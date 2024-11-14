@@ -23,7 +23,7 @@
             </div>
             <div class="col-12 col-md-3 q-pa-xs">
               <label class="text-bold">Identificación:</label>
-              <q-input v-model="paciente.identificacion" dense outlined placeholder="Identificación" :rules="[val => !!val || 'Campo requerido']" />
+              <q-input v-model="paciente.identificacion" dense outlined placeholder="Identificación" />
             </div>
             <div class="col-12 col-md-3 q-pa-xs">
               <label class="text-bold">Edad:</label>
@@ -107,7 +107,7 @@ export default {
       this.loading = true
       this.$axios.post('pacientes', this.paciente).then(res => {
         this.$alert.success(res.data.message)
-        this.$router.push({ name: 'pacientes' })
+        this.$router.push({ name: 'paciente', params: { id: res.data.id } })
       }).catch(error => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {

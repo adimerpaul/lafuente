@@ -17,6 +17,7 @@ class PacienteController extends Controller{
         return response()->json($pacientes);
     }
     function store(Request $request){
+        $request->merge(['fecha_creacion' => now()]);
         return response()->json(Paciente::create($request->all()));
     }
     function show(Paciente $paciente){

@@ -19,6 +19,7 @@ class Paciente extends Model{
         'estado_civil',
         'direccion',
         'telefono',
+        'fecha_creacion',
     ];
     protected $hidden = [
         'created_at',

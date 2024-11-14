@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <q-table :rows="pacientes" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-             title="Usuarios" >
+             title="Usuarios" @rowClick="pacienteEdit">
       <template v-slot:top>
         <div style="width: 100%">
           <div>
@@ -178,10 +178,12 @@ export default {
           })
         })
     },
-    pacienteEdit(paciente) {
-      this.paciente = { ...paciente }
-      this.actionPeriodo = 'Editar'
-      this.pacienteDialog = true
+    pacienteEdit(row,paciente) {
+      // this.paciente = { ...paciente }
+      // this.actionPeriodo = 'Editar'
+      // this.pacienteDialog = true
+      console.log(paciente)
+      this.$router.push({ name: 'paciente', params: { id: paciente.id } })
     },
     pacienteDelete(id) {
       this.$alert.dialog('¿Desea eliminar el paciente?')
