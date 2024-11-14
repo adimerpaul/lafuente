@@ -45,7 +45,7 @@
       <template v-slot:body-cell-role="props">
         <q-td :props="props">
           <q-chip :label="props.row.role"
-                  :color="props.row.role === 'Jefatura' ? 'primary' : 'positive'"
+                  :color="props.row.color"
                   text-color="white" dense  size="14px"/>
         </q-td>
       </template>
@@ -65,8 +65,7 @@
             <q-input v-model="user.username" label="Usuario" dense outlined :rules="[val => !!val || 'Campo requerido']" />
             <q-input v-model="user.email" label="Email" dense outlined hint="" />
             <q-input v-model="user.password" label="Contraseña" dense outlined :rules="[val => !!val || 'Campo requerido']" v-if="!user.id" />
-            <q-select v-model="user.role" label="Rol" dense outlined :options="['Area', 'Jefatura']" :rules="[val => !!val || 'Campo requerido']" />
-            <q-select v-model="user.area_id" label="Area" dense outlined :options="areas" :rules="[val => !!val || 'Campo requerido']" emit-value map-options :option-label="area => area.nombre" :option-value="area => area.id" />
+            <q-select v-model="user.role" label="Rol" dense outlined :options="roles" :rules="[val => !!val || 'Campo requerido']" />
             <div class="text-right" >
               <q-btn color="negative" label="Cancelar" @click="userDialog = false" no-caps :loading="loading" />
               <q-btn color="primary" label="Guardar" type="submit" no-caps :loading="loading" class="q-ml-sm" />
@@ -90,32 +89,20 @@ export default {
       actionPeriodo: '',
       gestiones: [],
       filter: '',
+      roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
       columns: [
         { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'name', label: 'Nombre', align: 'left', field: 'name' },
         { name: 'username', label: 'Usuario', align: 'left', field: 'username' },
         { name: 'role', label: 'Rol', align: 'left', field: 'role' },
-        { name: 'email', label: 'Email', align: 'left', field: 'email' },
-        { name: 'area', label: 'Area', align: 'left', field: row => row.area?.nombre },
-      ],
-      areas: [],
+        { name: 'email', label: 'Email', align: 'left', field: 'email' }
+      ]
     }
   },
   mounted() {
     this.usersGet()
-    this.areasGet()
   },
   methods: {
-    areasGet() {
-      this.loading = true
-      this.$axios.get('areas').then(res => {
-        this.areas = res.data
-      }).catch(error => {
-        this.$alert.error(error.response.data.message)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
     userNew() {
       this.user = {
         name: '',

@@ -74,16 +74,16 @@
             <q-item-label >
               {{ $store.user.name }}
 <!--              <q-chip color="white" text-color="primary" dense>-->
-              <span class="text-bold">
-                {{ $store.user.role }}
-              </span>
+<!--              <span class="text-bold">-->
+<!--                {{ $store.user.role }}-->
+<!--              </span>-->
 <!--              </q-chip>-->
             </q-item-label>
-<!--            <q-item-label class="text-grey">-->
-<!--              <q-chip color="white" text-color="primary" dense>-->
-<!--                {{ $store.user.role }}-->
-<!--              </q-chip>-->
-<!--            </q-item-label>-->
+            <q-item-label caption>
+              <q-chip :color="$store.user.color" text-color="white" dense>
+                {{ $store.user.role }}
+              </q-chip>
+            </q-item-label>
           </q-item-section>
         </q-item>
         <q-separator  class="bg-white" inset />

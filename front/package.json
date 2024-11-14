@@ -1,8 +1,8 @@
 {
   "name": "educacion",
   "version": "0.0.1",
-  "description": "Educacion",
-  "productName": "Educacion",
+  "description": "La fuente",
+  "productName": "La fuente",
   "author": "adimerpaul <adimer101@gmail.com>",
   "private": true,
   "scripts": {

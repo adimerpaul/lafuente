@@ -23,14 +23,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'area_id',
         'username',
-        'cargo',
         'role',
     ];
-    function area(){
-        return $this->belongsTo(Area::class);
-    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -57,5 +52,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    protected $appends = ['color'];
+    public function getColorAttribute(){
+        $rol = $this->role;
+        if($rol == 'Doctor'){
+            return 'orange';
+        }
+        if($rol == 'Enfermera'){
+            return 'green';
+        }
+        if($rol == 'Administrativo'){
+            return 'blue';
+        }
+        if($rol == 'Secretaria'){
+            return 'purple';
+        }
     }
 }

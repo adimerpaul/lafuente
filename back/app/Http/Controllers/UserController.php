@@ -32,7 +32,6 @@ class UserController extends Controller{
     function index(){
         return User::where('id', '!=', 1)
             ->orderBy('id', 'desc')
-            ->with('area')
             ->get();
     }
     function update(Request $request, $id){
