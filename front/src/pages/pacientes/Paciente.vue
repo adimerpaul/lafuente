@@ -112,17 +112,7 @@ export default {
   },
   methods: {
     pacienteNew() {
-      this.paciente = {
-        name: '',
-        email: '',
-        password: '',
-        area_id: 1,
-        pacientename: '',
-        cargo: '',
-        role: 'Area',
-      }
-      this.actionPeriodo = 'Nuevo'
-      this.pacienteDialog = true
+      this.$router.push({ name: 'pacienteNew' })
     },
     pacientesGet() {
       this.loading = true
