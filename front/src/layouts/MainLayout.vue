@@ -135,9 +135,9 @@ export default {
       linksList: [
         {title: 'Principal', icon: 'home', link: '/'},
         {title: 'Usuarios', icon: 'people', link: '/usuarios'},
-        {title: 'Gestion', icon: 'settings', link: '/gestion'},
-        {title: 'Almacen', icon: 'store', link: '/almacen'},
-        {title: 'Poa', icon: 'assignment', link: '/poa'}
+        {title: 'Pacientes', icon: 'people', link: '/pacientes'},
+        {title: 'Productos', icon: 'shopping_cart', link: '/productos'},
+        {title: 'Venta', icon: 'shopping_cart', link: '/venta'},
       ]
     }
   },

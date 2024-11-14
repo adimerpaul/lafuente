@@ -5,45 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
 
-class PacienteController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class PacienteController extends Controller{
+    function index(Request $request){
+        $search = $request->search;
+        $pacientes = Paciente::where('nombre', 'like', "%$search%")
+            ->orWhere('apellido', 'like', "%$search%")
+            ->orWhere('identificacion', 'like', "%$search%")
+            ->orderBy('nombre')
+            ->orderBy('apellido')
+            ->paginate(15);
+        return response()->json($pacientes);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+    function store(Request $request){
+        return response()->json(Paciente::create($request->all()));
     }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Paciente $paciente)
-    {
-        //
+    function show(Paciente $paciente){
+        return response()->json($paciente);
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Paciente $paciente)
-    {
-        //
+    function update(Request $request, Paciente $paciente){
+        $paciente->update($request->all());
+        return response()->json($paciente);
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Paciente $paciente)
-    {
-        //
+    function destroy(Paciente $paciente){
+        $paciente->delete();
+        return response()->json($paciente);
     }
 }

@@ -4,11 +4,8 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') , meta: { requiresAuth: true } },
-      { path: 'almacen', component: () => import('pages/almacen/Almacen.vue'), meta: { requiresAuth: true } },
-      { path: 'gestion', component: () => import('pages/gestion/Gestion.vue'), meta: { requiresAuth: true } },
       { path: 'usuarios', component: () => import('pages/usuarios/Usuarios.vue'), meta: { requiresAuth: true } },
-      { path: 'poa', component: () => import('pages/poa/Poa.vue'), meta: { requiresAuth: true } },
-      { path: 'poa/:id', name: 'poaVisible', component: () => import('pages/poa/PoaVisible.vue'), meta: { requiresAuth: true } },
+      { path: 'pacientes', component: () => import('pages/pacientes/Paciente.vue'), meta: { requiresAuth: true } },
     ]
   },
   {
