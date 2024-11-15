@@ -36,10 +36,16 @@ class Paciente extends Model{
     public function getNombreCompletoAttribute(): string{
         return "{$this->nombre} {$this->apellido}";
     }
+    public function historialMedicos(){
+        return $this->hasMany(HistorialMedico::class);
+    }
     public function signosVitales(){
         return $this->hasMany(SignosVitale::class);
     }
-    public function historialMedicos(){
-        return $this->hasMany(HistorialMedico::class);
+    public function antecedentesFamiliares(){
+        return $this->hasMany(AntecedentesFamiliare::class);
+    }
+    public function habitosPersonales(){
+        return $this->hasMany(HabitosPersonale::class);
     }
 }
