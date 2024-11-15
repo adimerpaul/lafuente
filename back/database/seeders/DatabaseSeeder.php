@@ -2,11 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\AntecedentesFamiliare;
 use App\Models\Area;
+use App\Models\HabitosPersonale;
 use App\Models\HistorialMedico;
 use App\Models\Material;
 use App\Models\Paciente;
 use App\Models\Periodo;
+use App\Models\SignosVitale;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -39,6 +42,15 @@ class DatabaseSeeder extends Seeder
 
         $paciente = Paciente::factory()->create();
         $historial = HistorialMedico::factory()->create([
+            'paciente_id' => $paciente->id,
+        ]);
+        $signosVitales = SignosVitale::factory()->create([
+            'paciente_id' => $paciente->id,
+        ]);
+        $antecedentesFamiliares = AntecedentesFamiliare::factory()->create([
+            'paciente_id' => $paciente->id,
+        ]);
+        $habitosPersonales = HabitosPersonale::factory()->create([
             'paciente_id' => $paciente->id,
         ]);
 
