@@ -21,13 +21,11 @@ class Paciente extends Model{
         'telefono',
         'fecha_creacion',
     ];
+
     protected $hidden = [
         'created_at',
         'updated_at',
         'deleted_at',
-    ];
-    protected $casts = [
-        'fecha_nacimiento' => 'date',
     ];
     protected $appends = [
         'nombre_completo',

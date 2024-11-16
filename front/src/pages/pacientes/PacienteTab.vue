@@ -35,6 +35,18 @@
       </div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
+      <label class="text-bold">Fecha de nacimiento:</label>
+      <div>
+        {{ paciente.fecha_nacimiento.substring(0, 10) }}
+      </div>
+    </div>
+    <div class="col-12 col-md-6 q-pa-xs">
+      <label class="text-bold">Edad:</label>
+      <div>
+        {{ paciente.edad }}
+      </div>
+    </div>
+    <div class="col-12 col-md-6 q-pa-xs">
       <label class="text-bold">Estado civil:</label>
       <div>
         {{ paciente.estado_civil }}
@@ -54,62 +66,40 @@
     </div>
   </div>
   <q-dialog v-model="pacienteDialog" persistent>
-    <q-card style="min-width: 300px">
+    <q-card style="min-width: 350px">
       <q-card-section>
-            <q-input
-              v-model="paciente.nombre"
-              label="Nombre"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.apellido"
-              label="Apellido"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.identificacion"
-              label="Identificación"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.sexo"
-              label="Sexo"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.estado_civil"
-              label="Estado civil"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.direccion"
-              label="Dirección"
-              dense
-              filled
-              hint=""
-            />
-            <q-input
-              v-model="paciente.telefono"
-              label="Teléfono"
-              dense
-              filled
-              hint=""
-            />
+        <div  class="row items-center">
+          <div class="text-h6">Editar paciente</div>
+          <q-space />
+          <q-btn icon="close" flat @click="pacienteDialog = false"/>
+        </div>
       </q-card-section>
-      <q-card-actions align="right">
-        <q-btn label="Cancelar" color="primary" flat @click="pacienteDialog = false" />
-        <q-btn label="Guardar" color="primary" flat @click="pacienteDialog = false" />
-      </q-card-actions>
+      <q-card-section>
+        <q-form @submit="submitPaciente">
+<!--          "nombre": "Ona",-->
+<!--          "apellido": "Riojas",-->
+<!--          "fecha_nacimiento": "1993-03-23T04:00:00.000000Z",-->
+<!--          "identificacion": "723137902",-->
+<!--          "edad": 77,-->
+<!--          "sexo": "M",-->
+<!--          "estado_civil": "Casado",-->
+<!--          "direccion": "asdsdsadas",-->
+<!--          "telefono": "+34 987 14 7740",-->
+            <q-input v-model="paciente.nombre" label="Nombre" dense filled hint=""/>
+            <q-input v-model="paciente.apellido" label="Apellido" dense filled hint=""/>
+            <q-input v-model="paciente.identificacion" label="Identificación" dense filled hint=""/>
+            <q-input v-model="paciente.sexo" label="Sexo" dense filled hint=""/>
+            <q-input v-model="paciente.fecha_nacimiento" label="Fecha de nacimiento" type="date" dense filled hint="" @update:modelValue="calculateEdad"/>
+            <q-input v-model="paciente.edad" label="Edad" dense filled hint=""/>
+            <q-input v-model="paciente.estado_civil" label="Estado civil" dense filled hint=""/>
+            <q-input v-model="paciente.direccion" label="Dirección" dense filled hint=""/>
+            <q-input v-model="paciente.telefono" label="Teléfono" dense filled hint=""/>
+            <q-card-actions align="right">
+              <q-btn label="Cancelar" color="primary" flat @click="pacienteDialog = false" :loading="$store.loading"/>
+              <q-btn label="Guardar" color="primary" flat type="submit" :loading="$store.loading"/>
+            </q-card-actions>
+          </q-form>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>
@@ -152,6 +142,18 @@ export default {
         }).catch(error => {
           this.$alert.error(error.response.data.message)
         })
+      })
+    },
+    submitPaciente() {
+      this.$store.loading = true
+      this.$axios.put('pacientes/' + this.paciente.id, this.paciente).then(() => {
+        this.$alert.success('Paciente actualizado')
+        this.pacienteDialog = false
+        this.$emit('pacienteGet')
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+      }).finally(() => {
+        this.$store.loading = false
       })
     }
   }
