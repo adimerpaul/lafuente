@@ -27,4 +27,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/historial_medicos', [App\Http\Controllers\HistorialMedicoController::class, 'store']);
 });
-Route::get('/poaPrint/{poa}', [App\Http\Controllers\PoaController::class, 'poaPrint']);
+Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
+
