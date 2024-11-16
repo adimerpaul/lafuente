@@ -28,7 +28,7 @@
             </div>
           </div>
           <div class="col-12">
-            <q-card>
+            <q-card flat bordered>
               <q-tabs
                 v-model="tab"
                 dense
@@ -39,13 +39,6 @@
                 align="justify"
                 narrow-indicator
               >
-<!--                paciente-->
-<!--                historial_medicos-->
-<!--                signos vitales-->
-<!--                antecedentes-->
-<!--                habitos-->
-<!--                diagnosticos-->
-<!--                recetas-->
                 <q-tab name="paciente" >
                   <q-btn flat dense icon="person" label="Paciente" no-caps/>
                 </q-tab>
@@ -73,15 +66,8 @@
                 <q-tab-panel name="paciente">
                   <PacienteTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
-
-                <q-tab-panel name="alarms">
-                  <div class="text-h6">Alarms</div>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                </q-tab-panel>
-
-                <q-tab-panel name="movies">
-                  <div class="text-h6">Movies</div>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                <q-tab-panel name="historial_medicos">
+                  <HistorialTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
               </q-tab-panels>
             </q-card>
@@ -108,12 +94,13 @@
 <script>
 import moment from 'moment'
 import PacienteTab from "pages/pacientes/PacienteTab.vue";
+import HistorialTab from "pages/pacientes/HistorialTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {PacienteTab},
+  components: {HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'paciente',
+      tab: 'historial_medicos',
       paciente: {
         nombre: '',
         apellido: '',

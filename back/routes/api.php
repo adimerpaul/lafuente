@@ -25,5 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'update']);
     Route::delete('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'destroy']);
 
+    Route::post('/historial_medicos', [App\Http\Controllers\HistorialMedicoController::class, 'store']);
 });
 Route::get('/poaPrint/{poa}', [App\Http\Controllers\PoaController::class, 'poaPrint']);
