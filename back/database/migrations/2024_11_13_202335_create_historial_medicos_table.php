@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('historial_medicos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
-            $table->date('fecha_consulta')->nullable();
-            $table->time('hora_consulta')->nullable();
+            $table->foreignId('user_id')->constrained('users');
+            $table->dateTime('fecha')->nullable();
             $table->string('referido_de')->nullable();
             $table->text('motivo_consulta')->nullable();
             $table->text('enfermedad_actual')->nullable();

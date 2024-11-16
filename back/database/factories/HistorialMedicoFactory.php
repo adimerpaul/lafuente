@@ -18,12 +18,12 @@ class HistorialMedicoFactory extends Factory
     {
         return [
             'paciente_id' => 1,
-            'fecha_consulta' => fake()->date(),
-            'hora_consulta' => fake()->time(),
+            'fecha' => fake()->dateTime(),
             'referido_de' => fake('es_ES')->company(),
             'motivo_consulta' => fake('es_ES')->sentence(),
             'enfermedad_actual' => fake('es_ES')->sentence(),
             'alergias_conocidas' => fake('es_ES')->sentence(),
+            'user_id' => 1,
         ];
     }
 }

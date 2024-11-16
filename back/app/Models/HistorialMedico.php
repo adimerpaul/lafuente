@@ -11,8 +11,8 @@ class HistorialMedico extends Model{
     protected $table = 'historial_medicos';
     protected $fillable = [
         'paciente_id',
-        'fecha_consulta',
-        'hora_consulta',
+        'user_id',
+        'fecha',
         'referido_de',
         'motivo_consulta',
         'enfermedad_actual',
@@ -29,5 +29,8 @@ class HistorialMedico extends Model{
 //    ];
     public function paciente(){
         return $this->belongsTo(Paciente::class);
+    }
+    public function user(){
+        return $this->belongsTo(User::class);
     }
 }
