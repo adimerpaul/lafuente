@@ -68,56 +68,10 @@
                   <q-btn flat dense icon="description" label="Recetas" no-caps/>
                 </q-tab>
               </q-tabs>
-
               <q-separator />
-
               <q-tab-panels v-model="tab" animated>
                 <q-tab-panel name="paciente">
-                  <div class="text-h6">Paciente</div>
-                  <div class="row">
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Nombre:</label>
-                      <div>
-                        {{ paciente.nombre }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Apellido:</label>
-                      <div>
-                        {{ paciente.apellido }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Identificación:</label>
-                      <div>
-                        {{ paciente.identificacion }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Sexo:</label>
-                      <div>
-                        {{ paciente.sexo }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Estado civil:</label>
-                      <div>
-                        {{ paciente.estado_civil }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Dirección:</label>
-                      <div>
-                        {{ paciente.direccion }}
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6 q-pa-xs">
-                      <label class="text-bold">Teléfono:</label>
-                      <div>
-                        {{ paciente.telefono }}
-                      </div>
-                    </div>
-                  </div>
+                  <PacienteTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
 
                 <q-tab-panel name="alarms">
@@ -153,8 +107,10 @@
 </template>
 <script>
 import moment from 'moment'
+import PacienteTab from "pages/pacientes/PacienteTab.vue";
 export default {
   name: 'PacienteNewPage',
+  components: {PacienteTab},
   data() {
     return {
       tab: 'paciente',
@@ -178,40 +134,17 @@ export default {
   },
   methods: {
     pacienteGet() {
+      this.$store.loading = true
       this.$axios.get('pacientes/' + this.$route.params.id).then(res => {
         this.paciente = res.data
       }).catch(error => {
         this.$alert.error(error.response.data.message)
-      })
-    },
-    calculateEdad() {
-      let edad = moment().diff(this.paciente.fecha_nacimiento, 'years')
-      if (isNaN(edad)) {
-        this.paciente.edad = ''
-        return
-      }
-      this.paciente.edad = edad
-    },
-    pacienteSave() {
-      this.loading = true
-      this.$axios.post('pacientes', this.paciente).then(res => {
-        this.$alert.success(res.data.message)
-        this.$router.push({ name: 'paciente', params: { id: res.data.id } })
-      }).catch(error => {
-        this.$alert.error(error.response.data.message)
       }).finally(() => {
-        this.loading = false
+        this.$store.loading = false
       })
-    }
+    },
   },
   computed: {
-    edad() {
-      let edad = moment().diff(this.paciente.fecha_nacimiento, 'years')
-      if (isNaN(edad)) {
-        return ''
-      }
-      return edad
-    }
   }
 }
 </script>

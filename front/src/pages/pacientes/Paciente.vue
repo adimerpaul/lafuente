@@ -96,7 +96,7 @@ export default {
       total: 0,
       per_page: 10,
       columns: [
-        { name: 'actions', label: 'Acciones', align: 'center' },
+        // { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'nombre_completo', label: 'Nombre', align: 'left', field: 'nombre_completo' },
         { name: 'identificacion', label: 'Identificación', align: 'left', field: 'identificacion' },
         { name: 'edad', label: 'Edad', align: 'left', field: 'edad' },
