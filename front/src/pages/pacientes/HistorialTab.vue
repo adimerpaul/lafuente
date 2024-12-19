@@ -162,7 +162,8 @@ export default {
       this.historialDialog = true;
     },
     printHistorial(historial) {
-      console.log(historial);
+      const pdfUrl = `${this.$url}/../historial_medicos/${historial.id}/pdf`;
+      window.open(pdfUrl, '_blank'); // Abre el archivo PDF en una nueva pestaña
     },
     startRecognition(field) {
       if (this.recognition) {

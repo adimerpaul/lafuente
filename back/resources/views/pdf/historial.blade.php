@@ -6,12 +6,12 @@
     <title>Historia Clínica</title>
     <style>
         * {
+            font-family: Arial, sans-serif;
             padding: 0;
             margin: 0;
             border: 0;
         }
         body {
-            font-family: Arial, sans-serif;
             font-size: 12px;
             line-height: 1.5;
             margin: 20px;
@@ -41,28 +41,35 @@
         .text-bold {
             font-weight: bold;
         }
+        .center {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-<h1>Historia Clínica - Consulta Externa</h1>
-<h3>Número de Historia Clínica: {{ $historial->id }}</h3>
+<div class="center text-bold">Historia Clínica - Consulta Externa</div>
+<div class="center text-bold">Número de Historia Clínica: {{ $historial->id }}
+</div>
 
-<div class="section">
+<div class="section font-style-script">
+    <div class="font-style-script">Datos del Paciente</div>
     <table>
         <tr>
-            <th colspan="2">Datos del Paciente</th>
+            <th colspan="2">
+                <div>Datos del Pacientes</div>
+            </th>
         </tr>
         <tr>
-            <td><strong>Nombre Completo:</strong> {{ $historial->paciente->nombre_completo }}</td>
-            <td><strong>Fecha de Nacimiento:</strong> {{ $historial->paciente->fecha_nacimiento }}</td>
+            <td><span class="text-bold">Nombre Completo:</span> {{ $historial->paciente->nombre_completo }}</td>
+            <td><span class="text-bold">Fecha de Nacimiento:</span> {{ $historial->paciente->fecha_nacimiento }}</td>
         </tr>
         <tr>
-            <td><strong>Edad:</strong> {{ $historial->paciente->edad }}</td>
-            <td><strong>Sexo:</strong> {{ $historial->paciente->sexo }}</td>
+            <td><span class="text-bold">Edad:</span> {{ $historial->paciente->edad }}</td>
+            <td><span class="text-bold">Sexo:</span> {{ $historial->paciente->sexo }}</td>
         </tr>
         <tr>
-            <td><strong>Dirección:</strong> {{ $historial->paciente->direccion }}</td>
-            <td><strong>Teléfono:</strong> {{ $historial->paciente->telefono }}</td>
+            <td><span class="text-bold">Dirección:</span> {{ $historial->paciente->direccion }}</td>
+            <td><span class="text-bold">Teléfono:</span> {{ $historial->paciente->telefono }}</td>
         </tr>
     </table>
 </div>
@@ -73,14 +80,14 @@
             <th colspan="2">Información Médica</th>
         </tr>
         <tr>
-            <td><strong>Referido de:</strong> {{ $historial->referido_de }}</td>
-            <td><strong>Motivo de Consulta:</strong> {{ $historial->motivo_consulta }}</td>
+            <td><span class="text-bold">Referido de:</span> {{ $historial->referido_de }}</td>
+            <td><div style="">{{'Motivo de Consulta'}}:</div> {{ $historial->motivo_consulta }}</td>
         </tr>
         <tr>
-            <td colspan="2"><strong>Enfermedad Actual:</strong> {{ $historial->enfermedad_actual }}</td>
+            <td colspan="2"><span class="text-bold"><b>Enfermedad Actual:</span> {{ $historial->enfermedad_actual }}</td>
         </tr>
         <tr>
-            <td colspan="2"><strong>Alergias Conocidas:</strong> {{ $historial->alergias_conocidas }}</td>
+            <td colspan="2"><span class="text-bold">Alergias Conocidas:</span> {{ $historial->alergias_conocidas }}</td>
         </tr>
     </table>
 </div>
