@@ -167,10 +167,13 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <div id="myElement" class="hidden"></div>
   </q-page>
 </template>
 
 <script>
+import {Imprimir} from "src/addons/Imprimir";
+
 export default {
   name: "VentasTab",
   props: {
@@ -307,6 +310,7 @@ export default {
         this.loading = false;
         this.$alert.success("Venta realizada con éxito");
         this.productosVentas = [];
+        Imprimir.nota(res.data);
       }).catch((error) => {
         this.loading = false;
         console.error(error);
