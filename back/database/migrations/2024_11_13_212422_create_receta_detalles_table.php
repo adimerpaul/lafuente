@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('receta_detalles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('receta_id')->constrained('recetas');
-            $table->foreignId('producto_id')->constrained('productos')->nullable();
+            $table->unsignedBigInteger('producto_id')->nullable();
+            $table->foreign('producto_id')->references('id')->on('productos');
             $table->integer('cantidad')->nullable();
             $table->string('unidad')->nullable();
             $table->string('productoNombre')->nullable();

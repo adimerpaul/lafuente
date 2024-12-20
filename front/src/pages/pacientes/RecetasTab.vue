@@ -45,89 +45,6 @@
           </q-item-section>
         </q-item>
       </q-list>
-<!--      "recetas": [-->
-<!--      {-->
-<!--      "id": 1,-->
-<!--      "paciente_id": 1,-->
-<!--      "user_id": 8,-->
-<!--      "indicaciones": "Tomar con agua",-->
-<!--      "observaciones": "No tomar con el estomago vacio",-->
-<!--      "fecha": "2024-12-20 08:25:17",-->
-<!--      "user": {-->
-<!--      "id": 8,-->
-<!--      "name": "Arnau Cuenca",-->
-<!--      "username": "cervantes.blanca",-->
-<!--      "email": "saul.saldana@example.com",-->
-<!--      "role": "Doctor",-->
-<!--      "color": "orange"-->
-<!--      },-->
-<!--      "receta_detalles": [-->
-<!--      {-->
-<!--      "id": 1,-->
-<!--      "receta_id": 1,-->
-<!--      "producto_id": 942,-->
-<!--      "cantidad": 1,-->
-<!--      "unidad": "pastilla",-->
-<!--      "via": "oral",-->
-<!--      "frecuencia": "cada 8 horas",-->
-<!--      "duracion": "3 dias",-->
-<!--      "indicaciones": "Tomar con agua",-->
-<!--      "producto": {-->
-<!--      "id": 942,-->
-<!--      "nombre": "VIDIZOLIN GOTAS OFTALMICAS X 5ML",-->
-<!--      "descripcion": "Antibiótico, Antiinflamatorio, Descongestionante oftálmico",-->
-<!--      "unidad": "FRASCOS",-->
-<!--      "precio": 175,-->
-<!--      "stock": null,-->
-<!--      "stock_minimo": null,-->
-<!--      "stock_maximo": null-->
-<!--      }-->
-<!--      },-->
-<!--      {-->
-<!--      "id": 2,-->
-<!--      "receta_id": 1,-->
-<!--      "producto_id": 340,-->
-<!--      "cantidad": 1,-->
-<!--      "unidad": "pastilla",-->
-<!--      "via": "oral",-->
-<!--      "frecuencia": "cada 8 horas",-->
-<!--      "duracion": "3 dias",-->
-<!--      "indicaciones": "Tomar con agua",-->
-<!--      "producto": {-->
-<!--      "id": 340,-->
-<!--      "nombre": "FLEXICAM 15 MG X COMPRIMIDO SL",-->
-<!--      "descripcion": "Antiinflamatorio, Analgésico de acción preferencial",-->
-<!--      "unidad": "COMPRIMIDO SUBLINGUAL",-->
-<!--      "precio": 6,-->
-<!--      "stock": null,-->
-<!--      "stock_minimo": null,-->
-<!--      "stock_maximo": null-->
-<!--      }-->
-<!--      },-->
-<!--      {-->
-<!--      "id": 3,-->
-<!--      "receta_id": 1,-->
-<!--      "producto_id": 100,-->
-<!--      "cantidad": 1,-->
-<!--      "unidad": "pastilla",-->
-<!--      "via": "oral",-->
-<!--      "frecuencia": "cada 8 horas",-->
-<!--      "duracion": "3 dias",-->
-<!--      "indicaciones": "Tomar con agua",-->
-<!--      "producto": {-->
-<!--      "id": 100,-->
-<!--      "nombre": "CLOFENAC 75 MG X AMPOLLA",-->
-<!--      "descripcion": "Analgésico - Antiinflamatorio",-->
-<!--      "unidad": "AMPOLLAS",-->
-<!--      "precio": 14,-->
-<!--      "stock": null,-->
-<!--      "stock_minimo": null,-->
-<!--      "stock_maximo": null-->
-<!--      }-->
-<!--      }-->
-<!--      ]-->
-<!--      }-->
-<!--      ],-->
     </div>
   </div>
   <q-dialog v-model="recetaDialog" persistent>
@@ -331,7 +248,7 @@ export default {
         via: "oral",
         frecuencia: "cada 8 horas",
         duracion: "3 dias",
-        indicaciones: "Tomar con agua",
+        indicaciones: "",
         producto,
       });
     },
@@ -358,7 +275,7 @@ export default {
       this.$axios.post("recetas",{
         ...this.receta,
         paciente_id: this.paciente.id,
-        ...this.productosRecetas,
+        productos: this.productosRecetas,
       }).then((res) => {
         this.recetaDialog = false;
         this.$store.loading = false;
@@ -374,6 +291,7 @@ export default {
         observaciones: "",
       };
       this.recetaDialog = true;
+      this.productosRecetas = [];
     },
     printReceta(receta) {
       const pdfUrl = `${this.$url}/../receta_medicos/${receta.id}/pdf`;

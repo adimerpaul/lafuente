@@ -57,8 +57,8 @@
 export default {
   data() {
     return {
-      username: 'admin',
-      password: 'admin',
+      username: '',
+      password: '',
       remember: false,
       loading: false
     }
