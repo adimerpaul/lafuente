@@ -3,16 +3,16 @@
     <q-card flat bordered>
       <q-card-section>
         <div class="row">
-          <div class="col-10 col-md-3 q-pa-xs">
+          <div class="col-12 col-md-3 q-pa-xs">
             <label class="text-bold">Nombre completo:</label>
             <div>
               {{ paciente.nombre_completo }}
             </div>
           </div>
-          <div class="col-2 col-md-3 q-pa-xs">
+          <div class="col-12 col-md-3 q-pa-xs">
             <label class="text-bold">Edad:</label>
             <div>
-              {{ paciente.edad }}
+              {{ calculateEdad(paciente.fecha_nacimiento) }}
             </div>
           </div>
           <div class="col-6 col-md-3 q-pa-xs">
@@ -78,6 +78,9 @@
                 <q-tab-panel name="habitos">
                   <HabitosTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="diagnosticos">
+                  <DiagnosticosTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
@@ -94,12 +97,13 @@ import HistorialTab from "pages/pacientes/HistorialTab.vue";
 import SignosTab from "pages/pacientes/SignosTab.vue";
 import AntecedentesTab from "pages/pacientes/AntecedentesTab.vue";
 import HabitosTab from "pages/pacientes/HabitosTab.vue";
+import DiagnosticosTab from "pages/pacientes/DiagnosticosTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
+  components: {DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'habitos',
+      tab: 'diagnosticos',
       paciente: {
         nombre: '',
         apellido: '',
@@ -119,6 +123,13 @@ export default {
     this.pacienteGet();
   },
   methods: {
+    calculateEdad(fecha) {
+      if (!fecha) return this.paciente.edad + ' años'
+      const anios= moment().diff(fecha, 'years')
+      const meses = moment().diff(fecha, 'months') % 12
+      const dias = moment().diff(fecha, 'days') % 30
+      return `${anios} años ${meses} meses ${dias} días`
+    },
     pacienteGet() {
       this.$store.loading = true
       this.$axios.get('pacientes/' + this.$route.params.id).then(res => {

@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/antecedentes_familiares', [App\Http\Controllers\AntecedentesFamiliareController::class, 'store']);
 
     Route::post('/habitos_personales', [App\Http\Controllers\HabitosPersonaleController::class, 'store']);
+
+    Route::post('/diagnosticos', [App\Http\Controllers\DiagnosticoController::class, 'store']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 
