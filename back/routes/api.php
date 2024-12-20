@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'destroy']);
 
     Route::post('/historial_medicos', [App\Http\Controllers\HistorialMedicoController::class, 'store']);
+
+    Route::post('/signos_vitales', [App\Http\Controllers\SignosVitaleController::class, 'store']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 

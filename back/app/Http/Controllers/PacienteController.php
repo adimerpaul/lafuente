@@ -27,7 +27,7 @@ class PacienteController extends Controller{
         return response()->json(Paciente::create($request->all()));
     }
     function show(Paciente $paciente){
-        return Paciente::with('historialMedicos.user','signosVitales','antecedentesFamiliares','habitosPersonales')->find($paciente->id);
+        return Paciente::with('historialMedicos.user','signosVitales.user','antecedentesFamiliares.user','habitosPersonales.user','recetas.user','diagnosticos.user')->find($paciente->id);
     }
     function update(Request $request, Paciente $paciente){
         $paciente->update($request->all());

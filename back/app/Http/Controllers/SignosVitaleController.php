@@ -5,45 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\SignosVitale;
 use Illuminate\Http\Request;
 
-class SignosVitaleController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(SignosVitale $signosVitale)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, SignosVitale $signosVitale)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(SignosVitale $signosVitale)
-    {
-        //
+class SignosVitaleController extends Controller{
+    public function store(Request $request){
+        $user = $request->user();
+        $request->merge(['fecha' => now()]);
+        $request->merge(['user_id' => $user->id]);
+        return response()->json(SignosVitale::create($request->all()));
     }
 }

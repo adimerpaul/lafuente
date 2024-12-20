@@ -43,19 +43,19 @@ class DatabaseSeeder extends Seeder
         $paciente = Paciente::factory()->create();
         $historial = HistorialMedico::factory()->create([
             'paciente_id' => $paciente->id,
-            'user_id' => 1,
+            'user_id' => rand(1, 11),
         ]);
         $signosVitales = SignosVitale::factory()->create([
             'paciente_id' => $paciente->id,
-            'user_id' => 1,
+            'user_id' => rand(1, 11),
         ]);
         $antecedentesFamiliares = AntecedentesFamiliare::factory()->create([
             'paciente_id' => $paciente->id,
-            'user_id' => 1,
+            'user_id' => rand(1, 11),
         ]);
         $habitosPersonales = HabitosPersonale::factory()->create([
             'paciente_id' => $paciente->id,
-            'user_id' => 1,
+            'user_id' => rand(1, 11),
         ]);
 
         Paciente::factory(1000)->create();

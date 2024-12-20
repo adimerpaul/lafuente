@@ -5,7 +5,7 @@
     </div>
     <q-space />
     <q-btn-group flat>
-      <q-btn icon="add_circle_outline" @click="addHistorial" :loading="$store.loading" />
+      <q-btn icon="add_circle_outline" @click="addSigno" :loading="$store.loading" />
     </q-btn-group>
   </div>
   <div class="row">
@@ -20,20 +20,44 @@
           <q-item-section>
             <q-item-label>
               <div>
-                <span class="text-bold">Referido de: </span>
-                <span>{{ signo.referido_de }}</span>
+                <span class="text-bold">Estado general: </span>
+                <span>{{ signo.estado_general }}</span>
               </div>
               <div>
-                <span class="text-bold">Motivo de consulta: </span>
-                <span>{{ signo.motivo_consulta }}</span>
+                <span class="text-bold">FC: </span>
+                <span>{{ signo.fc }}</span>
               </div>
               <div>
-                <span class="text-bold">Enfermedad actual: </span>
-                <span>{{ signo.enfermedad_actual }}</span>
+                <span class="text-bold">FR: </span>
+                <span>{{ signo.fr }}</span>
               </div>
               <div>
-                <span class="text-bold">Alergias conocidas: </span>
-                <span>{{ signo.alergias_conocidas }}</span>
+                <span class="text-bold">PA: </span>
+                <span>{{ signo.pa }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Temperatura: </span>
+                <span>{{ signo.temperatura }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Peso: </span>
+                <span>{{ signo.peso }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Talla: </span>
+                <span>{{ signo.talla }}</span>
+              </div>
+              <div>
+                <span class="text-bold">IMC: </span>
+                <span>{{ signo.imc }}</span>
+              </div>
+              <div>
+                <span class="text-bold">SPO2: </span>
+                <span>{{ signo.spo2 }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Glasgow: </span>
+                <span>{{ signo.glasgow }}</span>
               </div>
             </q-item-label>
             <q-item-label caption>
@@ -44,8 +68,8 @@
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <span class="text-bold">{{ historial.user?.name }}</span>
-            <q-btn icon="print" flat @click="printHistorial(historial)" />
+            <span class="text-bold">{{ signo.user?.name }}</span>
+<!--            <q-btn icon="print" flat @click="printSigno(signo)" />-->
           </q-item-section>
         </q-item>
       </q-list>
@@ -67,38 +91,59 @@
 <!--      ],-->
     </div>
   </div>
-  <q-dialog v-model="historialDialog" persistent>
+  <q-dialog v-model="signoDialog" persistent>
     <q-card flat bordered style="min-width: 600px">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Historial médico</div>
+        <div class="text-h6">Signo Vital</div>
         <q-space />
-        <q-btn icon="close" flat @click="historialDialog = false" />
+        <q-btn icon="close" flat @click="signoDialog = false" />
       </q-card-section>
       <q-card-section>
-        <q-form @submit="submitHistorial">
-        <q-input v-model="historial.referido_de" filled clearable label="Referido de" hint="">
-          <template v-slot:append>
-            <q-btn flat round dense icon="mic" @click="startRecognition('referido_de')" />
-          </template>
-        </q-input>
-        <q-input v-model="historial.motivo_consulta" filled clearable type="textarea" label="Motivo de consulta" hint="">
-          <template v-slot:append>
-            <q-btn flat round dense icon="mic" @click="startRecognition('motivo_consulta')" />
-          </template>
-        </q-input>
-        <q-input v-model="historial.enfermedad_actual" filled clearable type="textarea" label="Enfermedad actual" hint="">
-          <template v-slot:append>
-            <q-btn flat round dense icon="mic" @click="startRecognition('enfermedad_actual')" />
-          </template>
-        </q-input>
-        <q-input v-model="historial.alergias_conocidas" filled clearable type="textarea" label="Alergias conocidas" hint="">
-          <template v-slot:append>
-            <q-btn flat round dense icon="mic" @click="startRecognition('alergias_conocidas')" />
-          </template>
-        </q-input>
+        <q-form @submit="submitSigno">
+          <q-input v-model="signo.estado_general" outlined clearable label="Estado general" hint="">
+            <template v-slot:append>
+              <q-btn flat round dense icon="mic" @click="startRecognition('estado_general')" />
+            </template>
+          </q-input>
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.fc" outlined clearable type="number" label="Frecuencia cardíaca" hint="">
+<!--                <template v-slot:append>-->
+<!--                  <q-btn flat round dense icon="mic" @click="startRecognition('fc')" />-->
+<!--                </template>-->
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.fr" outlined clearable type="number" label="Frecuencia respiratoria" hint="">
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.pa" outlined clearable label="Presión arterial" hint="">
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.temperatura" outlined clearable type="number" label="Temperatura" hint="">
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.peso" outlined clearable type="number" label="Peso" hint=""/>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.talla" outlined clearable type="number" label="Talla" hint=""/>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.imc" outlined clearable type="number" label="IMC" hint=""/>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.spo2" outlined clearable type="number" label="SPO2" hint=""/>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="signo.glasgow" outlined clearable type="number" label="Glasgow" hint=""/>
+            </div>
+          </div>
         <q-card-actions align="right">
-          <q-btn label="Cancelar" color="negative" @click="historialDialog = false" />
-          <q-btn label="Guardar" color="primary" type="submit" />
+          <q-btn label="Cancelar" color="negative" @click="signoDialog = false" :loading="$store.loading" />
+          <q-btn label="Guardar" color="primary" type="submit" :loading="$store.loading" />
         </q-card-actions>
         </q-form>
       </q-card-section>
@@ -118,8 +163,8 @@ export default {
   emits: ["pacienteGet"],
   data() {
     return {
-      historialDialog: false,
-      historial: {
+      signoDialog: false,
+      signo: {
         referido_de: "",
         motivo_consulta: "",
         enfermedad_actual: "",
@@ -143,7 +188,7 @@ export default {
       this.recognition.onresult = (event) => {
         const text = event.results[0][0].transcript;
         if (this.activeField) {
-          this.historial[this.activeField] += text; // Agrega texto al campo activo
+          this.signo[this.activeField] += text; // Agrega texto al campo activo
         }
       };
 
@@ -156,13 +201,13 @@ export default {
     }
   },
   methods: {
-    submitHistorial() {
+    submitSigno() {
       this.$store.loading = true;
-      this.$axios.post("historial_medicos",{
-        ...this.historial,
+      this.$axios.post("signos_vitales",{
+        ...this.signo,
         paciente_id: this.paciente.id,
       }).then((res) => {
-        this.historialDialog = false;
+        this.signoDialog = false;
         this.$store.loading = false;
         this.$emit("pacienteGet");
       }).catch((error) => {
@@ -170,17 +215,23 @@ export default {
         console.error(error);
       });
     },
-    addHistorial() {
-      this.historial = {
-        referido_de: "",
-        motivo_consulta: "",
-        enfermedad_actual: "",
-        alergias_conocidas: "",
+    addSigno() {
+      this.signo = {
+        estado_general: "",
+        fc: '',
+        fr: '',
+        pa: '',
+        temperatura: '',
+        peso: '',
+        talla: '',
+        imc: '',
+        spo2: '',
+        glasgow: '',
       };
-      this.historialDialog = true;
+      this.signoDialog = true;
     },
-    printHistorial(historial) {
-      const pdfUrl = `${this.$url}/../historial_medicos/${historial.id}/pdf`;
+    printSigno(signo) {
+      const pdfUrl = `${this.$url}/../signo_medicos/${signo.id}/pdf`;
       window.open(pdfUrl, '_blank'); // Abre el archivo PDF en una nueva pestaña
     },
     startRecognition(field) {
