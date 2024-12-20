@@ -2,48 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 
-class VentaController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+class VentaController extends Controller{
+    function store(Request $request){
+        $cliente = $this->clienteUpdateOrCreate($request);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $request->merge(['user_id' => auth()->user()->id,]);
+        $request->merge(['cliente_id' => $cliente->id,]);
+        $request->merge(['fecha' => date('Y-m-d H:i:s'),]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Venta $venta)
-    {
-        //
+        return Venta::create($request->all());
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Venta $venta)
-    {
-        //
+    function clienteUpdateOrCreate($request){
+        $nit = $request->nit;
+        $findCliente = Cliente::where('nit', $nit)->first();
+        if ($findCliente) {
+            $findCliente->update($request->all());
+            return $findCliente;
+        } else {
+            return Cliente::create($request->all());
+        }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Venta $venta)
-    {
-        //
+    function index(){
+        return Venta::with('user', 'cliente')->get();
+    }
+    function show($id){
+        return Venta::with('user', 'cliente')->findOrFail($id);
+    }
+    function update(Request $request, $id){
+        $venta = Venta::findOrFail($id);
+        $venta->update($request->all());
+        return $venta;
+    }
+    function destroy($id){
+        $venta = Venta::findOrFail($id);
+        $venta->delete();
+        return $venta;
     }
 }

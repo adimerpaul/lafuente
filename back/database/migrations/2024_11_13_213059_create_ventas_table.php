@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('ventas', function (Blueprint $table) {
             $table->id();
-//            $table->foreignId('cliente_id')->constrained('clientes');
             $table->foreignId('user_id')->constrained('users');
             $table->unsignedBigInteger('cliente_id')->nullable();
             $table->foreign('cliente_id')->references('id')->on('clientes');
             $table->date('fecha')->nullable();
-            $table->string('estado')->nullable()->default('pendiente');
+            $table->string('ci')->nullable();
+            $table->string('nombre')->nullable();
+            $table->string('estado')->nullable()->default('Activo');
+            $table->string('tipo_comprobante')->nullable()->default('Venta');
             $table->decimal('total', 8, 2)->nullable();
             $table->softDeletes();
             $table->timestamps();
