@@ -87,7 +87,7 @@
 <br>
 <div class="center text-bold h1 lineHeight">
     <br>
-    HISTORIA CLÍNICA<br>
+    HISTORIA MEDICO<br>
     CONSULTA EXTERNA
 </div>
 <div class="text-right" style="height: 30px;">
@@ -147,7 +147,67 @@
         </td>
     </tr>
 </table>
-
+<table style="border: 0;padding: 0;margin: 0;">
+    <tr>
+        <td class="lineHeight" style="border: 0" >
+            <div class="border" style="padding: 3px">
+                C.I. - RUN: {{ $historial->paciente->identificacion }}
+            </div>
+        </td>
+        <td class="lineHeight" style="border: 0" >
+            <div class="border" style="padding: 3px">
+                Dirección: {{ $historial->paciente->direccion }}
+            </div>
+        </td>
+        <td class="lineHeight" style="border: 0" >
+            <div class="border" style="padding: 3px">
+                Teléfono: {{ $historial->paciente->telefono }}
+            </div>
+        </td>
+    </tr>
+</table>
+<table class="border" style="border-radius: 5px;">
+    <tr>
+        <td class="lineHeight" >
+            <div  style="padding: 3px">
+                Edad:
+                @php
+                    if($historial->paciente->fecha_nacimieto){
+                        $fechaNacimiento = new DateTime($historial->paciente->fecha_nacimiento);
+                        $fechaActual = new DateTime();
+                        $edad = $fechaNacimiento->diff($fechaActual);
+                        echo $edad->y;
+                    }else{
+                        echo $historial->paciente->edad;
+                    }
+                @endphp
+            </div>
+        </td>
+        <td class="lineHeight" >
+            <div  style="padding: 3px">
+                Fecha de atención: {{ substr($historial->fecha, 0, 10) }}
+            </div>
+        </td>
+        <td class="lineHeight" >
+            <div  style="padding: 3px">
+                Hora de atención: {{ substr($historial->fecha, 11, 5) }}
+            </div>
+        </td>
+        <td class="lineHeight" >
+            <div  style="padding: 3px">
+                Referido de: {{ $historial->referido_de }}
+            </div>
+        </td>
+    </tr>
+</table>
+<div class="border" style="padding: 3px">
+    <b>MOTIVO DE CONSULTA. (Síntomas, signos, causas y tiempo de evolución). </b><br>
+    {{ $historial->motivo_consulta }} <br>
+    <b>Enfermedad Actual: </b><br>
+    {{ $historial->enfermedad_actual }} <br>
+    <b>Alergias Conocidas: </b><br>
+    {{ $historial->alergias_conocidas }}
+</div>
 
 {{--{--}}
 {{--"id": 1,--}}
@@ -293,63 +353,15 @@
 {{--}--}}
 {{--]--}}
 {{--}--}}
-<div class="section font-style-script">
-    <div class="font-style-script">Datos del Paciente</div>
+{{--css floating bototm--}}
+<div style="position: absolute; bottom: 34px; width: 550px; text-align: center;right: 20px;">
     <table>
         <tr>
-            <th colspan="2">
-                <div>Datos del Pacientes</div>
-            </th>
-        </tr>
-        <tr>
-            <td><span class="text-bold">Nombre Completo:</span> {{ $historial->paciente->nombre_completo }}</td>
-            <td><span class="text-bold">Fecha de Nacimiento:</span> {{ $historial->paciente->fecha_nacimiento }}</td>
-        </tr>
-        <tr>
-            <td><span class="text-bold">Edad:</span> {{ $historial->paciente->edad }}</td>
-            <td><span class="text-bold">Sexo:</span> {{ $historial->paciente->sexo }}</td>
-        </tr>
-        <tr>
-            <td><span class="text-bold">Dirección:</span> {{ $historial->paciente->direccion }}</td>
-            <td><span class="text-bold">Teléfono:</span> {{ $historial->paciente->telefono }}</td>
+            <td style="height: 50px;text-align: center;width: 50px">Atendido por:</td>
+            <td style="height: 50px;text-align: center;width: 150px" valign="bottom">Firma</td>
+            <td style="height: 50px;text-align: center;width: 150px" valign="bottom">Sello</td>
         </tr>
     </table>
-</div>
-
-<div class="section">
-    <table>
-        <tr>
-            <th colspan="2">Información Médica</th>
-        </tr>
-        <tr>
-            <td><span class="text-bold">Referido de:</span> {{ $historial->referido_de }}</td>
-            <td><div style="">{{'Motivo de Consulta'}}:</div> {{ $historial->motivo_consulta }}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><span class="text-bold"><b>Enfermedad Actual:</span> {{ $historial->enfermedad_actual }}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><span class="text-bold">Alergias Conocidas:</span> {{ $historial->alergias_conocidas }}</td>
-        </tr>
-    </table>
-</div>
-
-<div class="section">
-    <table>
-        <tr>
-            <th>Fecha de Creación</th>
-            <th>Creado por</th>
-        </tr>
-        <tr>
-            <td>{{ $historial->fecha }}</td>
-            <td>{{ $historial->user->name }}</td>
-        </tr>
-    </table>
-</div>
-
-<div class="section">
-    <h3>Diagnósticos y Observaciones</h3>
-    <p>Información adicional o diagnósticos específicos pueden incluirse aquí, según los datos disponibles.</p>
 </div>
 </body>
 </html>
