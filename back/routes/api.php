@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'destroy']);
 
     Route::post('/searchCliente', [App\Http\Controllers\ClienteController::class, 'searchCliente']);
+
+    Route::post('/ventas', [App\Http\Controllers\VentaController::class, 'store']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

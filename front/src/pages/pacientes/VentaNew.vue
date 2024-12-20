@@ -297,17 +297,16 @@ export default {
       });
     },
     submitVenta() {
-      if (this.productosVentas.length === 0) {
-        this.$alert.error("Debe agregar al menos un producto a la venta");
-        return;
-      }
       this.loading = true;
       this.$axios.post("ventas", {
+        ci: this.venta.nit,
+        nombre: this.venta.nombre,
         productos: this.productosVentas,
       }).then((res) => {
         this.ventaDialog = false;
         this.loading = false;
-        // this.$emit("pacienteGet");
+        this.$alert.success("Venta realizada con éxito");
+        this.productosVentas = [];
       }).catch((error) => {
         this.loading = false;
         console.error(error);

@@ -13,12 +13,24 @@ class VentaController extends Controller{
         $request->merge(['user_id' => auth()->user()->id,]);
         $request->merge(['cliente_id' => $cliente->id,]);
         $request->merge(['fecha' => date('Y-m-d H:i:s'),]);
+        $venta = Venta::create($request->all());
+        $productos = $request->productos;
+        $insertProductos = [];
+        foreach ($productos as $producto) {
+            $insertProductos[] = [
+                'venta_id' => $venta->id,
+                'producto_id' => $producto['producto_id'],
+                'cantidad' => $producto['cantidad'],
+                'precio' => $producto['precio'],
+            ];
+        }
+        $venta->ventaDetalles()->createMany($insertProductos);
 
-        return Venta::create($request->all());
+        return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);
     }
     function clienteUpdateOrCreate($request){
-        $nit = $request->nit;
-        $findCliente = Cliente::where('nit', $nit)->first();
+        $ci = $request->ci;
+        $findCliente = Cliente::where('ci', $ci)->first();
         if ($findCliente) {
             $findCliente->update($request->all());
             return $findCliente;
