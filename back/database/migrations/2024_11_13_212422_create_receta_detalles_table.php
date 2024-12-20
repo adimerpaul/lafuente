@@ -17,6 +17,10 @@ return new class extends Migration
             $table->foreignId('producto_id')->constrained('productos');
             $table->integer('cantidad')->nullable();
             $table->string('unidad')->nullable();
+            $table->string('via')->nullable();
+            $table->string('frecuencia')->nullable();
+            $table->string('duracion')->nullable();
+            $table->string('indicaciones')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

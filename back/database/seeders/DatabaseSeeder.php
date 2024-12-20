@@ -10,6 +10,8 @@ use App\Models\HistorialMedico;
 use App\Models\Material;
 use App\Models\Paciente;
 use App\Models\Periodo;
+use App\Models\Receta;
+use App\Models\RecetaDetalle;
 use App\Models\SignosVitale;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -65,5 +67,67 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Paciente::factory(1000)->create();
+
+//        Schema::create('recetas', function (Blueprint $table) {
+//            $table->id();
+//            $table->foreignId('paciente_id')->constrained('pacientes');
+//            $table->foreignId('user_id')->constrained('users');
+//            $table->text('indicaciones')->nullable();
+//            $table->text('observaciones')->nullable();
+//            $table->dateTime('fecha')->useCurrent();
+//            $table->softDeletes();
+//            $table->timestamps();
+//        });
+//        Schema::create('receta_detalles', function (Blueprint $table) {
+//            $table->id();
+//            $table->foreignId('receta_id')->constrained('recetas');
+//            $table->foreignId('producto_id')->constrained('productos');
+//            $table->integer('cantidad')->nullable();
+//            $table->string('unidad')->nullable();
+//            $table->string('via')->nullable();
+//            $table->string('frecuencia')->nullable();
+//            $table->string('duracion')->nullable();
+//            $table->string('indicaciones')->nullable();
+//            $table->softDeletes();
+//            $table->timestamps();
+//        });
+
+        $receta = Receta::create([
+            'paciente_id' => $paciente->id,
+            'user_id' => rand(1, 11),
+            'indicaciones' => 'Tomar con agua',
+            'observaciones' => 'No tomar con el estomago vacio',
+        ]);
+
+        $recetaDetalle = RecetaDetalle::create([
+            'receta_id' => $receta->id,
+            'producto_id' => rand(1, 1000),
+            'cantidad' => 1,
+            'unidad' => 'pastilla',
+            'via' => 'oral',
+            'frecuencia' => 'cada 8 horas',
+            'duracion' => '3 dias',
+            'indicaciones' => 'Tomar con agua',
+        ]);
+        $recetaDetalle = RecetaDetalle::create([
+            'receta_id' => $receta->id,
+            'producto_id' => rand(1, 1000),
+            'cantidad' => 1,
+            'unidad' => 'pastilla',
+            'via' => 'oral',
+            'frecuencia' => 'cada 8 horas',
+            'duracion' => '3 dias',
+            'indicaciones' => 'Tomar con agua',
+        ]);
+        $recetaDetalle = RecetaDetalle::create([
+            'receta_id' => $receta->id,
+            'producto_id' => rand(1, 1000),
+            'cantidad' => 1,
+            'unidad' => 'pastilla',
+            'via' => 'oral',
+            'frecuencia' => 'cada 8 horas',
+            'duracion' => '3 dias',
+            'indicaciones' => 'Tomar con agua',
+        ]);
     }
 }

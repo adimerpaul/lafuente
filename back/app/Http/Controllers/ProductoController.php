@@ -5,45 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 
-class ProductoController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+class ProductoController extends Controller{
+    function index(Request $request) {
+        $search = $request->search;
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $productos = Producto::where(function ($query) use ($search) {
+            $query->where('nombre', 'like', "%$search%")
+                ->orWhere('descripcion', 'like', "%$search%");
+        })
+            ->orderBy('nombre')
+            ->paginate(15);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Producto $producto)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Producto $producto)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Producto $producto)
-    {
-        //
+        return response()->json($productos);
     }
 }

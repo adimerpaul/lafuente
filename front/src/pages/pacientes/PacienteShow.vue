@@ -81,6 +81,9 @@
                 <q-tab-panel name="diagnosticos">
                   <DiagnosticosTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="recetas">
+                  <RecetasTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
@@ -98,12 +101,13 @@ import SignosTab from "pages/pacientes/SignosTab.vue";
 import AntecedentesTab from "pages/pacientes/AntecedentesTab.vue";
 import HabitosTab from "pages/pacientes/HabitosTab.vue";
 import DiagnosticosTab from "pages/pacientes/DiagnosticosTab.vue";
+import RecetasTab from "pages/pacientes/RecetasTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
+  components: {RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'diagnosticos',
+      tab: 'recetas',
       paciente: {
         nombre: '',
         apellido: '',

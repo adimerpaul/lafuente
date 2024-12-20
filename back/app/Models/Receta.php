@@ -25,4 +25,7 @@ class Receta extends Model{
     function user(){
         return $this->belongsTo(User::class);
     }
+    function recetaDetalles(){
+        return $this->hasMany(RecetaDetalle::class);
+    }
 }
