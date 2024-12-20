@@ -5,45 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\HabitosPersonale;
 use Illuminate\Http\Request;
 
-class HabitosPersonaleController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(HabitosPersonale $habitosPersonale)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, HabitosPersonale $habitosPersonale)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(HabitosPersonale $habitosPersonale)
-    {
-        //
+class HabitosPersonaleController extends Controller{
+    function store(Request $request){
+        $request->merge(['fecha' => now()]);
+        $user = auth()->user();
+        $request->merge(['user_id' => $user->id]);
+        return response()->json(HabitosPersonale::create($request->all()));
     }
 }

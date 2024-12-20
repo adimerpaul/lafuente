@@ -75,6 +75,9 @@
                 <q-tab-panel name="antecedentes">
                   <AntecedentesTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="habitos">
+                  <HabitosTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
@@ -90,12 +93,13 @@ import PacienteTab from "pages/pacientes/PacienteTab.vue";
 import HistorialTab from "pages/pacientes/HistorialTab.vue";
 import SignosTab from "pages/pacientes/SignosTab.vue";
 import AntecedentesTab from "pages/pacientes/AntecedentesTab.vue";
+import HabitosTab from "pages/pacientes/HabitosTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
+  components: {HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'antecedentes',
+      tab: 'habitos',
       paciente: {
         nombre: '',
         apellido: '',
