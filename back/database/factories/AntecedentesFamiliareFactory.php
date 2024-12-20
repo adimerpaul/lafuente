@@ -22,6 +22,21 @@ class AntecedentesFamiliareFactory extends Factory
             'diabetes' => $this->faker->boolean(),
             'hipertension' => $this->faker->boolean(),
             'cardiopatia' => $this->faker->boolean(),
+            'neumopatia' => $this->faker->boolean(),
+            'hepatopatia' => $this->faker->boolean(),
+            'nefropatia' => $this->faker->boolean(),
+            'endocrinopatia' => $this->faker->boolean(),
+            'epilepsia' => $this->faker->boolean(),
+            'asma' => $this->faker->boolean(),
+            'enfermedades_hematologicas' => $this->faker->boolean(),
+            'neoplasias' => $this->faker->boolean(),
+            'enfermedades_congenitas' => $this->faker->boolean(),
+            'enfermedades_mentales' => $this->faker->boolean(),
+            'vih' => $this->faker->boolean(),
+            'violencia' => $this->faker->boolean(),
+            'otros' => $this->faker->text(),
+            'observaciones' => $this->faker->text(),
+            'parentesco' => $this->faker->text(),
         ];
     }
 }

@@ -50,7 +50,7 @@
     </div>
   </div>
   <q-dialog v-model="historialDialog" persistent>
-    <q-card flat bordered style="min-width: 600px">
+    <q-card flat bordered style="width: 600px;max-width: 100%">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Historial médico</div>
         <q-space />
