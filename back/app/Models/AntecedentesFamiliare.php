@@ -11,10 +11,12 @@ class AntecedentesFamiliare extends Model{
     protected $table = 'antecedentes_familiares';
     protected $fillable = [
         'paciente_id',
+        'user_id',
         'tuberculosis',
         'diabetes',
         'hipertension',
         'cardiopatia',
+        'fecha',
     ];
     protected $hidden = [
         'created_at',
@@ -23,5 +25,8 @@ class AntecedentesFamiliare extends Model{
     ];
     function paciente(){
         return $this->belongsTo(Paciente::class);
+    }
+    function user(){
+        return $this->belongsTo(User::class);
     }
 }

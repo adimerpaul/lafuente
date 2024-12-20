@@ -69,25 +69,15 @@
                 <q-tab-panel name="historial_medicos">
                   <HistorialTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="signos vitales">
+                  <SignosTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
         </div>
       </q-card-section>
       <pre>{{ paciente }}</pre>
-<!--      {-->
-<!--      "id": 1005,-->
-<!--      "nombre": "aaa",-->
-<!--      "apellido": "bbbb",-->
-<!--      "fecha_nacimiento": null,-->
-<!--      "identificacion": null,-->
-<!--      "edad": null,-->
-<!--      "sexo": null,-->
-<!--      "estado_civil": null,-->
-<!--      "direccion": null,-->
-<!--      "telefono": null,-->
-<!--      "nombre_completo": "aaa bbbb"-->
-<!--      }-->
     </q-card>
   </q-page>
 </template>
@@ -95,12 +85,13 @@
 import moment from 'moment'
 import PacienteTab from "pages/pacientes/PacienteTab.vue";
 import HistorialTab from "pages/pacientes/HistorialTab.vue";
+import SignosTab from "pages/pacientes/SignosTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {HistorialTab, PacienteTab},
+  components: {SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'historial_medicos',
+      tab: 'signos vitales',
       paciente: {
         nombre: '',
         apellido: '',

@@ -46,4 +46,10 @@ class Paciente extends Model{
     public function habitosPersonales(){
         return $this->hasMany(HabitosPersonale::class);
     }
+    public function recetas(){
+        return $this->hasMany(Receta::class);
+    }
+    public function diagnosticos(){
+        return $this->hasMany(Diagnostico::class);
+    }
 }

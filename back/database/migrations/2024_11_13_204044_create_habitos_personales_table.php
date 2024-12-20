@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('habitos_personales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
+            $table->foreignId('user_id')->constrained('users');
             $table->boolean('fuma')->nullable();
             $table->boolean('alcohol')->nullable();
             $table->boolean('drogas')->nullable();
             $table->boolean('zoonosis')->nullable();
             $table->boolean('deportes')->nullable();
             $table->boolean('vacunas')->nullable();
+            $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
         });

@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('antecedentes_familiares', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
+            $table->foreignId('user_id')->constrained('users');
             $table->boolean('tuberculosis')->nullable();
             $table->boolean('diabetes')->nullable();
             $table->boolean('hipertension')->nullable();
             $table->boolean('cardiopatia')->nullable();
+            $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
         });

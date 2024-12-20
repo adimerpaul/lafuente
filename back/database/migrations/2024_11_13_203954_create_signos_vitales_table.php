@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('signos_vitales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
+            $table->foreignId('user_id')->constrained('users');
             $table->string('estado_general')->nullable();
             $table->integer('fc')->nullable();  // Frecuencia cardíaca
             $table->integer('fr')->nullable();  // Frecuencia respiratoria
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->decimal('imc', 5, 2)->nullable(); // Índice de Masa Corporal
             $table->integer('spo2')->nullable();
             $table->integer('glasgow')->nullable();
+            $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
         });

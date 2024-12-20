@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('recetas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
-//            $table->text('medicamentos')->nullable();
+            $table->foreignId('user_id')->constrained('users');
             $table->text('indicaciones')->nullable();
             $table->text('observaciones')->nullable();
+            $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
         });

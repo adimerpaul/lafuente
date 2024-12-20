@@ -11,12 +11,14 @@ class HabitosPersonale extends Model{
     protected $table = 'habitos_personales';
     protected $fillable = [
         'paciente_id',
+        'user_id',
         'fuma',
         'alcohol',
         'drogas',
         'zoonosis',
         'deportes',
         'vacunas',
+        'fecha',
     ];
     protected $hidden = [
         'created_at',
@@ -25,5 +27,8 @@ class HabitosPersonale extends Model{
     ];
     function paciente(){
         return $this->belongsTo(Paciente::class);
+    }
+    function user(){
+        return $this->belongsTo(User::class);
     }
 }

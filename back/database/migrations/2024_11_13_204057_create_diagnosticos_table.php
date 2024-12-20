@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes');
+            $table->foreignId('user_id')->constrained('users');
             $table->text('diagnostico')->nullable();
             $table->text('tratamiento')->nullable();
+            $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
         });
