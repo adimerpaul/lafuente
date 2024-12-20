@@ -89,7 +89,7 @@
           </div>
         </div>
       </q-card-section>
-      <pre>{{ paciente }}</pre>
+<!--      <pre>{{ paciente }}</pre>-->
     </q-card>
   </q-page>
 </template>
@@ -107,7 +107,7 @@ export default {
   components: {RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
-      tab: 'recetas',
+      tab: 'paciente',
       paciente: {
         nombre: '',
         apellido: '',

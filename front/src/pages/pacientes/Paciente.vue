@@ -52,9 +52,7 @@
         </q-td>
       </template>
     </q-table>
-    <pre>
-      {{ pacientes }}
-    </pre>
+<!--    <pre>{{ pacientes }}</pre>-->
     <q-dialog v-model="pacienteDialog" persistent>
       <q-card>
         <q-card-section class="q-pb-none row items-center">
@@ -84,7 +82,7 @@
 <script>
 import moment from 'moment'
 export default {
-  name: 'UsuariosPage',
+  name: 'ProductosPage',
   data() {
     return {
       pacientes: [],

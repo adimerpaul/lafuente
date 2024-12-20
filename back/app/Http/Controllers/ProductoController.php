@@ -18,4 +18,15 @@ class ProductoController extends Controller{
 
         return response()->json($productos);
     }
+    function store(Request $request){
+        return Producto::create($request->all());
+    }
+    function update(Request $request, Producto $producto){
+        $producto->update($request->all());
+        return $producto;
+    }
+    function destroy(Producto $producto){
+        $producto->delete();
+        return response()->json(['success' => true]);
+    }
 }

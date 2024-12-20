@@ -41,7 +41,10 @@
           </q-item-section>
           <q-item-section side>
             <span class="text-bold">{{ receta.user?.name }}</span>
-            <q-btn icon="print" flat @click="printReceta(receta)" />
+            <q-btn-group flat >
+            <q-btn icon="print" flat dense @click="printReceta(receta)" />
+            <q-btn icon="fa-brands fa-whatsapp" flat color="green" @click="sendWhatsapp(receta)" />
+            </q-btn-group>
           </q-item-section>
         </q-item>
       </q-list>
@@ -292,6 +295,13 @@ export default {
       };
       this.recetaDialog = true;
       this.productosRecetas = [];
+    },
+    sendWhatsapp(receta) {
+      const pdfUrl = `${this.$url}/../receta/${receta.id}/pdf`;
+      const url = `https://api.whatsapp.com/send?phone=${this.paciente.telefono}&text=Hola ${this.paciente.nombre}, aquí tienes tu receta: ${pdfUrl}`;
+      window
+        .open(url, "_blank")
+        .focus(); // Abre la conversación de WhatsApp en una nueva pestaña
     },
     printReceta(receta) {
       const pdfUrl = `${this.$url}/../receta/${receta.id}/pdf`;
