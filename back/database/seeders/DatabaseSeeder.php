@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AntecedentesFamiliare;
 use App\Models\Area;
+use App\Models\Diagnostico;
 use App\Models\HabitosPersonale;
 use App\Models\HistorialMedico;
 use App\Models\Material;
@@ -54,6 +55,11 @@ class DatabaseSeeder extends Seeder
             'user_id' => rand(1, 11),
         ]);
         $habitosPersonales = HabitosPersonale::factory()->create([
+            'paciente_id' => $paciente->id,
+            'user_id' => rand(1, 11),
+        ]);
+
+        $diagnostico = Diagnostico::factory()->create([
             'paciente_id' => $paciente->id,
             'user_id' => rand(1, 11),
         ]);

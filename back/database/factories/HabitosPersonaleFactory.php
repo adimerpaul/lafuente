@@ -17,13 +17,6 @@ class HabitosPersonaleFactory extends Factory
     public function definition(): array
     {
         return [
-//            $table->foreignId('paciente_id')->constrained('pacientes');
-//        $table->boolean('fuma')->nullable();
-//        $table->boolean('alcohol')->nullable();
-//        $table->boolean('drogas')->nullable();
-//        $table->boolean('zoonosis')->nullable();
-//        $table->boolean('deportes')->nullable();
-//        $table->boolean('vacunas')->nullable();
             'paciente_id' => 1,
             'fuma' => $this->faker->boolean(),
             'alcohol' => $this->faker->boolean(),
