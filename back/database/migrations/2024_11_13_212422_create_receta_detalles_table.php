@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('producto_id')->constrained('productos')->nullable();
             $table->integer('cantidad')->nullable();
             $table->string('unidad')->nullable();
+            $table->string('productoNombre')->nullable();
             $table->string('via')->nullable();
             $table->string('frecuencia')->nullable();
             $table->string('duracion')->nullable();

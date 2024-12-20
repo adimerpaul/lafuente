@@ -102,6 +102,7 @@ class DatabaseSeeder extends Seeder
         $recetaDetalle = RecetaDetalle::create([
             'receta_id' => $receta->id,
             'producto_id' => rand(1, 1000),
+            'productoNombre' => 'Paracetamol',
             'cantidad' => 1,
             'unidad' => 'pastilla',
             'via' => 'oral',
@@ -112,6 +113,7 @@ class DatabaseSeeder extends Seeder
         $recetaDetalle = RecetaDetalle::create([
             'receta_id' => $receta->id,
             'producto_id' => rand(1, 1000),
+            'productoNombre' => 'Ibuprofeno',
             'cantidad' => 1,
             'unidad' => 'pastilla',
             'via' => 'oral',
@@ -122,6 +124,7 @@ class DatabaseSeeder extends Seeder
         $recetaDetalle = RecetaDetalle::create([
             'receta_id' => $receta->id,
             'producto_id' => rand(1, 1000),
+            'productoNombre' => 'Amoxicilina',
             'cantidad' => 1,
             'unidad' => 'pastilla',
             'via' => 'oral',

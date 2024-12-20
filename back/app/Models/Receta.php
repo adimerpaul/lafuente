@@ -28,4 +28,15 @@ class Receta extends Model{
     function recetaDetalles(){
         return $this->hasMany(RecetaDetalle::class);
     }
+    protected $appends = [
+        'detalleText',
+    ];
+    function getDetalleTextAttribute(){
+        $detalleText = '';
+        foreach ($this->recetaDetalles as $detalle) {
+            $detalleText .= $detalle->cantidad . ' ' . $detalle->unidad . ' de ' . $detalle->productoNombre . ' ' . $detalle->via . ' ' . $detalle->frecuencia . ' ' . $detalle->duracion . ' ' . $detalle->indicaciones . "\n". ",";
+        }
+        $detalleText = substr($detalleText, 0, -1);
+        return $detalleText;
+    }
 }

@@ -11,6 +11,7 @@ class RecetaDetalle extends Model{
         'receta_id',
         'producto_id',
         'cantidad',
+        'productoNombre',
         'unidad',
         'via',
         'frecuencia',

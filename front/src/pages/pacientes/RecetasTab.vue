@@ -11,7 +11,7 @@
   <div class="row">
     <div class="col-12">
       <q-list bordered>
-        <q-item v-for="(antecedente, index) in paciente.antecedentes_familiares" :key="index">
+        <q-item v-for="(receta, index) in paciente.recetas" :key="index">
           <q-item-section avatar>
             <q-avatar >
               <q-btn :label="index + 1" flat />
@@ -20,141 +20,28 @@
           <q-item-section>
             <q-item-label>
               <div>
-                <span class="text-bold">Tuberculosis: </span>
-                <span>
-                    <q-chip :label="antecedente.tuberculosis ? 'Sí' : 'No'"
-                            :color="antecedente.tuberculosis ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Diabetes: </span>
-                <span>
-                    <q-chip :label="antecedente.diabetes ? 'Sí' : 'No'"
-                            :color="antecedente.diabetes ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Hipertensión: </span>
-                <span>
-                    <q-chip :label="antecedente.hipertension ? 'Sí' : 'No'"
-                            :color="antecedente.hipertension ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Cardiopatía: </span>
-                <span>
-                    <q-chip :label="antecedente.cardiopatia ? 'Sí' : 'No'"
-                            :color="antecedente.cardiopatia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Neumopatía: </span>
-                <span>
-                    <q-chip :label="antecedente.neumopatia ? 'Sí' : 'No'"
-                            :color="antecedente.neumopatia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Hepatopatía: </span>
-                <span>
-                    <q-chip :label="antecedente.hepatopatia ? 'Sí' : 'No'"
-                            :color="antecedente.hepatopatia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Nefropatía: </span>
-                <span>
-                    <q-chip :label="antecedente.nefropatia ? 'Sí' : 'No'"
-                            :color="antecedente.nefropatia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Endocrinopatía: </span>
-                <span>
-                    <q-chip :label="antecedente.endocrinopatia ? 'Sí' : 'No'"
-                            :color="antecedente.endocrinopatia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Epilepsia: </span>
-                <span>
-                    <q-chip :label="antecedente.epilepsia ? 'Sí' : 'No'"
-                            :color="antecedente.epilepsia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Asma: </span>
-                <span>
-                    <q-chip :label="antecedente.asma ? 'Sí' : 'No'"
-                            :color="antecedente.asma ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Enfermedades hematológicas: </span>
-                <span>
-                    <q-chip :label="antecedente.enfermedades_hematologicas ? 'Sí' : 'No'"
-                            :color="antecedente.enfermedades_hematologicas ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Neoplasias: </span>
-                <span>
-                    <q-chip :label="antecedente.neoplasias ? 'Sí' : 'No'"
-                            :color="antecedente.neoplasias ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Enfermedades congénitas: </span>
-                <span>
-                    <q-chip :label="antecedente.enfermedades_congenitas ? 'Sí' : 'No'"
-                            :color="antecedente.enfermedades_congenitas ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Enfermedades mentales: </span>
-                <span>
-                    <q-chip :label="antecedente.enfermedades_mentales ? 'Sí' : 'No'"
-                            :color="antecedente.enfermedades_mentales ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">VIH: </span>
-                <span>
-                    <q-chip :label="antecedente.vih ? 'Sí' : 'No'"
-                            :color="antecedente.vih ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-
-                <span class="text-bold">Violencia: </span>
-                <span>
-                    <q-chip :label="antecedente.violencia ? 'Sí' : 'No'"
-                            :color="antecedente.violencia ? 'positive' : 'negative'"
-                            text-color="white" dense  size="10px"/>
-                </span>
-              </div>
-              <div>
-                <span class="text-bold">Otros: </span>
-                <span>{{ antecedente.otros }}</span>
+                <span class="text-bold">indicaciones: </span>
+                <span>{{ receta.indicaciones }}</span>
               </div>
               <div>
                 <span class="text-bold">Observaciones: </span>
-                <span>{{ antecedente.observaciones }}</span>
+                <span>{{ receta.observaciones }}</span>
               </div>
               <div>
-                <span class="text-bold">Parentesco: </span>
-                <span>{{ antecedente.parentesco }}</span>
+                <span class="text-bold">Detalle: </span>
+                <span>{{ receta.detalleText }}</span>
               </div>
             </q-item-label>
             <q-item-label caption>
               <div>
                 <span class="text-bold">Fecha de creación: </span>
-                <span>{{ antecedente.fecha }}</span>
+                <span>{{ receta.fecha }}</span>
               </div>
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <span class="text-bold">{{ antecedente.user?.name }}</span>
-<!--            <q-btn icon="print" flat @click="printReceta(antecedente)" />-->
+            <span class="text-bold">{{ receta.user?.name }}</span>
+<!--            <q-btn icon="print" flat @click="printReceta(receta)" />-->
           </q-item-section>
         </q-item>
       </q-list>
@@ -243,12 +130,12 @@
 <!--      ],-->
     </div>
   </div>
-  <q-dialog v-model="antecedenteDialog" persistent>
+  <q-dialog v-model="recetaDialog" persistent>
     <q-card flat bordered style="width: 80%;max-width: 100%">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Receta Vital</div>
         <q-space />
-        <q-btn icon="close" flat @click="antecedenteDialog = false" />
+        <q-btn icon="close" flat @click="recetaDialog = false" />
       </q-card-section>
       <q-card-section>
         <q-form @submit="submitReceta">
@@ -281,19 +168,11 @@
                   </tr>
                 </tbody>
               </q-markup-table>
-<!--              [-->
-<!--              {-->
-<!--              "id": 3284,-->
-<!--              "nombre": "3-A OFTENO 0,1 % 5 ML",-->
-<!--              "descripcion": "Antiinflamatorio no esteroideo",-->
-<!--              "unidad": "SOLUCION OFTALMICA",-->
-<!--              "precio": 1,-->
-<!--              "stock": null,-->
-<!--              "stock_minimo": null,-->
-<!--              "stock_maximo": null-->
-<!--              },-->
             </div>
             <div class="col-12 col-md-8 q-pa-xs">
+              <div class="text-right">
+                <q-btn icon="add_circle_outline" @click="addProductoName" color="green" dense no-caps label="Agregar producto" />
+              </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                   <tr>
@@ -344,76 +223,23 @@
                 </tbody>
               </q-markup-table>
             </div>
-          </div>
-          <div class="row">
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.tuberculosis" label="Tuberculosis" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.diabetes" label="Diabetes" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.hipertension" label="Hipertensión" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.cardiopatia" label="Cardiopatía" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.neumopatia" label="Neumopatía" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.hepatopatia" label="Hepatopatía" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.nefropatia" label="Nefropatía" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.endocrinopatia" label="Endocrinopatía" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.epilepsia" label="Epilepsia" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.asma" label="Asma" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.enfermedades_hematologicas" label="Enfermedades hematológicas" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.neoplasias" label="Neoplasias" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.enfermedades_congenitas" label="Enfermedades congénitas" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.enfermedades_mentales" label="Enfermedades mentales" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.vih" label="VIH" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-checkbox v-model="antecedente.violencia" label="Violencia" />
-            </div>
             <div class="col-12">
-              <q-input v-model="antecedente.otros" outlined clearable label="Otros" >
+              <q-input v-model="receta.indicaciones" dense outlined clearable label="Indicaciones" hint="">
                 <template v-slot:append>
-                  <q-btn flat round dense icon="mic" @click="startRecognition('otros')" />
+                  <q-btn flat round dense icon="mic" @click="startRecognition('indicaciones')" />
                 </template>
               </q-input>
             </div>
             <div class="col-12">
-              <q-input v-model="antecedente.observaciones" outlined clearable label="Observaciones" >
+              <q-input v-model="receta.observaciones" dense outlined clearable label="Observaciones" hint="" >
                 <template v-slot:append>
                   <q-btn flat round dense icon="mic" @click="startRecognition('observaciones')" />
                 </template>
               </q-input>
             </div>
-            <div class="col-12">
-              <q-select v-model="antecedente.parentesco" outlined clearable label="Parentesco" :options="['Padre', 'Madre', 'Hermano', 'Hermana', 'Abuelo', 'Abuela', 'Tío', 'Tía', 'Primo', 'Prima', 'Otro']" />
-            </div>
           </div>
         <q-card-actions align="right">
-          <q-btn label="Cancelar" color="negative" @click="antecedenteDialog = false" :loading="$store.loading" />
+          <q-btn label="Cancelar" color="negative" @click="recetaDialog = false" :loading="$store.loading" />
           <q-btn label="Guardar" color="primary" type="submit" :loading="$store.loading" />
         </q-card-actions>
         </q-form>
@@ -434,8 +260,8 @@ export default {
   emits: ["pacienteGet"],
   data() {
     return {
-      antecedenteDialog: false,
-      antecedente: {
+      recetaDialog: false,
+      receta: {
         referido_de: "",
         motivo_consulta: "",
         enfermedad_actual: "",
@@ -446,10 +272,10 @@ export default {
       productos: [],
       productosSearch: "",
       productosRecetas: [],
-      unidades : ['capsulas', 'comprimidos', 'pastillas', 'ml', 'mg', 'otro'],
-      vias : ['oral', 'intramuscular', 'intravenosa', 'subcutánea', 'tópica', 'oftálmica', 'ótica', 'nasal', 'rectal', 'vaginal'],
-      frecuencias : ['cada 8 horas', 'cada 12 horas', 'cada 24 horas', 'cada 48 horas', 'cada 72 horas', 'cada 96 horas', 'cada 120 horas', 'cada 144 horas', 'cada 168 horas'],
-      duraciones : ['3 dias', '5 dias', '7 dias', '10 dias', '14 dias', '21 dias', '28 dias', '30 dias', '60 dias', '90 dias', '120 dias', '180 dias', '240 dias', '365 dias'],
+      unidades : ['','capsulas', 'comprimidos', 'pastillas', 'ml', 'mg', 'otro'],
+      vias : ['','oral', 'intramuscular', 'intravenosa', 'subcutánea', 'tópica', 'oftálmica', 'ótica', 'nasal', 'rectal', 'vaginal'],
+      frecuencias : ['','cada 8 horas', 'cada 12 horas', 'cada 24 horas', 'cada 48 horas', 'cada 72 horas', 'cada 96 horas', 'cada 120 horas', 'cada 144 horas', 'cada 168 horas'],
+      duraciones : ['','3 dias', '5 dias', '7 dias', '10 dias', '14 dias', '21 dias', '28 dias', '30 dias', '60 dias', '90 dias', '120 dias', '180 dias', '240 dias', '365 dias'],
     };
   },
   mounted() {
@@ -465,7 +291,7 @@ export default {
       this.recognition.onresult = (event) => {
         const text = event.results[0][0].transcript;
         if (this.activeField) {
-          this.antecedente[this.activeField] += text; // Agrega texto al campo activo
+          this.receta[this.activeField] += text; // Agrega texto al campo activo
         }
       };
 
@@ -477,6 +303,26 @@ export default {
     }
   },
   methods: {
+    addProductoName() {
+      this.$alert.dialogPrompt('Nombre del producto', {
+        title: 'Agregar producto',
+        cancel: true,
+        persistent: true,
+      }).onOk((nombre) => {
+        this.productosRecetas.push({
+          producto_id: null,
+          cantidad: 1,
+          unidad: 'capsulas',
+          via: "oral",
+          frecuencia: "cada 8 horas",
+          duracion: "3 dias",
+          indicaciones: "",
+          producto: {
+            nombre,
+          },
+        });
+      });
+    },
     addProducto(producto) {
       this.productosRecetas.push({
         producto_id: producto.id,
@@ -504,12 +350,17 @@ export default {
       });
     },
     submitReceta() {
+      if (this.productosRecetas.length === 0) {
+        this.$alert.error("Debe agregar al menos un producto a la receta");
+        return;
+      }
       this.$store.loading = true;
-      this.$axios.post("antecedentes_familiares",{
-        ...this.antecedente,
+      this.$axios.post("recetas",{
+        ...this.receta,
         paciente_id: this.paciente.id,
+        ...this.productosRecetas,
       }).then((res) => {
-        this.antecedenteDialog = false;
+        this.recetaDialog = false;
         this.$store.loading = false;
         this.$emit("pacienteGet");
       }).catch((error) => {
@@ -518,31 +369,14 @@ export default {
       });
     },
     addReceta() {
-      this.antecedente = {
-        tuberculosis: false,
-        diabetes: false,
-        hipertension: false,
-        cardiopatia: false,
-        neumopatia: false,
-        hepatopatia: false,
-        nefropatia: false,
-        endocrinopatia: false,
-        epilepsia: false,
-        asma: false,
-        enfermedades_hematologicas: false,
-        neoplasias: false,
-        enfermedades_congenitas: false,
-        enfermedades_mentales: false,
-        vih: false,
-        violencia: false,
-        otros: "",
+      this.receta = {
+        indicaciones: "",
         observaciones: "",
-        parentesco: "",
       };
-      this.antecedenteDialog = true;
+      this.recetaDialog = true;
     },
-    printReceta(antecedente) {
-      const pdfUrl = `${this.$url}/../antecedente_medicos/${antecedente.id}/pdf`;
+    printReceta(receta) {
+      const pdfUrl = `${this.$url}/../receta_medicos/${receta.id}/pdf`;
       window.open(pdfUrl, '_blank'); // Abre el archivo PDF en una nueva pestaña
     },
     startRecognition(field) {
