@@ -17,6 +17,21 @@ export default boot(({ app, router }) => {
   app.config.globalProperties.$alert = Alert
   app.config.globalProperties.$store = useCounterStore()
   app.config.globalProperties.$url = import.meta.env.VITE_API_BACK
+  app.config.globalProperties.$filters = {
+    date: (value) => {
+      if (!value) return ''
+      return new Date(value).toLocaleDateString()
+    },
+    time: (value) => {
+      if (!value) return ''
+      return new Date(value).toLocaleTimeString()
+    },
+    textUpper: (value) => {
+      if (!value) return ''
+      const lower = value.toLowerCase()
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    },
+  }
   const token = localStorage.getItem('tokenEducation')
   if (token) {
     app.config.globalProperties.$axios.defaults.headers.common['Authorization'] = `Bearer ${token}`

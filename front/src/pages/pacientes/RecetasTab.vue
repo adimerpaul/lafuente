@@ -158,45 +158,93 @@
           </q-item-section>
         </q-item>
       </q-list>
-<!--      "antecedentes_familiares": [-->
+<!--      "recetas": [-->
 <!--      {-->
 <!--      "id": 1,-->
 <!--      "paciente_id": 1,-->
-<!--      "user_id": 9,-->
-<!--      "tuberculosis": 0,-->
-<!--      "diabetes": 0,-->
-<!--      "hipertension": 0,-->
-<!--      "cardiopatia": 1,-->
-<!--      "neumopatia": 0,-->
-<!--      "hepatopatia": 1,-->
-<!--      "nefropatia": 1,-->
-<!--      "endocrinopatia": 0,-->
-<!--      "epilepsia": 1,-->
-<!--      "asma": 1,-->
-<!--      "enfermedades_hematologicas": 1,-->
-<!--      "neoplasias": 0,-->
-<!--      "enfermedades_congenitas": 1,-->
-<!--      "enfermedades_mentales": 1,-->
-<!--      "vih": 0,-->
-<!--      "violencia": 1,-->
-<!--      "otros": "Blanditiis minima eveniet officiis repudiandae saepe maxime consequatur fugit. Voluptatem omnis dolores reiciendis aperiam iure labore totam. Est enim non ratione nesciunt laboriosam.",-->
-<!--      "observaciones": "Dolores in minus veritatis optio vitae ratione. Vel earum id quod illo nesciunt aliquid. Nemo nisi ex et eius cum aut ut odio. Ipsam quae quas dolor rerum quia et est.",-->
-<!--      "parentesco": "Asperiores quae maxime atque doloribus quidem. Aspernatur et hic explicabo suscipit optio rerum. In ut animi porro. Fugit numquam possimus consequuntur officia fugit nam officia.",-->
-<!--      "fecha": "2024-12-20 06:44:20",-->
+<!--      "user_id": 8,-->
+<!--      "indicaciones": "Tomar con agua",-->
+<!--      "observaciones": "No tomar con el estomago vacio",-->
+<!--      "fecha": "2024-12-20 08:25:17",-->
 <!--      "user": {-->
-<!--      "id": 9,-->
-<!--      "name": "Marta Luevano",-->
-<!--      "username": "cantu.diana",-->
-<!--      "email": "martin14@example.net",-->
+<!--      "id": 8,-->
+<!--      "name": "Arnau Cuenca",-->
+<!--      "username": "cervantes.blanca",-->
+<!--      "email": "saul.saldana@example.com",-->
 <!--      "role": "Doctor",-->
 <!--      "color": "orange"-->
+<!--      },-->
+<!--      "receta_detalles": [-->
+<!--      {-->
+<!--      "id": 1,-->
+<!--      "receta_id": 1,-->
+<!--      "producto_id": 942,-->
+<!--      "cantidad": 1,-->
+<!--      "unidad": "pastilla",-->
+<!--      "via": "oral",-->
+<!--      "frecuencia": "cada 8 horas",-->
+<!--      "duracion": "3 dias",-->
+<!--      "indicaciones": "Tomar con agua",-->
+<!--      "producto": {-->
+<!--      "id": 942,-->
+<!--      "nombre": "VIDIZOLIN GOTAS OFTALMICAS X 5ML",-->
+<!--      "descripcion": "Antibiótico, Antiinflamatorio, Descongestionante oftálmico",-->
+<!--      "unidad": "FRASCOS",-->
+<!--      "precio": 175,-->
+<!--      "stock": null,-->
+<!--      "stock_minimo": null,-->
+<!--      "stock_maximo": null-->
 <!--      }-->
+<!--      },-->
+<!--      {-->
+<!--      "id": 2,-->
+<!--      "receta_id": 1,-->
+<!--      "producto_id": 340,-->
+<!--      "cantidad": 1,-->
+<!--      "unidad": "pastilla",-->
+<!--      "via": "oral",-->
+<!--      "frecuencia": "cada 8 horas",-->
+<!--      "duracion": "3 dias",-->
+<!--      "indicaciones": "Tomar con agua",-->
+<!--      "producto": {-->
+<!--      "id": 340,-->
+<!--      "nombre": "FLEXICAM 15 MG X COMPRIMIDO SL",-->
+<!--      "descripcion": "Antiinflamatorio, Analgésico de acción preferencial",-->
+<!--      "unidad": "COMPRIMIDO SUBLINGUAL",-->
+<!--      "precio": 6,-->
+<!--      "stock": null,-->
+<!--      "stock_minimo": null,-->
+<!--      "stock_maximo": null-->
+<!--      }-->
+<!--      },-->
+<!--      {-->
+<!--      "id": 3,-->
+<!--      "receta_id": 1,-->
+<!--      "producto_id": 100,-->
+<!--      "cantidad": 1,-->
+<!--      "unidad": "pastilla",-->
+<!--      "via": "oral",-->
+<!--      "frecuencia": "cada 8 horas",-->
+<!--      "duracion": "3 dias",-->
+<!--      "indicaciones": "Tomar con agua",-->
+<!--      "producto": {-->
+<!--      "id": 100,-->
+<!--      "nombre": "CLOFENAC 75 MG X AMPOLLA",-->
+<!--      "descripcion": "Analgésico - Antiinflamatorio",-->
+<!--      "unidad": "AMPOLLAS",-->
+<!--      "precio": 14,-->
+<!--      "stock": null,-->
+<!--      "stock_minimo": null,-->
+<!--      "stock_maximo": null-->
+<!--      }-->
+<!--      }-->
+<!--      ]-->
 <!--      }-->
 <!--      ],-->
     </div>
   </div>
   <q-dialog v-model="antecedenteDialog" persistent>
-    <q-card flat bordered style="width: 600px;max-width: 100%">
+    <q-card flat bordered style="width: 80%;max-width: 100%">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Receta Vital</div>
         <q-space />
@@ -204,11 +252,99 @@
       </q-card-section>
       <q-card-section>
         <q-form @submit="submitReceta">
-<!--          <q-input v-model="antecedente.estado_general" outlined clearable label="Estado general" hint="">-->
-<!--            <template v-slot:append>-->
-<!--              <q-btn flat round dense icon="mic" @click="startRecognition('estado_general')" />-->
-<!--            </template>-->
-<!--          </q-input>-->
+          <div class="row">
+            <div class="col-12 col-md-4 q-pa-xs">
+              <q-input v-model="productosSearch" outlined clearable label="Buscar producto" dense debounce="300" @update:modelValue="productosGet">
+                <template v-slot:append>
+                  <q-btn flat round dense icon="search" />
+                </template>
+              </q-input>
+              <q-markup-table dense wrap-cells flat bordered>
+                <thead>
+                  <tr>
+                    <th>Nombres</th>
+                    <th>Unidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
+                    <td style="padding: 0;margin: 0;" class="cursor-pointer">
+                      <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
+                        {{ $filters.textUpper( producto.nombre ) }}
+                      </div>
+                    </td>
+                    <td style="padding: 0;margin: 0;" class="cursor-pointer">
+                      <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
+                        {{ $filters.textUpper( producto.unidad ) }}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </q-markup-table>
+<!--              [-->
+<!--              {-->
+<!--              "id": 3284,-->
+<!--              "nombre": "3-A OFTENO 0,1 % 5 ML",-->
+<!--              "descripcion": "Antiinflamatorio no esteroideo",-->
+<!--              "unidad": "SOLUCION OFTALMICA",-->
+<!--              "precio": 1,-->
+<!--              "stock": null,-->
+<!--              "stock_minimo": null,-->
+<!--              "stock_maximo": null-->
+<!--              },-->
+            </div>
+            <div class="col-12 col-md-8 q-pa-xs">
+              <q-markup-table dense wrap-cells flat bordered>
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>Vía</th>
+                    <th>Frecuencia</th>
+                    <th>Duración</th>
+                    <th>Indicaciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(producto, index) in productosRecetas" :key="index">
+                    <td style="padding: 0;margin: 0;">
+                      <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
+                        <q-icon name="delete" color="red" class="cursor-pointer" @click="productosRecetas.splice(index, 1)" />
+                        {{ $filters.textUpper( producto.producto.nombre ) }}
+                      </div>
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <input v-model="producto.cantidad" type="number" style="width: 50px;" />
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <select v-model="producto.unidad" style="width: 80px;">
+                        <option v-for="unidad in unidades" :key="unidad" :value="unidad">{{ unidad }}</option>
+                      </select>
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <select v-model="producto.via" style="width: 80px;">
+                        <option v-for="via in vias" :key="via" :value="via">{{ via }}</option>
+                      </select>
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <select v-model="producto.frecuencia" style="width: 80px;">
+                        <option v-for="frecuencia in frecuencias" :key="frecuencia" :value="frecuencia">{{ frecuencia }}</option>
+                      </select>
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <select v-model="producto.duracion" style="width: 80px;">
+                        <option v-for="duracion in duraciones" :key="duracion" :value="duracion">{{ duracion }}</option>
+                      </select>
+                    </td>
+                    <td style="padding: 0;margin: 0;">
+                      <input v-model="producto.indicaciones" type="text" style="width: 100px;" />
+                    </td>
+                  </tr>
+                </tbody>
+              </q-markup-table>
+            </div>
+          </div>
           <div class="row">
             <div class="col-12 col-md-6">
               <q-checkbox v-model="antecedente.tuberculosis" label="Tuberculosis" />
@@ -306,11 +442,18 @@ export default {
         alergias_conocidas: "",
       },
       recognition: null,
-      activeField: null, // Campo activo para reconocimiento de voz
+      activeField: null,
+      productos: [],
+      productosSearch: "",
+      productosRecetas: [],
+      unidades : ['capsulas', 'comprimidos', 'pastillas', 'ml', 'mg', 'otro'],
+      vias : ['oral', 'intramuscular', 'intravenosa', 'subcutánea', 'tópica', 'oftálmica', 'ótica', 'nasal', 'rectal', 'vaginal'],
+      frecuencias : ['cada 8 horas', 'cada 12 horas', 'cada 24 horas', 'cada 48 horas', 'cada 72 horas', 'cada 96 horas', 'cada 120 horas', 'cada 144 horas', 'cada 168 horas'],
+      duraciones : ['3 dias', '5 dias', '7 dias', '10 dias', '14 dias', '21 dias', '28 dias', '30 dias', '60 dias', '90 dias', '120 dias', '180 dias', '240 dias', '365 dias'],
     };
   },
   mounted() {
-    // Inicializar reconocimiento de voz
+    this.productosGet();
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -319,7 +462,6 @@ export default {
       this.recognition.interimResults = false;
       this.recognition.continuous = false;
 
-      // Manejo de resultado de voz
       this.recognition.onresult = (event) => {
         const text = event.results[0][0].transcript;
         if (this.activeField) {
@@ -327,7 +469,6 @@ export default {
         }
       };
 
-      // Manejo de errores
       this.recognition.onerror = (event) => {
         console.error("Error en reconocimiento de voz:", event.error);
       };
@@ -336,6 +477,32 @@ export default {
     }
   },
   methods: {
+    addProducto(producto) {
+      this.productosRecetas.push({
+        producto_id: producto.id,
+        cantidad: 1,
+        unidad: 'capsulas',
+        via: "oral",
+        frecuencia: "cada 8 horas",
+        duracion: "3 dias",
+        indicaciones: "Tomar con agua",
+        producto,
+      });
+    },
+    productosGet() {
+      this.$store.loading = true;
+      this.$axios.get("productos",{
+        params: {
+          search: this.productosSearch,
+        },
+      }).then((res) => {
+        this.productos = res.data.data;
+        this.$store.loading = false;
+      }).catch((error) => {
+        this.$store.loading = false;
+        console.error(error);
+      });
+    },
     submitReceta() {
       this.$store.loading = true;
       this.$axios.post("antecedentes_familiares",{

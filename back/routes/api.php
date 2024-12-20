@@ -34,6 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/habitos_personales', [App\Http\Controllers\HabitosPersonaleController::class, 'store']);
 
     Route::post('/diagnosticos', [App\Http\Controllers\DiagnosticoController::class, 'store']);
+
+    Route::post('/recetas', [App\Http\Controllers\RecetaController::class, 'store']);
+
+    Route::post('/productos', [App\Http\Controllers\ProductoController::class, 'store']);
+    Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 
