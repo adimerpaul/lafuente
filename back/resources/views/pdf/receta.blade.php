@@ -92,7 +92,7 @@
 </div>
 <div class="text-right" style="height: 30px;">
     <div style="width: 100px; float: right;border-radius: 5px; border: 1px solid #D3D3D3; padding: 3px;text-align: left;background: #D3D3D3;">
-        N° H.CL: {{ $paciente->id }}
+        N° H.CL: {{ $receta->id }}
     </div>
 </div>
 <div class="border">

@@ -134,10 +134,10 @@ export default {
       leftDrawerOpen: false,
       linksList: [
         {title: 'Principal', icon: 'home', link: '/'},
-        {title: 'Usuarios', icon: 'people', link: '/usuarios'},
+        {title: 'Usuarios', icon: 'account_circle', link: '/usuarios'},
         {title: 'Pacientes', icon: 'people', link: '/pacientes'},
         {title: 'Productos', icon: 'shopping_cart', link: '/productos'},
-        {title: 'Venta', icon: 'shopping_cart', link: '/venta'},
+        {title: 'Venta', icon: 'point_of_sale', link: '/venta'},
       ]
     }
   },

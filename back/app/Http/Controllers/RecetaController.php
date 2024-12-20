@@ -36,8 +36,8 @@ class RecetaController extends Controller{
     }
     function generatePdf($id)
     {
-        $receta = Receta::findOrFail($id)->with('recetaDetalles')->first();
-//        return $receta->recetaDetalles;
+        $receta = Receta::where('id', $id)->first();
+//        return $receta;
         $paciente = $receta->paciente;
 
         $apellidos = $paciente->apellido;

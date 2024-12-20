@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-md">
-    <q-table :rows="productos" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-              title="Productos" :filter="filter">
+    <q-table :rows="ventas" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
+              title="Ventas" :filter="filter">
       <template v-slot:top-right>
-          <q-btn color="primary" label="Nuevo" @click="productoNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
+          <q-btn color="primary" label="Nuevo" @click="ventaNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
           <q-input v-model="filter" label="Buscar" dense outlined >
             <template v-slot:append>
               <q-icon name="search" />
@@ -14,7 +14,7 @@
         <q-td :props="props">
           <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">
               <q-list>
-                <q-item clickable @click="productoEdit(props.row)" v-close-popup>
+                <q-item clickable @click="ventaEdit(props.row)" v-close-popup>
                   <q-item-section avatar>
                     <q-icon name="edit" />
                   </q-item-section>
@@ -22,7 +22,7 @@
                     <q-item-label>Editar</q-item-label>
                   </q-item-section>
                 </q-item>
-                <q-item clickable @click="productoDelete(props.row.id)" v-close-popup>
+                <q-item clickable @click="ventaDelete(props.row.id)" v-close-popup>
                   <q-item-section avatar>
                     <q-icon name="delete" />
                   </q-item-section>
@@ -42,7 +42,7 @@
         </q-td>
       </template>
     </q-table>
-<!--    <pre>{{ productos }}</pre>-->
+<!--    <pre>{{ ventas }}</pre>-->
 <!--    [-->
 <!--    {-->
 <!--    "id": 3284,-->
@@ -54,26 +54,26 @@
 <!--    "stock_minimo": null,-->
 <!--    "stock_maximo": null-->
 <!--    },-->
-    <q-dialog v-model="productoDialog" persistent>
+    <q-dialog v-model="ventaDialog" persistent>
       <q-card style="width: 400px;margin: 0 auto">
         <q-card-section class="q-pb-none row items-center">
           <div>
-            {{ actionPeriodo }} producto
+            {{ actionPeriodo }} venta
           </div>
           <q-space />
-          <q-btn icon="close" flat round dense @click="productoDialog = false" />
+          <q-btn icon="close" flat round dense @click="ventaDialog = false" />
         </q-card-section>
         <q-card-section class="q-pt-none">
-          <q-form @submit="producto.id ? productoPut() : productoPost()">
-            <q-input v-model="producto.nombre" label="Nombre" dense outlined :rules="[val => !!val || 'Campo requerido']" />
-            <q-input v-model="producto.descripcion" label="Descripción" dense outlined hint="" />
-            <q-input v-model="producto.unidad" label="Unidad" dense outlined hint="" />
-            <q-input v-model="producto.precio" label="Precio" dense outlined hint="" type="number" step="0.01" />
-            <q-input v-model="producto.stock" label="Stock" dense outlined hint="" />
-            <q-input v-model="producto.stock_minimo" label="Stock mínimo" dense outlined hint="" />
-            <q-input v-model="producto.stock_maximo" label="Stock máximo" dense outlined hint="" />
+          <q-form @submit="venta.id ? ventaPut() : ventaPost()">
+            <q-input v-model="venta.nombre" label="Nombre" dense outlined :rules="[val => !!val || 'Campo requerido']" />
+            <q-input v-model="venta.descripcion" label="Descripción" dense outlined hint="" />
+            <q-input v-model="venta.unidad" label="Unidad" dense outlined hint="" />
+            <q-input v-model="venta.precio" label="Precio" dense outlined hint="" type="number" step="0.01" />
+            <q-input v-model="venta.stock" label="Stock" dense outlined hint="" />
+            <q-input v-model="venta.stock_minimo" label="Stock mínimo" dense outlined hint="" />
+            <q-input v-model="venta.stock_maximo" label="Stock máximo" dense outlined hint="" />
             <div class="text-right" >
-              <q-btn color="negative" label="Cancelar" @click="productoDialog = false" no-caps :loading="loading" />
+              <q-btn color="negative" label="Cancelar" @click="ventaDialog = false" no-caps :loading="loading" />
               <q-btn color="primary" label="Guardar" type="submit" no-caps :loading="loading" class="q-ml-sm" />
             </div>
           </q-form>
@@ -85,12 +85,12 @@
 <script>
 import moment from 'moment'
 export default {
-  name: 'ProductosPage',
+  name: 'VentasPage',
   data() {
     return {
-      productos: [],
-      producto: {},
-      productoDialog: false,
+      ventas: [],
+      venta: {},
+      ventaDialog: false,
       loading: false,
       actionPeriodo: '',
       gestiones: [],
@@ -109,26 +109,26 @@ export default {
     }
   },
   mounted() {
-    this.productosGet()
+    this.ventasGet()
   },
   methods: {
-    productoNew() {
-      this.producto = {
+    ventaNew() {
+      this.venta = {
         name: '',
         email: '',
         password: '',
         area_id: 1,
-        productoname: '',
+        ventaname: '',
         cargo: '',
         role: 'Area',
       }
       this.actionPeriodo = 'Nuevo'
-      this.productoDialog = true
+      this.ventaDialog = true
     },
-    productosGet() {
+    ventasGet() {
       this.loading = true
-      this.$axios.get('productos').then(res => {
-        this.productos = res.data.data
+      this.$axios.get('ventas').then(res => {
+        this.ventas = res.data.data
       }).catch(error => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {
@@ -145,11 +145,11 @@ export default {
         this.loading = false
       })
     },
-    productoPost() {
+    ventaPost() {
       this.loading = true
-      this.$axios.post('productos', this.producto).then(res => {
-        this.productosGet()
-        this.productoDialog = false
+      this.$axios.post('ventas', this.venta).then(res => {
+        this.ventasGet()
+        this.ventaDialog = false
         this.$alert.success('Periodo creado')
       }).catch(error => {
         this.$alert.error(error.response.data.message)
@@ -157,11 +157,11 @@ export default {
         this.loading = false
       })
     },
-    productoPut() {
+    ventaPut() {
       this.loading = true
-      this.$axios.put('productos/' + this.producto.id, this.producto).then(res => {
-        this.productosGet()
-        this.productoDialog = false
+      this.$axios.put('ventas/' + this.venta.id, this.venta).then(res => {
+        this.ventasGet()
+        this.ventaDialog = false
         this.$alert.success('Periodo actualizado')
       }).catch(error => {
         this.$alert.error(error.response.data.message)
@@ -169,17 +169,17 @@ export default {
         this.loading = false
       })
     },
-    productoEdit(producto) {
-      this.producto = { ...producto }
+    ventaEdit(venta) {
+      this.venta = { ...venta }
       this.actionPeriodo = 'Editar'
-      this.productoDialog = true
+      this.ventaDialog = true
     },
-    productoDelete(id) {
-      this.$alert.dialog('¿Desea eliminar el producto?')
+    ventaDelete(id) {
+      this.$alert.dialog('¿Desea eliminar el venta?')
         .onOk(() => {
           this.loading = true
-          this.$axios.delete('productos/' + id).then(res => {
-            this.productosGet()
+          this.$axios.delete('ventas/' + id).then(res => {
+            this.ventasGet()
             this.$alert.success('Periodo eliminado')
           }).catch(error => {
             this.$alert.error(error.response.data.message)
