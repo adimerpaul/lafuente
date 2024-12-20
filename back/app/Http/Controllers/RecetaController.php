@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistorialMedico;
 use App\Models\Receta;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class RecetaController extends Controller{
@@ -31,5 +33,22 @@ class RecetaController extends Controller{
         $lower = strtolower($text); // Convierte todo el texto a minúsculas
         $capitalized = ucfirst($lower); // Convierte la primera letra en mayúscula
         return $capitalized;
+    }
+    function generatePdf($id)
+    {
+        $receta = Receta::findOrFail($id)->with('recetaDetalles')->first();
+//        return $receta->recetaDetalles;
+        $paciente = $receta->paciente;
+
+        $apellidos = $paciente->apellido;
+        $partes = explode(' ', $apellidos);
+        $apellidoPaterno = $partes[0];
+        $apellidoMaterno = isset($partes[1]) ? $partes[1] : '';
+
+        $html = view('pdf.receta', compact('receta', 'apellidoPaterno', 'apellidoMaterno', 'paciente'))->render();
+
+        $pdf = Pdf::loadHTML($html)->setPaper([0, 0, 396, 612], 'portrait'); // 396x612 puntos = 5.5x8.5 pulgadas
+
+        return $pdf->stream('receta' . $id . '.pdf');
     }
 }

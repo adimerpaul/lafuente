@@ -41,7 +41,7 @@
           </q-item-section>
           <q-item-section side>
             <span class="text-bold">{{ receta.user?.name }}</span>
-<!--            <q-btn icon="print" flat @click="printReceta(receta)" />-->
+            <q-btn icon="print" flat @click="printReceta(receta)" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -294,7 +294,7 @@ export default {
       this.productosRecetas = [];
     },
     printReceta(receta) {
-      const pdfUrl = `${this.$url}/../receta_medicos/${receta.id}/pdf`;
+      const pdfUrl = `${this.$url}/../receta/${receta.id}/pdf`;
       window.open(pdfUrl, '_blank'); // Abre el archivo PDF en una nueva pestaña
     },
     startRecognition(field) {

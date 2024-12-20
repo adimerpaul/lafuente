@@ -41,4 +41,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
+Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);
 
