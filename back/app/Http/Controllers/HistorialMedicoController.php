@@ -15,16 +15,17 @@ class HistorialMedicoController extends Controller{
     }
     public function generatePdf($id)
     {
-        // Obtener el historial médico por ID
         $historial = HistorialMedico::with('paciente', 'user')->findOrFail($id);
+        $apellidos = $historial->paciente->apellido;
+        $partes = explode(' ', $apellidos);
 
-        // Crear el contenido HTML para el PDF
-        $html = view('pdf.historial', compact('historial'))->render();
+        $apellidoPaterno = $partes[0];
+        $apellidoMaterno = isset($partes[1]) ? $partes[1] : '';
 
-        // Generar el PDF
+        $html = view('pdf.historial', compact('historial', 'apellidoPaterno', 'apellidoMaterno'))->render();
+
         $pdf = Pdf::loadHTML($html)->setPaper('A4', 'portrait');
 
-        // Descargar el PDF
         return $pdf->stream('historia_clinica_' . $id . '.pdf');
     }
 

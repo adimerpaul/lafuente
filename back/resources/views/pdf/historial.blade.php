@@ -15,7 +15,13 @@
             font-size: 12px;
             line-height: 1.5;
             margin: 20px;
+            background-image: url('{{ public_path("fondo.png") }}');
+            background-size: cover; /* Ajusta la imagen para cubrir el área */
+            background-repeat: no-repeat; /* Evita que la imagen se repita */
+            background-attachment: fixed; /* Fija el fondo durante el desplazamiento */
+            background-position: center; /* Centra la imagen */
         }
+
         h1, h2, h3 {
             text-align: center;
             margin-bottom: 5px;
@@ -27,7 +33,7 @@
         }
         table th, table td {
             border: 1px solid #000;
-            padding: 5px;
+            /*padding: 5px;*/
             text-align: left;
         }
         .section {
@@ -44,11 +50,64 @@
         .center {
             text-align: center;
         }
+        .h1 {
+            font-size: 24px;
+        }
+        .h2 {
+            font-size: 20px;
+        }
+        .h3 {
+            font-size: 16px;
+        }
+        .lineHeight {
+            line-height: 0.9;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .w-100 {
+            width: 100px;
+        }
     </style>
 </head>
 <body>
-<div class="center text-bold">Historia Clínica - Consulta Externa</div>
-<div class="center text-bold">Número de Historia Clínica: {{ $historial->id }}
+<br>
+<div class="center text-bold h1 lineHeight">
+    <br>
+    HISTORIA CLÍNICA<br>
+    CONSULTA EXTERNA
+</div>
+<div class="text-right" style="height: 30px;">
+    <div style="width: 100px; float: right;border-radius: 5px; border: 1px solid #D3D3D3; padding: 3px;text-align: left;background: #D3D3D3;">
+        N° H.CL: {{ $historial->id }}
+    </div>
+</div>
+<div style="border: 1px solid #000;text-align: left;padding: 0;margin: 0;border-radius: 5px;">
+    <table style="border: 0;padding: 0;margin: 0;">
+        <tr>
+            <td class="center lineHeight" style="border: 0" >
+                <br>
+                {{ $apellidoPaterno }}
+                <br>
+                ---------------------------- <br>
+                Apellido Paterno
+            </td>
+            <td class="center lineHeight" style="border: 0" >
+                <br>
+                {{ $apellidoMaterno }}
+                <br>
+                ---------------------------- <br>
+                Apellido Materno
+            </td>
+            <td class="center lineHeight" style="border: 0" >
+                <br>
+                {{ $historial->paciente->nombre }}
+                <br>
+                ---------------------------- <br>
+                Nombres
+            </td>
+        </tr>
+    </table>
 </div>
 
 <div class="section font-style-script">
