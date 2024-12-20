@@ -3,7 +3,7 @@
     <q-table :rows="ventas" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
               title="Ventas" :filter="filter">
       <template v-slot:top-right>
-          <q-btn color="primary" label="Nuevo" @click="ventaNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
+          <q-btn color="positive" label="Nueva venta"  no-caps  icon="add_circle_outline" :loading="loading" :to="'/ventaNuevo'" />
           <q-input v-model="filter" label="Buscar" dense outlined >
             <template v-slot:append>
               <q-icon name="search" />
@@ -85,7 +85,7 @@
 <script>
 import moment from 'moment'
 export default {
-  name: 'VentasPage',
+  name: 'Ventas',
   data() {
     return {
       ventas: [],

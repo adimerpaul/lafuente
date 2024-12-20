@@ -244,6 +244,11 @@ export default {
       });
     },
     addProducto(producto) {
+      const find = this.productosRecetas.find((p) => p.producto_id === producto.id);
+      if (find) {
+        find.cantidad += 1;
+        return;
+      }
       this.productosRecetas.push({
         producto_id: producto.id,
         cantidad: 1,
