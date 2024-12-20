@@ -159,9 +159,9 @@ Oruro</div!-->
 <div class="mono">
 <hr>
 <table>
-<tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='titder'>${factura.client ? (factura.name == null ? factura.client.nombre : factura.name) : ''}</td>
+<tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='titder'>${factura.nombre }</td>
 </tr><tr><!-- td class='titder'>NIT/CI/CEX:</td><td class='contenido'>${factura.client ? factura.client.nit : ''}</td --></tr>
-<tr><td class='titder'>FECHA DE EMISIÓN:</td><td class='contenido'>${factura.fecha_emision}</td></tr>
+<tr><td class='titder'>FECHA DE EMISIÓN:</td><td class='contenido'>${factura.fecha}</td></tr>
 ${producto}
 ${cantidad}
 </table><hr><div class='titulo'>DETALLE</div>`
@@ -199,8 +199,8 @@ ${cantidad}
 <div>${factura.comentario === '' || factura.comentario === null ? '' : 'Comentario: ' + factura.comentario}</div>
       <table style='font-size: 8px;'>
       <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='titder'>${parseFloat(factura.total).toFixed(2)}</td></tr>
-      <tr><td class='titder' style='width: 60%'>Descuento Bs</td><td class='titder'>${parseFloat(factura.descuento).toFixed(2)}</td></tr>
-      <tr><td class='titder' style='width: 60%'>TOTAL Bs</td><td class='titder'>${parseFloat(factura.total - factura.descuento).toFixed(2)}</td></tr>
+<!--      <tr><td class='titder' style='width: 60%'>Descuento Bs</td><td class='titder'>${parseFloat(factura.descuento).toFixed(2)}</td></tr>-->
+<!--      <tr><td class='titder' style='width: 60%'>TOTAL Bs</td><td class='titder'>${parseFloat(factura.total - factura.descuento).toFixed(2)}</td></tr>-->
       </table>
       <br>
       <div>Son ${a} ${((parseFloat(factura.total) - Math.floor(parseFloat(factura.total))) * 100).toFixed(2)} /100 Bolivianos</div><hr>
@@ -211,7 +211,7 @@ ${cantidad}
       </div>
 </body>
 </html>`
-        console.log('cadena', cadena)
+        // console.log('cadena', cadena)
         document.getElementById('myElement').innerHTML = cadena
         if (imprimir) {
           const d = new Printd()

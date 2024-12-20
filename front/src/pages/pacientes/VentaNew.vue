@@ -41,7 +41,7 @@
                 </tr>
                 </tbody>
               </q-markup-table>
-              <pre>{{productos}}</pre>
+<!--              <pre>{{productos}}</pre>-->
             </div>
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">

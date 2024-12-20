@@ -16,6 +16,7 @@ class VentaController extends Controller{
         $venta = Venta::create($request->all());
         $productos = $request->productos;
         $insertProductos = [];
+        $total = 0;
         foreach ($productos as $producto) {
             $insertProductos[] = [
                 'venta_id' => $venta->id,
@@ -23,7 +24,9 @@ class VentaController extends Controller{
                 'cantidad' => $producto['cantidad'],
                 'precio' => $producto['precio'],
             ];
+            $total += $producto['cantidad'] * $producto['precio'];
         }
+        $venta->update(['total' => $total]);
         $venta->ventaDetalles()->createMany($insertProductos);
 
         return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);
