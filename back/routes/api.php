@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recetas', [App\Http\Controllers\RecetaController::class, 'store']);
 
     Route::post('/productos', [App\Http\Controllers\ProductoController::class, 'store']);
+    Route::get('/productosAll', [App\Http\Controllers\ProductoController::class, 'productosAll']);
     Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
     Route::put('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'update']);
     Route::delete('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'destroy']);

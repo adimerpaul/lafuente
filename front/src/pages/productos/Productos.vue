@@ -116,19 +116,26 @@ export default {
   },
   methods: {
     exportExcel() {
-      let data = [{
-        columns: [
-          {label: "Nombre", value: "nombre"},
-          {label: "Descripción", value: "descripcion"},
-          {label: "Unidad", value: "unidad"},
-          {label: "Precio", value: "precio"},
-          {label: "Stock", value: "stock"},
-          {label: "Stock mínimo", value: "stock_minimo"},
-          {label: "Stock máximo", value: "stock_maximo"},
-        ],
-        content: this.productos
-      }]
-      Excel.export(data,'Productos')
+      this.loading = true
+      this.$axios.get('productosAll').then(res => {
+        let data = [{
+          columns: [
+            {label: "Nombre", value: "nombre"},
+            {label: "Descripción", value: "descripcion"},
+            {label: "Unidad", value: "unidad"},
+            {label: "Precio", value: "precio"},
+            {label: "Stock", value: "stock"},
+            {label: "Stock mínimo", value: "stock_minimo"},
+            {label: "Stock máximo", value: "stock_maximo"},
+          ],
+          content: res.data
+        }]
+        Excel.export(data,'Productos')
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+      }).finally(() => {
+        this.loading = false
+      })
     },
     productoNew() {
       this.producto = {

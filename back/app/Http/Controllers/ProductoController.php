@@ -6,6 +6,9 @@ use App\Models\Producto;
 use Illuminate\Http\Request;
 
 class ProductoController extends Controller{
+    function productosAll(){
+        return Producto::orderBy('nombre')->get();
+    }
     function index(Request $request) {
         $search = $request->search;
 
