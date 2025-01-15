@@ -18,4 +18,13 @@ class Venta extends Model{
     function ventaDetalles(){
         return $this->hasMany(VentaDetalle::class);
     }
+    protected $appends = ['detailsText'];
+    function getDetailsTextAttribute(){
+        $detailsText = '';
+        foreach ($this->ventaDetalles as $ventaDetalle) {
+            $detailsText .= $ventaDetalle->cantidad . ' ' . $ventaDetalle->producto->nombre . ',';
+        }
+        $detailsText = substr($detailsText, 0, -1);
+        return $detailsText;
+    }
 }

@@ -41,8 +41,13 @@ class VentaController extends Controller{
             return Cliente::create($request->all());
         }
     }
-    function index(){
-        return Venta::with('user', 'cliente')->get();
+    function index(Request $request){
+        $fechaInicio = $request->fechaInicio;
+        $fechaFin = $request->fechaFin;
+        return Venta::with('user', 'cliente')
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->orderBy('fecha', 'desc')
+            ->get();
     }
     function show($id){
         return Venta::with('user', 'cliente')->findOrFail($id);

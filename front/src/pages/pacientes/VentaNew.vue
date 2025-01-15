@@ -3,6 +3,8 @@
     <q-card flat bordered >
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Ventas</div>
+<!--        btn volver a tras-->
+        <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
       </q-card-section>
       <q-card-section>
         <q-form @submit="clickDialogVenta">
