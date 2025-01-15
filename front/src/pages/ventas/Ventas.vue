@@ -64,23 +64,11 @@
               </div>
               <div class="col-12 col-md-2 text-right">
                 <q-btn-dropdown color="primary" label="Exportar" no-caps  >
-                  <q-item clickable v-ripple @click="Imprimir.reporteVentas(this.ventas)" v-close-popup>
-                    <q-item-section avatar>
-                      <q-icon name="print" />
-                    </q-item-section>
-                    <q-item-section>Imprimir</q-item-section>
-                  </q-item>
-                  <q-item clickable v-ripple @click="Imprimir.excelVentas(this.ventas)" v-close-popup>
+                  <q-item clickable v-ripple @click="exportExcel" v-close-popup>
                     <q-item-section avatar>
                       <q-icon name="file_download" />
                     </q-item-section>
                     <q-item-section>Excel</q-item-section>
-                  </q-item>
-                  <q-item clickable v-ripple @click="Imprimir.pdfVentas(this.ventas)" v-close-popup>
-                    <q-item-section avatar>
-                      <q-icon name="file_download" />
-                    </q-item-section>
-                    <q-item-section>PDF</q-item-section>
                   </q-item>
                 </q-btn-dropdown>
               </div>
@@ -376,6 +364,7 @@
 <script>
 import moment from 'moment'
 import {Imprimir} from "src/addons/Imprimir";
+import {Excel} from "src/addons/Excel";
 export default {
   name: 'Ventas',
   data() {
@@ -389,7 +378,7 @@ export default {
       actionPeriodo: '',
       gestiones: [],
       users: [],
-      user: 'Todos',
+      user: '',
       filter: '',
       roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
       columns: [
@@ -409,6 +398,35 @@ export default {
     this.usersGet()
   },
   methods: {
+    exportExcel() {
+      // let data = [{
+      //   columns: [
+      //     {label: "Nombre", value: "nombre"},
+      //     {label: "Descripción", value: "descripcion"},
+      //     {label: "Unidad", value: "unidad"},
+      //     {label: "Precio", value: "precio"},
+      //     {label: "Stock", value: "stock"},
+      //     {label: "Stock mínimo", value: "stock_minimo"},
+      //     {label: "Stock máximo", value: "stock_maximo"},
+      //   ],
+      //   content: res.data
+      // }]
+      // Excel.export(data,'Productos')
+      let data = [{
+        columns: [
+          {label: "ID", value: "id"},
+          {label: "Fecha", value: "fecha"},
+          {label: "Cliente", value: "cliente.nombre"},
+          {label: "Usuario", value: "user.name"},
+          {label: "Estado", value: "estado"},
+          {label: "Total", value: "total"},
+          {label: "Detalle", value: "detailsText"},
+          {label: "Tipo venta", value: "tipo_venta"},
+        ],
+        content: this.ventas
+      }]
+      Excel.export(data,'Ventas')
+    },
     usersGet() {
       this.$axios.get('users').then(res => {
         this.users = res.data
