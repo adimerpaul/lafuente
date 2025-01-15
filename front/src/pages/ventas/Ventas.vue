@@ -31,7 +31,21 @@
           </q-card-section>
         </q-card>
       </div>
-      <div class="col-12 col-md-4 q-pa-xs"></div>
+      <div class="col-12 col-md-4 q-pa-xs">
+        <q-card flat bordered>
+          <q-card-section class="q-pa-none">
+            <q-item class="bg-green">
+              <q-item-section avatar>
+                <q-icon name="monetization_on" size="50px" color="white" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption class="text-white">Ventas Total</q-item-label>
+                <q-item-label  class="text-white text-h4">{{totalInternos + totalExternos}} Bs</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
+        </q-card>
+      </div>
       <div class="col-12">
         <q-card flat bordered>
           <q-card-section class="q-pa-none">
@@ -57,7 +71,7 @@
       <thead>
         <tr class="bg-primary text-white">
           <th>Acciones</th>
-          <th>#</th>
+          <th>ID</th>
 <!--          opciones deatlle fecha hora estado total-->
           <th>Fecha</th>
           <th>Cliente</th>
@@ -86,7 +100,7 @@
               </q-item>
             </q-btn-dropdown>
           </td>
-          <td>{{ index + 1 }}</td>
+          <td>{{ venta.id }}</td>
           <td>{{ venta.fecha }}</td>
           <td>{{ venta.cliente.nombre }}</td>
           <td>{{ venta.user.name }}</td>
