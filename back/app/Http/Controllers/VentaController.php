@@ -12,6 +12,18 @@ class VentaController extends Controller{
         $venta->update(['estado' => 'Anulada']);
         return $venta;
     }
+    function tipoVentasChange(Request $request, $id){
+        $venta = Venta::findOrFail($id);
+        $tipo_venta = $venta->tipo_venta;
+        if ($tipo_venta == 'Interno') {
+            $venta->tipo_venta = 'Externo';
+            $venta->save();
+        } else {
+            $venta->tipo_venta = 'Interno';
+            $venta->save();
+        }
+        return $venta;
+    }
     function store(Request $request){
         $cliente = $this->clienteUpdateOrCreate($request);
 
@@ -49,10 +61,16 @@ class VentaController extends Controller{
     function index(Request $request){
         $fechaInicio = $request->fechaInicio;
         $fechaFin = $request->fechaFin;
-        return Venta::with('user', 'cliente')
+        $user = $request->user;
+
+        $ventas = Venta::with('user', 'cliente')
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->orderBy('created_at', 'desc')
             ->get();
+        if ($user != '') {
+            $ventas = $ventas->where('user_id', $user);
+        }
+        return $ventas;
     }
     function show($id){
         return Venta::with('user', 'cliente')->findOrFail($id);

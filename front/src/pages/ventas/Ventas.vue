@@ -50,16 +50,41 @@
         <q-card flat bordered>
           <q-card-section class="q-pa-none">
             <div class="row">
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-2">
                 <q-input v-model="fechaInicio" label="Fecha inicio" dense outlined type="date" />
               </div>
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-2">
                 <q-input v-model="fechaFin" label="Fecha fin" dense outlined type="date" />
               </div>
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-2">
+                <q-select v-model="user" :options="usersTodos" label="Usuario" dense outlined  emit-value map-options/>
+              </div>
+              <div class="col-12 col-md-2">
                 <q-btn color="primary" label="Buscar"  no-caps  icon="search" :loading="loading" @click="ventasGet()" />
               </div>
-              <div class="col-12 col-md-3 text-right">
+              <div class="col-12 col-md-2 text-right">
+                <q-btn-dropdown color="primary" label="Exportar" no-caps  >
+                  <q-item clickable v-ripple @click="Imprimir.reporteVentas(this.ventas)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="print" />
+                    </q-item-section>
+                    <q-item-section>Imprimir</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="Imprimir.excelVentas(this.ventas)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="Imprimir.pdfVentas(this.ventas)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>PDF</q-item-section>
+                  </q-item>
+                </q-btn-dropdown>
+              </div>
+              <div class="col-12 col-md-2 text-right">
                 <q-btn color="positive" label="Nueva venta"  no-caps  icon="add_circle_outline" :loading="loading" :to="'/ventaNuevo'" />
               </div>
             </div>
@@ -98,6 +123,12 @@
                 </q-item-section>
                 <q-item-section>Anular</q-item-section>
               </q-item>
+              <q-item clickable v-ripple @click="tipoVentasChange(venta.id)" v-close-popup>
+                <q-item-section avatar>
+                  <q-icon name="swap_horiz" />
+                </q-item-section>
+                <q-item-section>Cambiar a {{ venta.tipo_venta === 'Interno' ? 'Externo' : 'Interno' }}</q-item-section>
+              </q-item>
             </q-btn-dropdown>
           </td>
           <td>{{ venta.id }}</td>
@@ -108,14 +139,16 @@
 <!--            {{ venta.estado }} q-chip activo verde -->
             <q-chip :color="venta.estado === 'Activo' ? 'positive' : 'negative'" class="text-white" dense>{{ venta.estado }}</q-chip>
           </td>
-          <td>{{ venta.total }}</td>
+          <td class="text-bold">
+            {{ venta.total }}
+            <q-chip size="10px" :color="venta.tipo_pago === 'Efectivo' ? 'green' : 'blue'" class="text-white" dense>{{ venta.tipo_pago.charAt(0) }}</q-chip>
+          </td>
           <td>
             <div style="max-width: 200px;wrap-option: wrap;line-height: 0.9;">
               {{ venta.detailsText }}
             </div>
           </td>
           <td>
-<!--            {{ venta.tipo_venta }} chip inter o exter-->
             <q-chip :color="venta.tipo_venta === 'Interno' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
         </tr>
@@ -355,6 +388,8 @@ export default {
       loading: false,
       actionPeriodo: '',
       gestiones: [],
+      users: [],
+      user: 'Todos',
       filter: '',
       roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
       columns: [
@@ -371,10 +406,26 @@ export default {
   },
   mounted() {
     this.ventasGet()
+    this.usersGet()
   },
   methods: {
+    usersGet() {
+      this.$axios.get('users').then(res => {
+        this.users = res.data
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+      })
+    },
     imprimir(venta) {
       Imprimir.nota(venta)
+    },
+    tipoVentasChange(id) {
+      this.$axios.put(`tipoVentasChange/${id}`).then(res => {
+        this.$alert.success('Tipo de venta cambiado')
+        this.ventasGet()
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+      })
     },
     anular(id) {
       this.$alert.dialog('¿Está seguro de anular la venta?').onOk(() => {
@@ -391,7 +442,8 @@ export default {
       this.$axios.get('ventas',{
         params: {
           fechaInicio: this.fechaInicio,
-          fechaFin: this.fechaFin
+          fechaFin: this.fechaFin,
+          user: this.user
         }
       }).then(res => {
         this.ventas = res.data
@@ -403,6 +455,10 @@ export default {
     },
   },
   computed: {
+    usersTodos() {
+      // colocar a user todos
+      return [{label: 'Todos', value: ''}, ...this.users.map(user => ({label: user.name, value: user.id}))]
+    },
     totalInternos() {
       return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Interno' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     },

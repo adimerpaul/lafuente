@@ -9,7 +9,7 @@ const routes = [
       { path: 'productos', name: 'productos', component: () => import('pages/productos/Productos.vue'), meta: { requiresAuth: true } },
       { path: 'venta', name: 'venta', component: () => import('pages/ventas/Ventas.vue'), meta: { requiresAuth: true } },
       { path: 'pacienteNew', name: 'pacienteNew', component: () => import('pages/pacientes/PacienteNew.vue'), meta: { requiresAuth: true } },
-      { path: 'ventaNuevo', name: 'ventaNuevo', component: () => import('pages/pacientes/VentaNew.vue'), meta: { requiresAuth: true } },
+      { path: 'ventaNuevo', name: 'ventaNuevo', component: () => import('pages/ventas/VentaNew.vue'), meta: { requiresAuth: true } },
       { path: 'paciente/:id', name: 'paciente', component: () => import('pages/pacientes/PacienteShow.vue'), meta: { requiresAuth: true } },
     ]
   },
