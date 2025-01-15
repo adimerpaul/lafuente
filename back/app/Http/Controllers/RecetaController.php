@@ -8,6 +8,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class RecetaController extends Controller{
+    function show($id){
+        return Receta::with('recetaDetalles.producto')->where('id', $id)->first();
+    }
     function store(Request $request){
         $request->merge(['user_id' => auth()->user()->id,]);
         $request->merge(['fecha' => date('Y-m-d H:i:s'),]);

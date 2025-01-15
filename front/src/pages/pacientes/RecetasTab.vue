@@ -13,9 +13,7 @@
       <q-list bordered>
         <q-item v-for="(receta, index) in paciente.recetas" :key="index">
           <q-item-section avatar>
-            <q-avatar >
-              <q-btn :label="index + 1" flat />
-            </q-avatar>
+              <q-btn :label="receta.id" color="orange" round unelevated />
           </q-item-section>
           <q-item-section>
             <q-item-label>

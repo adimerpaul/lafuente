@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/diagnosticos', [App\Http\Controllers\DiagnosticoController::class, 'store']);
 
     Route::post('/recetas', [App\Http\Controllers\RecetaController::class, 'store']);
+    Route::get('/receta/{receta}', [App\Http\Controllers\RecetaController::class, 'show']);
 
     Route::post('/productos', [App\Http\Controllers\ProductoController::class, 'store']);
     Route::get('/productosAll', [App\Http\Controllers\ProductoController::class, 'productosAll']);

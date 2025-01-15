@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <q-table :rows="pacientes" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-             title="Usuarios" @rowClick="pacienteEdit">
+             title="Usuarios" @rowClick="pacienteEdit" hide-bottom>
       <template v-slot:top>
         <div style="width: 100%">
           <div>

@@ -47,7 +47,7 @@
             </div>
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">
-                <q-btn icon="add_circle_outline" size="10px" @click="addProductoName" color="green" dense no-caps label="Recuperar venta" />
+                <q-btn icon="add_circle_outline" size="10px" @click="recoveryReceta" color="green" dense no-caps label="Recuperar venta" />
                 <q-space />
                 <q-btn icon="delete" size="10px" color="red" dense flat no-caps label="limpiar" @click="productosVentas = []" />
               </div>
@@ -65,7 +65,7 @@
                   <td style="padding: 0;margin: 0;">
                     <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                       <q-icon name="delete" color="red" class="cursor-pointer" @click="productosVentas.splice(index, 1)" />
-                      {{ $filters.textUpper( producto.producto.nombre ) }}
+                      {{ $filters.textUpper( producto.producto?.nombre ) }}
                     </div>
                   </td>
                   <td style="padding: 0;margin: 0;">
@@ -260,23 +260,35 @@ export default {
       };
       this.efectivo = '';
     },
-    addProductoName() {
-      this.$alert.dialogPrompt('Nombre del producto', {
-        title: 'Agregar producto',
+    recoveryReceta() {
+      this.$alert.dialogPrompt('Numero de receta ', {
+        title: 'Recuperar receta',
         cancel: true,
         persistent: true,
-      }).onOk((nombre) => {
-        this.productosVentas.push({
-          producto_id: null,
-          cantidad: 1,
-          unidad: 'capsulas',
-          via: "oral",
-          frecuencia: "cada 8 horas",
-          duracion: "3 dias",
-          indicaciones: "",
-          producto: {
-            nombre,
-          },
+      }).onOk((data) => {
+        this.loading = true;
+        this.$axios.get("receta/" + data).then((res) => {
+          console.log(res.data);
+          const receta_detalles = res.data.receta_detalles;
+          if (receta_detalles.length === 0) {
+            this.$alert.error("Receta vacía");
+            return;
+          }
+          this.productosVentas = receta_detalles
+            .filter((receta_detalle) => receta_detalle.producto_id) // Filtra los elementos que tienen producto_id no vacío
+            .map((receta_detalle) => {
+              console.log(receta_detalle);
+              return {
+                producto_id: receta_detalle.producto_id,
+                cantidad: receta_detalle.cantidad,
+                precio: receta_detalle.producto.precio,
+                producto: receta_detalle.producto,
+              };
+            });
+        }).catch((error) => {
+          this.$alert.error("Receta no encontrada");
+        }).finally(() => {
+          this.loading = false;
         });
       });
     },

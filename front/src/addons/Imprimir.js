@@ -159,8 +159,9 @@ Oruro</div!-->
 <div class="mono">
 <hr>
 <table>
-<tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='titder'>${factura.nombre }</td>
-</tr><tr><!-- td class='titder'>NIT/CI/CEX:</td><td class='contenido'>${factura.client ? factura.client.nit : ''}</td --></tr>
+<tr><td class='titder'>ID:</td><td class='titder'>${factura.id }</td></tr>
+<tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='titder'>${factura.nombre }</td></tr>
+<tr><!-- td class='titder'>NIT/CI/CEX:</td><td class='contenido'>${factura.client ? factura.client.nit : ''}</td --></tr>
 <tr><td class='titder'>FECHA DE EMISIÓN:</td><td class='contenido'>${factura.fecha}</td></tr>
 ${producto}
 ${cantidad}
@@ -196,7 +197,7 @@ ${cantidad}
           }
         })
         cadena += `<hr>
-<div>${factura.comentario === '' || factura.comentario === null ? '' : 'Comentario: ' + factura.comentario}</div>
+<div>${factura.comentario === '' || factura.comentario === null  || factura.comentario === undefined ? '' : 'Comentario: ' + factura.comentario}</div>
       <table style='font-size: 8px;'>
       <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='titder'>${parseFloat(factura.total).toFixed(2)}</td></tr>
 <!--      <tr><td class='titder' style='width: 60%'>Descuento Bs</td><td class='titder'>${parseFloat(factura.descuento).toFixed(2)}</td></tr>-->
