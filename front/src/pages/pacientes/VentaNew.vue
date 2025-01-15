@@ -104,12 +104,13 @@
           <q-form @submit="submitVenta">
             <div class="row">
               <div class="col-12 col-md-3 q-pa-xs">
-<!--                <label for="referido_de" class="text-bold">CI/NIT</label>-->
                 <q-input v-model="venta.nit" outlined dense label="CI/NIT" @update:modelValue="searchCliente" />
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-<!--                <label for="referido_de" class="text-bold">Nombre</label>-->
                 <q-input v-model="venta.nombre" outlined dense label="Nombre" />
+              </div>
+              <div class="col-12 col-md-3 q-pa-xs">
+                <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta" :options="['Interno', 'Externo']" />
               </div>
               <div class="col-12 q-pa-xs">
                 <q-markup-table dense wrap-cells flat bordered>
@@ -251,6 +252,7 @@ export default {
       this.venta = {
         nit: "0",
         nombre: "SN",
+        tipo_venta: "Interno",
       };
       this.efectivo = '';
     },
@@ -307,6 +309,7 @@ export default {
         ci: this.venta.nit,
         nombre: this.venta.nombre,
         productos: this.productosVentas,
+        tipo_venta: this.venta.tipo_venta,
       }).then((res) => {
         this.ventaDialog = false;
         this.loading = false;

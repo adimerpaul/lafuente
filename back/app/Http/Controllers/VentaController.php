@@ -7,6 +7,11 @@ use App\Models\Venta;
 use Illuminate\Http\Request;
 
 class VentaController extends Controller{
+    function anular(Request $request, $id){
+        $venta = Venta::findOrFail($id);
+        $venta->update(['estado' => 'Anulada']);
+        return $venta;
+    }
     function store(Request $request){
         $cliente = $this->clienteUpdateOrCreate($request);
 
@@ -46,7 +51,7 @@ class VentaController extends Controller{
         $fechaFin = $request->fechaFin;
         return Venta::with('user', 'cliente')
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
     }
     function show($id){

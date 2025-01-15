@@ -17,6 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('cliente_id')->nullable();
             $table->foreign('cliente_id')->references('id')->on('clientes');
             $table->date('fecha')->nullable();
+            $table->time('hora')->nullable();
+            $table->string('tipo_venta')->nullable()->default('Interno');
             $table->string('ci')->nullable();
             $table->string('nombre')->nullable();
             $table->string('estado')->nullable()->default('Activo');

@@ -4,19 +4,33 @@
       <div class="col-12 col-md-4 q-pa-xs">
         <q-card flat bordered>
           <q-card-section class="q-pa-none">
-            <q-item class="bg-green">
+            <q-item class="bg-indigo">
               <q-item-section avatar>
                 <q-icon name="monetization_on" size="50px" color="white" />
               </q-item-section>
               <q-item-section>
-                <q-item-label caption class="text-white">Ventas</q-item-label>
-                <q-item-label  class="text-white text-h4">22.04 Bs</q-item-label>
+                <q-item-label caption class="text-white">Ventas Interno</q-item-label>
+                <q-item-label  class="text-white text-h4">{{totalInternos}} Bs</q-item-label>
               </q-item-section>
             </q-item>
           </q-card-section>
         </q-card>
       </div>
-      <div class="col-12 col-md-4 q-pa-xs"></div>
+      <div class="col-12 col-md-4 q-pa-xs">
+        <q-card flat bordered>
+          <q-card-section class="q-pa-none">
+            <q-item class="bg-orange">
+              <q-item-section avatar>
+                <q-icon name="monetization_on" size="50px" color="white" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption class="text-white">Ventas Externo</q-item-label>
+                <q-item-label  class="text-white text-h4">{{totalExternos}} Bs</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
+        </q-card>
+      </div>
       <div class="col-12 col-md-4 q-pa-xs"></div>
       <div class="col-12">
         <q-card flat bordered>
@@ -51,19 +65,20 @@
           <th>Estado</th>
           <th>Total</th>
           <th>Detalle</th>
+          <th>Tipo venta</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(venta, index) in ventas" :key="venta.id">
           <td>
             <q-btn-dropdown color="primary" label="Opciones" no-caps dense size="10px">
-              <q-item clickable v-ripple @click="imprimir(venta)">
+              <q-item clickable v-ripple @click="imprimir(venta)" v-close-popup>
                 <q-item-section avatar>
                   <q-icon name="print" />
                 </q-item-section>
                 <q-item-section>Imprimir</q-item-section>
               </q-item>
-              <q-item clickable v-ripple @click="Anular(venta.id)">
+              <q-item clickable v-ripple @click="anular(venta.id)" v-close-popup>
                 <q-item-section avatar>
                   <q-icon name="delete" />
                 </q-item-section>
@@ -84,6 +99,10 @@
             <div style="max-width: 200px;wrap-option: wrap;line-height: 0.9;">
               {{ venta.detailsText }}
             </div>
+          </td>
+          <td>
+<!--            {{ venta.tipo_venta }} chip inter o exter-->
+            <q-chip :color="venta.tipo_venta === 'Interno' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
         </tr>
       </tbody>
@@ -343,6 +362,16 @@ export default {
     imprimir(venta) {
       Imprimir.nota(venta)
     },
+    anular(id) {
+      this.$alert.dialog('¿Está seguro de anular la venta?').onOk(() => {
+        this.$axios.put(`ventasAnular/${id}`).then(res => {
+          this.$alert.success('Venta anulada')
+          this.ventasGet()
+        }).catch(error => {
+          this.$alert.error(error.response.data.message)
+        })
+      })
+    },
     ventasGet() {
       this.loading = true
       this.$axios.get('ventas',{
@@ -358,6 +387,14 @@ export default {
         this.loading = false
       })
     },
+  },
+  computed: {
+    totalInternos() {
+      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Interno' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+    },
+    totalExternos() {
+      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Externo' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+    }
   }
 }
 </script>
