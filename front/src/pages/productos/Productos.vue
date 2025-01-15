@@ -1,10 +1,12 @@
 <template>
   <q-page class="q-pa-md">
     <q-table :rows="productos" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-              title="Productos" :filter="filter">
+              title="Productos" hide-bottom>
       <template v-slot:top-right>
-          <q-btn color="primary" label="Nuevo" @click="productoNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
-          <q-input v-model="filter" label="Buscar" dense outlined >
+<!--        btn descargar excel-->
+        <q-btn color="primary" label="Descargar" no-caps  icon="fa-solid fa-file-excel" :loading="loading" @click="exportExcel" />
+          <q-btn color="green" label="Nuevo" @click="productoNew" no-caps  icon="add_circle_outline" :loading="loading" />
+          <q-input v-model="filter" label="Buscar" dense outlined debounce="300" @update:modelValue="productosGet">
             <template v-slot:append>
               <q-icon name="search" />
             </template>
@@ -84,6 +86,7 @@
 </template>
 <script>
 import moment from 'moment'
+import {Excel} from "src/addons/Excel";
 export default {
   name: 'ProductosPage',
   data() {
@@ -112,6 +115,21 @@ export default {
     this.productosGet()
   },
   methods: {
+    exportExcel() {
+      let data = [{
+        columns: [
+          {label: "Nombre", value: "nombre"},
+          {label: "Descripción", value: "descripcion"},
+          {label: "Unidad", value: "unidad"},
+          {label: "Precio", value: "precio"},
+          {label: "Stock", value: "stock"},
+          {label: "Stock mínimo", value: "stock_minimo"},
+          {label: "Stock máximo", value: "stock_maximo"},
+        ],
+        content: this.productos
+      }]
+      Excel.export(data,'Productos')
+    },
     productoNew() {
       this.producto = {
         name: '',
@@ -127,7 +145,11 @@ export default {
     },
     productosGet() {
       this.loading = true
-      this.$axios.get('productos').then(res => {
+      this.$axios.get('productos',{
+        params: {
+          search: this.filter
+        }
+      }).then(res => {
         this.productos = res.data.data
       }).catch(error => {
         this.$alert.error(error.response.data.message)
