@@ -60,6 +60,9 @@
                 <q-tab name="recetas">
                   <q-btn flat dense icon="description" label="Recetas" no-caps/>
                 </q-tab>
+<!--                <q-tab name="Ventas">-->
+<!--                  <q-btn flat dense icon="shopping_cart" label="Ventas" no-caps/>-->
+<!--                </q-tab>-->
               </q-tabs>
               <q-separator />
               <q-tab-panels v-model="tab" animated>
@@ -84,6 +87,9 @@
                 <q-tab-panel name="recetas">
                   <RecetasTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="Ventas">
+                  <VentasTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
@@ -102,9 +108,10 @@ import AntecedentesTab from "pages/pacientes/AntecedentesTab.vue";
 import HabitosTab from "pages/pacientes/HabitosTab.vue";
 import DiagnosticosTab from "pages/pacientes/DiagnosticosTab.vue";
 import RecetasTab from "pages/pacientes/RecetasTab.vue";
+import VentasTab from "pages/pacientes/VentasTab.vue";
 export default {
   name: 'PacienteNewPage',
-  components: {RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
+  components: {VentasTab, RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {
       tab: 'paciente',

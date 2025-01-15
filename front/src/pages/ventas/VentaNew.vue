@@ -181,7 +181,7 @@
 import {Imprimir} from "src/addons/Imprimir";
 
 export default {
-  name: "VentasTab",
+  name: "VentasNew",
   props: {
   },
   emits: ["pacienteGet"],
