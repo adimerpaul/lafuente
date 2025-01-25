@@ -72,7 +72,7 @@
                     <input v-model="producto.cantidad" type="number" style="width: 50px;" />
                   </td>
                   <td style="padding: 0;margin: 0;">
-                    <input v-model="producto.precio" type="number" style="width: 50px;" />
+                    <input v-model="producto.precio" type="number" style="width: 50px;" step="0.01">
                   </td>
                   <td  class="text-right">
                     {{ (producto.cantidad * producto.precio) }} Bs
