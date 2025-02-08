@@ -89,7 +89,7 @@ export default {
       actionPeriodo: '',
       gestiones: [],
       filter: '',
-      roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
+      roles: ['Farmacia', 'Secretaria', 'Administrador'],
       columns: [
         { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'name', label: 'Nombre', align: 'left', field: 'name' },

@@ -63,7 +63,7 @@
       class="bg-primary text-white"
     >
       <q-list>
-        <q-item>
+        <q-item dense>
           <q-item-section avatar>
             <q-icon name="account_circle" />
           </q-item-section>
@@ -86,30 +86,33 @@
             </q-item-label>
           </q-item-section>
         </q-item>
-        <q-separator  class="bg-white" inset />
-        <q-item-label header class="text-white">
+<!--        <q-separator  class="bg-white" inset />-->
+        <div class="text-white text-center text-bold">
           Opciones
-        </q-item-label>
+        </div>
+        <template v-for="link in linksList" :key="link.title">
+          <q-item
+            clickable
+            :to="link.link"
+            exact
+            class="text-grey"
+            active-class="menu"
+            v-if="link && $store.user && (link.can.includes($store.user.role) || link.can.includes('Todos'))"
+          >
+            <q-item-section avatar>
+              <q-icon
+                :name="$route.path === link.link ? 'o_' + link.icon : link.icon"
+                :class="$route.path === link.link ? 'text-white' : ''"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label :class="$route.path === link.link ? 'text-white text-bold' : ''">
+                {{ link.title }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
 
-<!--        <EssentialLink-->
-<!--          v-for="link in linksList"-->
-<!--          :key="link.title"-->
-<!--          v-bind="link"-->
-<!--        />-->
-        <q-item v-for="link in linksList" :key="link.title" clickable :to="link.link" exact
-                class="text-grey"
-                active-class="menu"
-        >
-          <q-item-section avatar>
-            <q-icon :name="$route.path === link.link ? 'o_' + link.icon : link.icon"
-                    :class="$route.path === link.link ? 'text-white' : ''"/>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label :class="$route.path === link.link ? 'text-white text-bold' : ''">
-              {{ link.title }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
         <q-item clickable class="text-red" @click="logout">
           <q-item-section avatar>
             <q-icon name="exit_to_app" />
@@ -133,11 +136,11 @@ export default {
     return {
       leftDrawerOpen: false,
       linksList: [
-        {title: 'Principal', icon: 'home', link: '/'},
-        {title: 'Usuarios', icon: 'account_circle', link: '/usuarios'},
-        {title: 'Pacientes', icon: 'people', link: '/pacientes'},
-        {title: 'Productos', icon: 'shopping_cart', link: '/productos'},
-        {title: 'Venta', icon: 'point_of_sale', link: '/venta'},
+        {title: 'Principal', icon: 'home', link: '/', can: ['Todos']},
+        {title: 'Usuarios', icon: 'account_circle', link: '/usuarios', can: ['Administrador']},
+        {title: 'Pacientes', icon: 'people', link: '/pacientes', can: ['Todos']},
+        {title: 'Productos', icon: 'shopping_cart', link: '/productos', can: ['Farmacia', 'Administrador']},
+        {title: 'Venta', icon: 'point_of_sale', link: '/venta' , can: ['Todos']},
       ]
     }
   },

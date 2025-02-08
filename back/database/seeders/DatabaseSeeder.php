@@ -32,10 +32,11 @@ class DatabaseSeeder extends Seeder
 //            'email' => 'test@example.com',
 //        ]);
         User::create([
-            'name' => 'Adminstrador',
+            'name' => 'Administrador',
             'username' => 'admin',
             'email' => 'admin@test.com',
             'password' => bcrypt('admin'),
+            'role' => 'Administrador',
         ]);
         User::factory(10)->create();
         $sqlFIle = base_path('database/seeders/productos_202411150418.sql');
