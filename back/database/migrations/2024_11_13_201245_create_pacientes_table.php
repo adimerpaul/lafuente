@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('estado_civil')->nullable();
             $table->string('direccion')->nullable();
             $table->string('telefono')->nullable();
+            $table->string('tipo_paciente')->nullable()->default('Interno');
             $table->timestamp('fecha_creacion')->useCurrent();
             $table->softDeletes();
             $table->timestamps();

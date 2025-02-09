@@ -44,11 +44,9 @@
           </q-btn-dropdown>
         </q-td>
       </template>
-      <template v-slot:body-cell-role="props">
+      <template v-slot:body-cell-tipo_paciente="props">
         <q-td :props="props">
-          <q-chip :label="props.row.role"
-                  :color="props.row.color"
-                  text-color="white" dense  size="14px"/>
+          <q-chip :label="props.row.tipo_paciente" :color="props.row.tipo_paciente === 'Interno' ? 'indigo' : 'orange'" dense class="text-white" style="height: 10px" size="10px"/>
         </q-td>
       </template>
     </q-table>
@@ -96,12 +94,14 @@ export default {
       columns: [
         // { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'nombre_completo', label: 'Nombre', align: 'left', field: 'nombre_completo' },
+        { name: 'tipo_paciente', label: 'Tipo paciente', align: 'left', field: 'tipo_paciente' },
         { name: 'identificacion', label: 'Identificación', align: 'left', field: 'identificacion' },
         { name: 'edad', label: 'Edad', align: 'left', field: 'edad' },
         { name: 'sexo', label: 'Sexo', align: 'left', field: 'sexo' },
         { name: 'estado_civil', label: 'Estado civil', align: 'left', field: 'estado_civil' },
         { name: 'direccion', label: 'Dirección', align: 'left', field: 'direccion' },
-        { name: 'telefono', label: 'Teléfono', align: 'left', field: 'telefono' }
+        { name: 'telefono', label: 'Teléfono', align: 'left', field: 'telefono' },
+        // tipo_paciente
       ]
     }
   },

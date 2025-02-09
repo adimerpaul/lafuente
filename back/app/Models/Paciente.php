@@ -17,6 +17,7 @@ class Paciente extends Model{
         'edad',
         'sexo',
         'estado_civil',
+        'tipo_paciente',
         'direccion',
         'telefono',
         'fecha_creacion',

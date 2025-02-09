@@ -18,6 +18,7 @@
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Nombres</th>
                   <th>Unidad</th>
                   <th>Precio</th>
@@ -25,6 +26,9 @@
                 </thead>
                 <tbody>
                 <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
+                  <td>
+                    {{ producto.id }}
+                  </td>
                   <td style="padding: 0;margin: 0;" class="cursor-pointer">
                     <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                       {{ $filters.textUpper( producto.nombre ) }}
@@ -65,6 +69,7 @@
                   <td style="padding: 0;margin: 0;">
                     <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                       <q-icon name="delete" color="red" class="cursor-pointer" @click="productosVentas.splice(index, 1)" />
+                      {{producto.producto_id}}
                       {{ $filters.textUpper( producto.producto?.nombre ) }}
                     </div>
                   </td>
@@ -119,6 +124,7 @@
                 <q-markup-table dense wrap-cells flat bordered>
                   <thead>
                   <tr>
+                    <th>ID</th>
                     <th>Producto</th>
                     <th>Cantidad</th>
                     <th>Precio</th>
@@ -127,6 +133,9 @@
                   </thead>
                   <tbody>
                   <tr v-for="(producto, index) in productosVentas" >
+                    <td>
+                        {{ producto.producto_id }}
+                    </td>
                     <td style="padding: 0;margin: 0;">
                       <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                         {{ $filters.textUpper( producto.producto.nombre ) }}

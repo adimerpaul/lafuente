@@ -64,6 +64,15 @@
         {{ paciente.telefono }}
       </div>
     </div>
+    <div class="col-12 col-md-6 q-pa-xs">
+      <label class="text-bold">Tipo paciente:</label>
+      <div>
+        <q-chip :label="paciente.tipo_paciente" :color="paciente.tipo_paciente === 'Interno' ? 'indigo' : 'orange'" dense class="text-white"/>
+      </div>
+    </div>
+<!--    <div>-->
+<!--      <pre>{{paciente}}</pre>-->
+<!--    </div>-->
   </div>
   <q-dialog v-model="pacienteDialog" persistent>
     <q-card style="min-width: 350px">
@@ -94,6 +103,8 @@
             <q-input v-model="paciente.estado_civil" label="Estado civil" dense filled hint=""/>
             <q-input v-model="paciente.direccion" label="Dirección" dense filled hint=""/>
             <q-input v-model="paciente.telefono" label="Teléfono" dense filled hint=""/>
+<!--          select Interno Externo-->
+          <q-select v-model="paciente.tipo_paciente" label="Tipo paciente" dense filled hint="" :options="[ 'Interno','Externo'] "/>
             <q-card-actions align="right">
               <q-btn label="Cancelar" color="primary" flat @click="pacienteDialog = false" :loading="$store.loading"/>
               <q-btn label="Guardar" color="primary" flat type="submit" :loading="$store.loading"/>

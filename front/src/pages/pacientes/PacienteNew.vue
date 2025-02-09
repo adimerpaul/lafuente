@@ -38,7 +38,7 @@
             </div>
             <div class="col-12 col-md-3 q-pa-xs">
               <label class="text-bold">Estado civil:</label>
-              <q-select v-model="paciente.estado_civil" dense outlined :options="estados_civiles" placeholder="Estado civil" clearable/>
+              <q-select v-model="paciente.estado_civil" dense outlined :options="estados_civiles" placeholder="Estado civil"/>
             </div>
             <div class="col-12 col-md-3 q-pa-xs">
               <label class="text-bold">Teléfono:</label>
@@ -47,6 +47,12 @@
             <div class="col-12 col-md-6 q-pa-xs">
               <label class="text-bold">Dirección:</label>
               <q-input v-model="paciente.direccion" dense outlined placeholder="Dirección" />
+            </div>
+            <div class="col-12 col-md-6 q-pa-xs">
+              <label class="text-bold">Dirección:</label>
+<!--              <q-input v-model="paciente.direccion" dense outlined placeholder="Dirección" />-->
+              <q-radio v-model="paciente.tipo_paciente" val="Interno" label="Interno" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
+              <q-radio v-model="paciente.tipo_paciente" val="Externo" label="Externo" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
             </div>
             <div class="col-12 q-pa-xs">
               <div class="text-center">
@@ -86,9 +92,10 @@ export default {
         identificacion: '',
         edad: '',
         sexo: '',
-        estado_civil: '',
+        estado_civil: 'Soltero',
         direccion: '',
-        telefono: ''
+        telefono: '',
+        tipo_paciente: 'Externo'
       },
       estados_civiles: ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Otro'],
       loading: false

@@ -40,6 +40,9 @@
                 <q-tab name="paciente" :class="{'bg-blue text-white': tab === 'paciente'}">
                   <q-btn flat dense icon="person" label="Paciente" no-caps />
                 </q-tab>
+                <q-tab name="recetas" :class="{'bg-teal text-white': tab === 'recetas'}">
+                  <q-btn flat dense icon="receipt_long" label="Recetas" no-caps />
+                </q-tab>
                 <q-tab name="historial_medicos" :class="{'bg-green text-white': tab === 'historial_medicos'}">
                   <q-btn flat dense icon="history_edu" label="Historial médico" no-caps />
                 </q-tab>
@@ -54,9 +57,6 @@
                 </q-tab>
                 <q-tab name="diagnosticos" :class="{'bg-orange text-white': tab === 'diagnosticos'}">
                   <q-btn flat dense icon="assignment" label="Diagnósticos" no-caps />
-                </q-tab>
-                <q-tab name="recetas" :class="{'bg-teal text-white': tab === 'recetas'}">
-                  <q-btn flat dense icon="receipt_long" label="Recetas" no-caps />
                 </q-tab>
               </q-tabs>
 

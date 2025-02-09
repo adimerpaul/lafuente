@@ -28,8 +28,11 @@
               </div>
               <div class="col-12">
                 <label for="password" class="text-bold">Contraseña</label>
-                <q-input outlined v-model="password" type="password"
-                         :rules="[val => !!val || 'Este campo es requerido']" />
+                <q-input outlined v-model="password" :type="showPassword? 'text' : 'password'" @click:append="showPassword = !showPassword" append-icon="visibility" :rules="[val => !!val || 'Este campo es requerido']" >
+                  <template v-slot:append>
+                    <q-icon :name="showPassword? 'visibility_off' : 'visibility'"  @click="showPassword = !showPassword" />
+                  </template>
+                </q-input>
               </div>
               <div class="col-12 row items-center">
                 <q-checkbox v-model="remember" label="Recordar usuario" />
@@ -60,7 +63,8 @@ export default {
       username: '',
       password: '',
       remember: false,
-      loading: false
+      loading: false,
+      showPassword: false
     }
   },
   methods: {

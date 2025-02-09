@@ -10,21 +10,37 @@ import moment from 'moment'
 
 export class Imprimir {
   static numeroALetras(num) {
+    num = parseInt(num);
+    if (isNaN(num) || num < 0 || num > 1000000) return 'Número fuera de rango';
+
     const unidades = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
     const decenas = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
     const especiales = {
       10: 'diez', 11: 'once', 12: 'doce', 13: 'trece', 14: 'catorce',
-      15: 'quince', 16: 'dieciséis', 17: 'diecisiete', 18: 'dieciocho', 19: 'diecinueve',
+      15: 'quince', 16: 'dieciséis', 17: 'diecisiete', 18: 'dieciocho', 19: 'diecinueve'
     };
+    const centenas = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
-    if (num < 10) return unidades[num];
-    if (num >= 10 && num < 20) return especiales[num];
-    if (num < 100) {
-      const unidad = num % 10;
-      return `${decenas[Math.floor(num / 10)]}${unidad > 0 ? ' y ' + unidades[unidad] : ''}`;
+    function convertirCentenas(n) {
+      if (n < 10) return unidades[n];
+      if (n >= 10 && n < 20) return especiales[n];
+      if (n < 100) {
+        const unidad = n % 10;
+        return `${decenas[Math.floor(n / 10)]}${unidad > 0 ? ' y ' + unidades[unidad] : ''}`;
+      }
+      if (n === 100) return 'cien';
+      const dec = n % 100;
+      return `${centenas[Math.floor(n / 100)]}${dec > 0 ? ' ' + convertirCentenas(dec) : ''}`;
     }
 
-    return 'Número muy grande';
+    if (num === 1000000) return 'un millón';
+
+    let miles = Math.floor(num / 1000);
+    let resto = num % 1000;
+    let milesTexto = miles > 0 ? (miles === 1 ? 'mil' : `${convertirCentenas(miles)} mil`) : '';
+    let restoTexto = resto > 0 ? convertirCentenas(resto) : '';
+
+    return (milesTexto + ' ' + restoTexto).trim();
   }
   static factura (factura) {
     return new Promise((resolve, reject) => {
@@ -109,7 +125,7 @@ Oruro</div>
   static nota (factura, imprimir = true) {
     console.log('factura', factura)
     return new Promise((resolve, reject) => {
-      const a = this.numeroALetras(123)
+      const a = this.numeroALetras( parseFloat(factura.total).toFixed(2))
       const opts = {
         errorCorrectionLevel: 'M',
         type: 'png',
@@ -169,7 +185,7 @@ ${cantidad}
         factura.venta_detalles.forEach(r => {
           console.log('r', r)
           cadena += `<div style='font-size: 12px'><b> ${r.producto?.nombre} </b></div>`
-          if (r.visible === 1) {
+          if (true) {
             cadena += `<div>
                     <span style='font-size: 18px;font-weight: bold'>
                         ${r.cantidad}
