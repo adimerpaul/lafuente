@@ -32,38 +32,35 @@
               <q-tabs
                 v-model="tab"
                 dense
-                active-bg-color="primary"
                 class="text-grey"
-                active-color="white"
                 indicator-color="white"
                 align="justify"
                 narrow-indicator
               >
-                <q-tab name="paciente" >
-                  <q-btn flat dense icon="person" label="Paciente" no-caps/>
+                <q-tab name="paciente" :class="{'bg-blue text-white': tab === 'paciente'}">
+                  <q-btn flat dense icon="person" label="Paciente" no-caps />
                 </q-tab>
-                <q-tab name="historial_medicos">
-                  <q-btn flat dense icon="history" label="Historial médico" no-caps/>
+                <q-tab name="historial_medicos" :class="{'bg-green text-white': tab === 'historial_medicos'}">
+                  <q-btn flat dense icon="history_edu" label="Historial médico" no-caps />
                 </q-tab>
-                <q-tab name="signos vitales">
-                  <q-btn flat dense icon="favorite" label="Signos vitales" no-caps/>
+                <q-tab name="signos vitales" :class="{'bg-red text-white': tab === 'signos vitales'}">
+                  <q-btn flat dense icon="monitor_heart" label="Signos vitales" no-caps />
                 </q-tab>
-                <q-tab name="antecedentes">
-                  <q-btn flat dense icon="history" label="Antecedentes" no-caps/>
+                <q-tab name="antecedentes" :class="{'bg-purple text-white': tab === 'antecedentes'}">
+                  <q-btn flat dense icon="medical_services" label="Antecedentes" no-caps />
                 </q-tab>
-                <q-tab name="habitos">
-                  <q-btn flat dense icon="article" label="Hábitos" no-caps/>
+                <q-tab name="habitos" :class="{'bg-cyan text-white': tab === 'habitos'}">
+                  <q-btn flat dense icon="self_improvement" label="Hábitos" no-caps />
                 </q-tab>
-                <q-tab name="diagnosticos">
-                  <q-btn flat dense icon="history" label="Diagnósticos" no-caps/>
+                <q-tab name="diagnosticos" :class="{'bg-orange text-white': tab === 'diagnosticos'}">
+                  <q-btn flat dense icon="assignment" label="Diagnósticos" no-caps />
                 </q-tab>
-                <q-tab name="recetas">
-                  <q-btn flat dense icon="description" label="Recetas" no-caps/>
+                <q-tab name="recetas" :class="{'bg-teal text-white': tab === 'recetas'}">
+                  <q-btn flat dense icon="receipt_long" label="Recetas" no-caps />
                 </q-tab>
-<!--                <q-tab name="Ventas">-->
-<!--                  <q-btn flat dense icon="shopping_cart" label="Ventas" no-caps/>-->
-<!--                </q-tab>-->
               </q-tabs>
+
+
               <q-separator />
               <q-tab-panels v-model="tab" animated>
                 <q-tab-panel name="paciente">

@@ -48,9 +48,14 @@ class RecetaController extends Controller{
         $apellidoPaterno = $partes[0];
         $apellidoMaterno = isset($partes[1]) ? $partes[1] : '';
 
-        $html = view('pdf.receta', compact('receta', 'apellidoPaterno', 'apellidoMaterno', 'paciente'))->render();
+//        $html = view('pdf.receta', compact('receta', 'apellidoPaterno', 'apellidoMaterno', 'paciente'))->render();
 
-        $pdf = Pdf::loadHTML($html)->setPaper([0, 0, 396, 612], 'portrait'); // 396x612 puntos = 5.5x8.5 pulgadas
+//        $pdf = Pdf::loadHTML($html)->setPaper([0, 0, 396, 612], 'portrait'); // 396x612 puntos = 5.5x8.5 pulgadas
+
+//        hoja tamaño carta horizontal
+        $pdf = Pdf::loadView('pdf.receta', compact('receta', 'apellidoPaterno', 'apellidoMaterno', 'paciente'))
+            ->setPaper('letter', 'landscape');
+//            ->setPaper('half-letter');  // Formato media carta
 
         return $pdf->stream('receta' . $id . '.pdf');
     }

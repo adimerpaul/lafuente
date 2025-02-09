@@ -11,7 +11,7 @@
                 <q-icon name="search" />
               </template>
               <template v-slot:before>
-                <q-btn color="primary" label="Nuevo" @click="pacienteNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
+                <q-btn color="positive" label="Nuevo" @click="pacienteNew" no-caps  icon="add_circle_outline" :loading="loading" />
               </template>
             </q-input>
           </div>

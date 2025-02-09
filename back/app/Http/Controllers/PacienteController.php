@@ -18,7 +18,7 @@ class PacienteController extends Controller{
         })
             ->orderBy('nombre')
             ->orderBy('apellido')
-            ->paginate(15);
+            ->paginate(20);
 
         return response()->json($pacientes);
     }

@@ -67,12 +67,14 @@
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                   <tr>
+                    <th>ID</th>
                     <th>Nombres</th>
                     <th>Unidad</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
+                    <td>{{ producto.id }}</td>
                     <td style="padding: 0;margin: 0;" class="cursor-pointer">
                       <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                         {{ $filters.textUpper( producto.nombre ) }}
@@ -250,10 +252,15 @@ export default {
       this.productosRecetas.push({
         producto_id: producto.id,
         cantidad: 1,
-        unidad: 'capsulas',
-        via: "oral",
-        frecuencia: "cada 8 horas",
-        duracion: "3 dias",
+        // unidad: 'capsulas',
+        // via: "oral",
+        // frecuencia: "cada 8 horas",
+        // duracion: "3 dias",
+        // indicaciones: "",
+        unidad: '',
+        via: "",
+        frecuencia: "",
+        duracion: "",
         indicaciones: "",
         producto,
       });

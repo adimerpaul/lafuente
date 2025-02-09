@@ -14,7 +14,8 @@ class ProductoController extends Controller{
 
         $productos = Producto::where(function ($query) use ($search) {
             $query->where('nombre', 'like', "%$search%")
-                ->orWhere('descripcion', 'like', "%$search%");
+                ->orWhere('descripcion', 'like', "%$search%")
+                ->orWhere('id', 'like', "%$search%");
         })
             ->orderBy('nombre')
             ->paginate(15);
