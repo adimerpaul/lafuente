@@ -5,7 +5,8 @@
     </div>
     <q-space />
     <q-btn-group flat>
-      <q-btn icon="add_circle_outline" @click="addVenta" :loading="$store.loading" />
+<!--      <q-btn icon="add_circle_outline" @click="addVenta" :loading="$store.loading" />-->
+      <q-btn icon="add_circle_outline" @click="addVenta" :loading="$store.loading" unelevated color="positive" label="Vincular venta" no-caps />
     </q-btn-group>
   </div>
   <div class="row">

@@ -4,8 +4,8 @@
       Recetas
     </div>
     <q-space />
-    <q-btn-group flat>
-      <q-btn icon="add_circle_outline" @click="addReceta" :loading="$store.loading" />
+    <q-btn-group >
+      <q-btn icon="add_circle_outline" @click="addReceta" :loading="$store.loading" unelevated color="positive" label="Crear receta" no-caps />
     </q-btn-group>
   </div>
   <div class="row">
@@ -299,12 +299,28 @@ export default {
       });
     },
     addReceta() {
-      this.receta = {
-        indicaciones: "",
-        observaciones: "",
-      };
-      this.recetaDialog = true;
-      this.productosRecetas = [];
+      // this.receta = {
+      //   indicaciones: "",
+      //   observaciones: "",
+      // };
+      // this.recetaDialog = true;
+      // this.productosRecetas = [];
+      this.$alert.dialogPrompt('Insert ID de la venta', {
+        title: 'Agregar receta',
+        cancel: true,
+        persistent: true,
+      }).onOk((id) => {
+        this.$store.loading = true;
+        this.$axios.get("recetas/" + id).then((res) => {
+          this.receta = res.data;
+          this.productosRecetas = res.data.productos;
+          this.recetaDialog = true;
+          this.$store.loading = false;
+        }).catch((error) => {
+          this.$store.loading = false;
+          this.$alert.error(error.response.data.message);
+        });
+      });
     },
     sendWhatsapp(receta) {
       const pdfUrl = `${this.$url}/../receta/${receta.id}/pdf`;

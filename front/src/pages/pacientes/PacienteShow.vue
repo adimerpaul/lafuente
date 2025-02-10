@@ -43,11 +43,27 @@
                 <q-tab name="recetas" :class="{'bg-teal text-white': tab === 'recetas'}">
                   <q-btn flat dense icon="receipt_long" label="Recetas" no-caps />
                 </q-tab>
+<!--                ventas-->
+<!--                cuentas por cobrar-->
+<!--                facturas-->
+<!--                pagos-->
+                <q-tab name="Ventas" :class="{'bg-green text-white': tab === 'Ventas'}">
+                  <q-btn flat dense icon="shopping_cart" label="Ventas" no-caps />
+                </q-tab>
+                <q-tab name="cuentas por cobrar" :class="{'bg-red text-white': tab === 'cuentas por cobrar'}">
+                  <q-btn flat dense icon="account_balance" label="Cobrar" no-caps />
+                </q-tab>
+                <q-tab name="facturas" :class="{'bg-purple text-white': tab === 'facturas'}">
+                  <q-btn flat dense icon="receipt" label="Facturas" no-caps />
+                </q-tab>
+                <q-tab name="pagos" :class="{'bg-cyan text-white': tab === 'pagos'}">
+                  <q-btn flat dense icon="payment" label="Pagos" no-caps />
+                </q-tab>
                 <q-tab name="historial_medicos" :class="{'bg-green text-white': tab === 'historial_medicos'}">
-                  <q-btn flat dense icon="history_edu" label="Historial médico" no-caps />
+                  <q-btn flat dense icon="history_edu" label="Historial " no-caps />
                 </q-tab>
                 <q-tab name="signos vitales" :class="{'bg-red text-white': tab === 'signos vitales'}">
-                  <q-btn flat dense icon="monitor_heart" label="Signos vitales" no-caps />
+                  <q-btn flat dense icon="monitor_heart" label="Signos" no-caps />
                 </q-tab>
                 <q-tab name="antecedentes" :class="{'bg-purple text-white': tab === 'antecedentes'}">
                   <q-btn flat dense icon="medical_services" label="Antecedentes" no-caps />
