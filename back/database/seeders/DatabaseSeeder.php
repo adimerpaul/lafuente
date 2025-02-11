@@ -44,30 +44,30 @@ class DatabaseSeeder extends Seeder
 
         DB::unprepared($sqlContent);
 
-        $paciente = Paciente::factory()->create();
-        $historial = HistorialMedico::factory()->create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-        ]);
-        $signosVitales = SignosVitale::factory()->create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-        ]);
-        $antecedentesFamiliares = AntecedentesFamiliare::factory()->create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-        ]);
-        $habitosPersonales = HabitosPersonale::factory()->create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-        ]);
-
-        $diagnostico = Diagnostico::factory()->create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-        ]);
-
-        Paciente::factory(1)->create();
+//        $paciente = Paciente::factory()->create();
+//        $historial = HistorialMedico::factory()->create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//        ]);
+//        $signosVitales = SignosVitale::factory()->create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//        ]);
+//        $antecedentesFamiliares = AntecedentesFamiliare::factory()->create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//        ]);
+//        $habitosPersonales = HabitosPersonale::factory()->create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//        ]);
+//
+//        $diagnostico = Diagnostico::factory()->create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//        ]);
+//
+//        Paciente::factory(1)->create();
 
 //        Schema::create('recetas', function (Blueprint $table) {
 //            $table->id();
