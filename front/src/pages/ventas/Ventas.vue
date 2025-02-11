@@ -120,7 +120,10 @@
             </q-btn-dropdown>
           </td>
           <td>{{ venta.id }}</td>
-          <td>{{ venta.fecha }}</td>
+          <td>
+            {{ venta.fecha }}
+            {{ venta.hora }}
+          </td>
           <td>{{ venta.cliente.nombre }}</td>
           <td>{{ venta.user.name }}</td>
           <td>
