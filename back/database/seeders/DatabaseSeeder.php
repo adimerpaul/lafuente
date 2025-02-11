@@ -93,45 +93,45 @@ class DatabaseSeeder extends Seeder
 //            $table->timestamps();
 //        });
 
-        $receta = Receta::create([
-            'paciente_id' => $paciente->id,
-            'user_id' => rand(1, 11),
-            'indicaciones' => 'Tomar con agua',
-            'observaciones' => 'No tomar con el estomago vacio',
-        ]);
-
-        $recetaDetalle = RecetaDetalle::create([
-            'receta_id' => $receta->id,
-            'producto_id' => rand(1, 1000),
-            'productoNombre' => 'Paracetamol',
-            'cantidad' => 1,
-            'unidad' => 'pastilla',
-            'via' => 'oral',
-            'frecuencia' => 'cada 8 horas',
-            'duracion' => '3 dias',
-            'indicaciones' => 'Tomar con agua',
-        ]);
-        $recetaDetalle = RecetaDetalle::create([
-            'receta_id' => $receta->id,
-            'producto_id' => rand(1, 1000),
-            'productoNombre' => 'Ibuprofeno',
-            'cantidad' => 1,
-            'unidad' => 'pastilla',
-            'via' => 'oral',
-            'frecuencia' => 'cada 8 horas',
-            'duracion' => '3 dias',
-            'indicaciones' => 'Tomar con agua',
-        ]);
-        $recetaDetalle = RecetaDetalle::create([
-            'receta_id' => $receta->id,
-            'producto_id' => rand(1, 1000),
-            'productoNombre' => 'Amoxicilina',
-            'cantidad' => 1,
-            'unidad' => 'pastilla',
-            'via' => 'oral',
-            'frecuencia' => 'cada 8 horas',
-            'duracion' => '3 dias',
-            'indicaciones' => 'Tomar con agua',
-        ]);
+//        $receta = Receta::create([
+//            'paciente_id' => $paciente->id,
+//            'user_id' => rand(1, 11),
+//            'indicaciones' => 'Tomar con agua',
+//            'observaciones' => 'No tomar con el estomago vacio',
+//        ]);
+//
+//        $recetaDetalle = RecetaDetalle::create([
+//            'receta_id' => $receta->id,
+//            'producto_id' => rand(1, 1000),
+//            'productoNombre' => 'Paracetamol',
+//            'cantidad' => 1,
+//            'unidad' => 'pastilla',
+//            'via' => 'oral',
+//            'frecuencia' => 'cada 8 horas',
+//            'duracion' => '3 dias',
+//            'indicaciones' => 'Tomar con agua',
+//        ]);
+//        $recetaDetalle = RecetaDetalle::create([
+//            'receta_id' => $receta->id,
+//            'producto_id' => rand(1, 1000),
+//            'productoNombre' => 'Ibuprofeno',
+//            'cantidad' => 1,
+//            'unidad' => 'pastilla',
+//            'via' => 'oral',
+//            'frecuencia' => 'cada 8 horas',
+//            'duracion' => '3 dias',
+//            'indicaciones' => 'Tomar con agua',
+//        ]);
+//        $recetaDetalle = RecetaDetalle::create([
+//            'receta_id' => $receta->id,
+//            'producto_id' => rand(1, 1000),
+//            'productoNombre' => 'Amoxicilina',
+//            'cantidad' => 1,
+//            'unidad' => 'pastilla',
+//            'via' => 'oral',
+//            'frecuencia' => 'cada 8 horas',
+//            'duracion' => '3 dias',
+//            'indicaciones' => 'Tomar con agua',
+//        ]);
     }
 }
