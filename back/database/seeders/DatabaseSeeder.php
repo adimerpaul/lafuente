@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('admin'),
             'role' => 'Administrador',
         ]);
-        User::factory(10)->create();
+//        User::factory(10)->create();
         $sqlFIle = base_path('database/seeders/productos_202411150418.sql');
         $sqlContent = file_get_contents($sqlFIle);
 
