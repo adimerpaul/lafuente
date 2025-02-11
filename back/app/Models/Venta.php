@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Venta extends Model{
     use SoftDeletes;
-    protected $fillable = ['user_id', 'cliente_id', 'fecha', 'ci', 'nombre', 'estado', 'tipo_comprobante', 'total','tipo_venta', 'tipo_pago'];
+    protected $fillable = ['user_id', 'cliente_id', 'fecha','hora', 'ci', 'nombre', 'estado', 'tipo_comprobante', 'total','tipo_venta', 'tipo_pago'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     function user(){
         return $this->belongsTo(User::class);

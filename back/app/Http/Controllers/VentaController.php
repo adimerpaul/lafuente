@@ -29,7 +29,8 @@ class VentaController extends Controller{
 
         $request->merge(['user_id' => auth()->user()->id,]);
         $request->merge(['cliente_id' => $cliente->id,]);
-        $request->merge(['fecha' => date('Y-m-d H:i:s'),]);
+        $request->merge(['fecha' => date('Y-m-d'),]);
+        $request->merge(['hora' => date('H:i:s'),]);
         $venta = Venta::create($request->all());
         $productos = $request->productos;
         $insertProductos = [];

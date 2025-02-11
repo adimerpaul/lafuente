@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => rand(1, 11),
         ]);
 
-        Paciente::factory(1000)->create();
+        Paciente::factory(1)->create();
 
 //        Schema::create('recetas', function (Blueprint $table) {
 //            $table->id();
