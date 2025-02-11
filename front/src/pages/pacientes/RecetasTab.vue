@@ -299,28 +299,12 @@ export default {
       });
     },
     addReceta() {
-      // this.receta = {
-      //   indicaciones: "",
-      //   observaciones: "",
-      // };
-      // this.recetaDialog = true;
-      // this.productosRecetas = [];
-      this.$alert.dialogPrompt('Insert ID de la venta', {
-        title: 'Agregar receta',
-        cancel: true,
-        persistent: true,
-      }).onOk((id) => {
-        this.$store.loading = true;
-        this.$axios.get("recetas/" + id).then((res) => {
-          this.receta = res.data;
-          this.productosRecetas = res.data.productos;
-          this.recetaDialog = true;
-          this.$store.loading = false;
-        }).catch((error) => {
-          this.$store.loading = false;
-          this.$alert.error(error.response.data.message);
-        });
-      });
+      this.receta = {
+        indicaciones: "",
+        observaciones: "",
+      };
+      this.recetaDialog = true;
+      this.productosRecetas = [];
     },
     sendWhatsapp(receta) {
       const pdfUrl = `${this.$url}/../receta/${receta.id}/pdf`;

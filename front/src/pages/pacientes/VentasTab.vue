@@ -12,81 +12,161 @@
   <div class="row">
     <div class="col-12">
       <q-list bordered>
-        <q-item v-for="(diagnostico, index) in paciente.diagnosticos" :key="index">
+        <q-item v-for="(venta, index) in paciente.paciente_ventas" :key="index">
           <q-item-section avatar>
             <q-avatar >
-              <q-btn :label="index + 1" flat />
+              <q-btn :label="venta.id" color="primary" flat />
             </q-avatar>
           </q-item-section>
           <q-item-section>
             <q-item-label>
+<!--              <div>-->
+<!--                <span class="text-bold">Venta: </span>-->
+<!--                <span>-->
+<!--                  {{ venta.diagnostico }}-->
+<!--                </span>-->
+<!--              </div>-->
+<!--              <div>-->
+<!--                <span class="text-bold">Tratamiento: </span>-->
+<!--                <span>-->
+<!--                  {{ venta.tratamiento }}-->
+<!--                </span>-->
+<!--              </div>-->
               <div>
                 <span class="text-bold">Venta: </span>
-                <span>
-                  {{ diagnostico.diagnostico }}
-                </span>
+                <span>{{ venta.venta.nombre }}</span>
               </div>
               <div>
-                <span class="text-bold">Tratamiento: </span>
-                <span>
-                  {{ diagnostico.tratamiento }}
-                </span>
+                <span class="text-bold">Total: </span>
+                <span>{{ venta.venta.total }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Tipo de venta: </span>
+                <span>{{ venta.venta.tipo_venta }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Tipo de comprobante: </span>
+                <span>{{ venta.venta.tipo_comprobante }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Tipo de pago: </span>
+                <span>{{ venta.venta.tipo_pago }}</span>
+              </div>
+              <div>
+                <span class="text-bold">Productos: </span>
+                <span>{{ venta.venta.detailsText }}</span>
               </div>
             </q-item-label>
             <q-item-label caption>
               <div>
                 <span class="text-bold">Fecha de creación: </span>
-                <span>{{ diagnostico.fecha }}</span>
+                <span>{{ venta.fecha }}</span>
               </div>
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <span class="text-bold">{{ diagnostico.user?.name }}</span>
-            <!--            <q-btn icon="print" flat @click="printVenta(diagnostico)" />-->
+            <span class="text-bold">{{ venta.user?.name }}</span>
+            <q-btn icon="delete" color="negative" @click="deleteVenta(venta)" size="10px" no-caps label="Quitar" :loading="$store.loading" />
           </q-item-section>
         </q-item>
       </q-list>
-      <!--      "diagnosticos": [-->
-      <!--      {-->
-      <!--      "id": 1,-->
-      <!--      "paciente_id": 1,-->
-      <!--      "user_id": 7,-->
-      <!--      "diagnostico": "Voluptatem eligendi amet quidem ipsum. Deserunt fuga aut placeat. Animi ut quia quibusdam aut.",-->
-      <!--      "tratamiento": "A suscipit cumque perferendis omnis quod blanditiis itaque. Qui ea sit quas maiores rerum. Nulla quia laboriosam eligendi corporis sit a officiis. Vel in accusamus quis ratione ea ducimus alias non.",-->
-      <!--      "fecha": "1970-06-20 00:00:00",-->
-      <!--      "user": {-->
-      <!--      "id": 7,-->
-      <!--      "name": "Dario Saiz",-->
-      <!--      "username": "rosa.cervantez",-->
-      <!--      "email": "pizarro.lucas@example.com",-->
-      <!--      "role": "Doctor",-->
-      <!--      "color": "orange"-->
-      <!--      }-->
-      <!--      }-->
-      <!--      ]-->
     </div>
+<!--    <pre>-->
+<!--      {{ paciente.paciente_ventas }}-->
+<!--    </pre>-->
+<!--    "paciente_ventas": [-->
+<!--    {-->
+<!--    "id": 1,-->
+<!--    "paciente_id": 247,-->
+<!--    "venta_id": 1,-->
+<!--    "user_id": 1,-->
+<!--    "fecha": "2025-02-11 05:24:37",-->
+<!--    "hora": "05:24",-->
+<!--    "nombre_completo": "Administrador",-->
+<!--    "user": {-->
+<!--    "id": 1,-->
+<!--    "name": "Administrador",-->
+<!--    "username": "admin",-->
+<!--    "email": "admin@test.com",-->
+<!--    "role": "Administrador",-->
+<!--    "color": "red"-->
+<!--    },-->
+<!--    "venta": {-->
+<!--    "id": 1,-->
+<!--    "user_id": 1,-->
+<!--    "cliente_id": 1,-->
+<!--    "fecha": "2025-02-11",-->
+<!--    "hora": null,-->
+<!--    "tipo_venta": "Interno",-->
+<!--    "ci": "0",-->
+<!--    "nombre": "SN",-->
+<!--    "estado": "Activo",-->
+<!--    "tipo_comprobante": "Venta",-->
+<!--    "total": "57.00",-->
+<!--    "tipo_pago": "Efectivo",-->
+<!--    "detailsText": "1 4 DERM X 20 GR,1 ABIRATRAL 250 MG. COMPRIMIDOS",-->
+<!--    "venta_detalles": [-->
+<!--    {-->
+<!--    "id": 1,-->
+<!--    "venta_id": 1,-->
+<!--    "producto_id": 4454,-->
+<!--    "cantidad": 1,-->
+<!--    "unidad": null,-->
+<!--    "precio": 56,-->
+<!--    "producto": {-->
+<!--    "id": 4454,-->
+<!--    "nombre": "4 DERM X 20 GR",-->
+<!--    "descripcion": "Antimicótico y antiinflamatorio",-->
+<!--    "unidad": "TUBOS",-->
+<!--    "precio": 56,-->
+<!--    "stock": null,-->
+<!--    "stock_minimo": null,-->
+<!--    "stock_maximo": null-->
+<!--    }-->
+<!--    },-->
+<!--    {-->
+<!--    "id": 2,-->
+<!--    "venta_id": 1,-->
+<!--    "producto_id": 3410,-->
+<!--    "cantidad": 1,-->
+<!--    "unidad": null,-->
+<!--    "precio": 1,-->
+<!--    "producto": {-->
+<!--    "id": 3410,-->
+<!--    "nombre": "ABIRATRAL 250 MG. COMPRIMIDOS",-->
+<!--    "descripcion": "Antineoplásico",-->
+<!--    "unidad": "COMPRIMIDOS",-->
+<!--    "precio": 1,-->
+<!--    "stock": null,-->
+<!--    "stock_minimo": null,-->
+<!--    "stock_maximo": null-->
+<!--    }-->
+<!--    }-->
+<!--    ]-->
+<!--    }-->
+<!--    },-->
   </div>
-  <q-dialog v-model="diagnosticoDialog" persistent>
-    <q-card flat bordered style="width: 600px;max-width: 100%">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Venta</div>
-        <q-space />
-        <q-btn icon="close" flat @click="diagnosticoDialog = false" />
-      </q-card-section>
-      <q-card-section>
-        <q-form @submit="submitVenta">
-          <div class="row">
-            <div class="col-12 col-md-12">
-            </div>
-          </div>
-          <q-card-actions align="right">
-            <q-btn label="Cancelar" color="negative" @click="diagnosticoDialog = false" :loading="$store.loading" />
-            <q-btn label="Guardar" color="primary" type="submit" :loading="$store.loading" />
-          </q-card-actions>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+<!--  <q-dialog v-model="diagnosticoDialog" persistent>-->
+<!--    <q-card flat bordered style="width: 600px;max-width: 100%">-->
+<!--      <q-card-section class="row items-center q-pb-none">-->
+<!--        <div class="text-h6">Venta</div>-->
+<!--        <q-space />-->
+<!--        <q-btn icon="close" flat @click="diagnosticoDialog = false" />-->
+<!--      </q-card-section>-->
+<!--      <q-card-section>-->
+<!--        <q-form @submit="submitVenta">-->
+<!--          <div class="row">-->
+<!--            <div class="col-12 col-md-12">-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <q-card-actions align="right">-->
+<!--            <q-btn label="Cancelar" color="negative" @click="diagnosticoDialog = false" :loading="$store.loading" />-->
+<!--            <q-btn label="Guardar" color="primary" type="submit" :loading="$store.loading" />-->
+<!--          </q-card-actions>-->
+<!--        </q-form>-->
+<!--      </q-card-section>-->
+<!--    </q-card>-->
+<!--  </q-dialog>-->
 </template>
 
 <script>
@@ -139,26 +219,53 @@ export default {
     }
   },
   methods: {
-    submitVenta() {
-      this.$store.loading = true;
-      this.$axios.post("diagnosticos", {
-        ...this.diagnostico,
-        paciente_id: this.paciente.id,
-      }).then((res) => {
-        this.diagnosticoDialog = false;
-        this.$store.loading = false;
-        this.$emit("pacienteGet");
-      }).catch((error) => {
-        this.$store.loading = false;
-        console.error(error);
+    deleteVenta(venta) {
+      this.$alert.dialog("¿Está seguro de quitar la venta?").onOk(() => {
+        this.$store.loading = true;
+        this.$axios.delete("paciente_ventas/" + venta.id).then((res) => {
+          this.$emit("pacienteGet");
+          this.$alert.success("Venta quitada correctamente");
+        }).catch((error) => {
+          this.$alert.error(error.response.data.message);
+        }).finally(() => {
+          this.$store.loading = false;
+        });
       });
     },
+    // submitVenta() {
+    //   this.$store.loading = true;
+    //   this.$axios.post("diagnosticos", {
+    //     ...this.diagnostico,
+    //     paciente_id: this.paciente.id,
+    //   }).then((res) => {
+    //     this.diagnosticoDialog = false;
+    //     this.$store.loading = false;
+    //     this.$emit("pacienteGet");
+    //   }).catch((error) => {
+    //     this.$store.loading = false;
+    //     console.error(error);
+    //   });
+    // },
     addVenta() {
-      this.diagnostico = {
-        diagnostico: "",
-        tratamiento: "",
-      };
-      this.diagnosticoDialog = true;
+      // this.diagnostico = {
+      //   diagnostico: "",
+      //   tratamiento: "",
+      // };
+      // this.diagnosticoDialog = true;
+      this.$alert.dialogPrompt('Ingrese Id venta').onOk((id) => {
+        this.$store.loading = true;
+        this.$axios.post("paciente_ventas", {
+          venta_id: id,
+          paciente_id: this.paciente.id,
+        }).then((res) => {
+          this.$emit("pacienteGet");
+          this.$alert.success("Venta vinculada correctamente");
+        }).catch((error) => {
+          this.$alert.error(error.response.data.message);
+        }).finally(() => {
+          this.$store.loading = false;
+        });
+      });
     },
     printVenta(diagnostico) {
       const pdfUrl = `${this.$url}/../diagnostico_medicos/${diagnostico.id}/pdf`;

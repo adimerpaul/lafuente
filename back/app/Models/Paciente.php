@@ -53,4 +53,12 @@ class Paciente extends Model{
     public function diagnosticos(){
         return $this->hasMany(Diagnostico::class);
     }
+    function ventas(){
+        return $this->belongsToMany(Venta::class, 'paciente_ventas')
+            ->withPivot('user_id', 'fecha', 'hora')
+            ->withTimestamps();
+    }
+    function pacienteVentas(){
+        return $this->hasMany(PacienteVenta::class);
+    }
 }
