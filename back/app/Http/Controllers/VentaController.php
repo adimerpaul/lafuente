@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Receta;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 
@@ -45,6 +46,13 @@ class VentaController extends Controller{
             $total += $producto['cantidad'] * $producto['precio'];
         }
         $venta->update(['total' => $total]);
+        $receta_id = $request->receta_id;
+        if ($receta_id != '') {
+            error_log('receta_id: ' . $receta_id);
+            $receta = Receta::findOrFail($receta_id);
+            $receta->numero_factura = $venta->id;
+            $receta->save();
+        }
         $venta->ventaDetalles()->createMany($insertProductos);
 
         return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);

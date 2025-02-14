@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->text('indicaciones')->nullable();
             $table->text('observaciones')->nullable();
+            $table->text('numero_factura')->nullable();
             $table->dateTime('fecha')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
