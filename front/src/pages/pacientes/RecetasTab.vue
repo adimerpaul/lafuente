@@ -18,7 +18,17 @@
           <q-item-section>
             <q-item-label>
               <div>
-                <span class="text-bold">indicaciones: </span>
+                <span class="text-bold">Cancelado: </span>
+                <span>
+                  <q-chip
+                    dense text-color="white"
+                    :label="receta.numero_factura ? 'Si' : 'No'"
+                    :color="receta.numero_factura ? 'green' : 'red'"
+                  />
+                </span>
+              </div>
+              <div>
+                <span class="text-bold">Indicaciones: </span>
                 <span>{{ receta.indicaciones }}</span>
               </div>
               <div>
@@ -55,7 +65,7 @@
         <q-space />
         <q-btn icon="close" flat @click="recetaDialog = false" />
       </q-card-section>
-      <q-card-section>
+      <q-card-section class="q-pa-xs">
         <q-form @submit="submitReceta">
           <div class="row">
             <div class="col-12 col-md-4 q-pa-xs">
@@ -143,25 +153,29 @@
                 </tbody>
               </q-markup-table>
             </div>
-            <div class="col-12">
+            <div class="col-12 col-md-10">
               <q-input v-model="receta.indicaciones" dense outlined clearable label="Indicaciones" hint="">
                 <template v-slot:append>
                   <q-btn flat round dense icon="mic" @click="startRecognition('indicaciones')" />
                 </template>
               </q-input>
-            </div>
-            <div class="col-12">
               <q-input v-model="receta.observaciones" dense outlined clearable label="Observaciones" hint="" >
                 <template v-slot:append>
                   <q-btn flat round dense icon="mic" @click="startRecognition('observaciones')" />
                 </template>
               </q-input>
             </div>
+            <div class="col-12 col-md-2 text-right">
+              <div>
+                <q-btn label="Guardar" color="green" type="submit" :loading="$store.loading" style="width: 120px" />
+              </div>
+              <div>
+                <q-btn label="Cancelar" color="negative" @click="recetaDialog = false" :loading="$store.loading" style="width: 120px" />
+              </div>
+            </div>
           </div>
-        <q-card-actions align="right">
-          <q-btn label="Cancelar" color="negative" @click="recetaDialog = false" :loading="$store.loading" />
-          <q-btn label="Guardar" color="primary" type="submit" :loading="$store.loading" />
-        </q-card-actions>
+<!--        <q-card-actions align="right">-->
+<!--        </q-card-actions>-->
         </q-form>
       </q-card-section>
     </q-card>

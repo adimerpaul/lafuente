@@ -2,6 +2,14 @@
   <div class="row items-center">
     <div class="text-h6">
       Ventas
+      <template v-if="paciente.paciente_ventas.length">
+        <span class="text-caption">
+          ({{ paciente.paciente_ventas.length }})
+        </span>
+        <span class="text-h5 text-bold">
+          {{ paciente.paciente_ventas.reduce((total, venta) => total + parseFloat(venta.venta.total), 0) }} Bs.
+        </span>
+      </template>
     </div>
     <q-space />
     <q-btn-group flat>
@@ -22,36 +30,25 @@
             <q-item-label>
 <!--              <div>-->
 <!--                <span class="text-bold">Venta: </span>-->
-<!--                <span>-->
-<!--                  {{ venta.diagnostico }}-->
-<!--                </span>-->
+<!--                <span>{{ venta.venta.nombre }}</span>-->
 <!--              </div>-->
-<!--              <div>-->
-<!--                <span class="text-bold">Tratamiento: </span>-->
-<!--                <span>-->
-<!--                  {{ venta.tratamiento }}-->
-<!--                </span>-->
-<!--              </div>-->
-              <div>
-                <span class="text-bold">Venta: </span>
-                <span>{{ venta.venta.nombre }}</span>
-              </div>
               <div>
                 <span class="text-bold">Total: </span>
                 <span>{{ venta.venta.total }}</span>
+                <span class="text-bold"> Bs.</span>
               </div>
               <div>
                 <span class="text-bold">Tipo de venta: </span>
                 <span>{{ venta.venta.tipo_venta }}</span>
               </div>
-              <div>
-                <span class="text-bold">Tipo de comprobante: </span>
-                <span>{{ venta.venta.tipo_comprobante }}</span>
-              </div>
-              <div>
-                <span class="text-bold">Tipo de pago: </span>
-                <span>{{ venta.venta.tipo_pago }}</span>
-              </div>
+<!--              <div>-->
+<!--                <span class="text-bold">Tipo de comprobante: </span>-->
+<!--                <span>{{ venta.venta.tipo_comprobante }}</span>-->
+<!--              </div>-->
+<!--              <div>-->
+<!--                <span class="text-bold">Tipo de pago: </span>-->
+<!--                <span>{{ venta.venta.tipo_pago }}</span>-->
+<!--              </div>-->
               <div>
                 <span class="text-bold">Productos: </span>
                 <span>{{ venta.venta.detailsText }}</span>

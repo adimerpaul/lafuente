@@ -51,9 +51,9 @@
             </div>
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">
-                <q-btn icon="add_circle_outline" size="10px" @click="recoveryReceta" color="green" dense no-caps label="Recuperar venta" />
+                <q-btn icon="add_circle_outline" size="10px" @click="recoveryReceta" color="green" dense no-caps label="Recuperar receta" />
                 <q-space />
-                <q-btn icon="delete" size="10px" color="red" dense flat no-caps label="limpiar" @click="productosVentas = []" />
+                <q-btn icon="delete" size="10px" color="red" dense flat no-caps label="limpiar" @click="productosVentas = [];this.receta_id = null" />
               </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
@@ -204,6 +204,7 @@ export default {
         nit: "0",
         nombre: "SN",
       },
+      receta_id: null,
       recognition: null,
       activeField: null,
       productos: [],
@@ -275,9 +276,10 @@ export default {
         cancel: true,
         persistent: true,
       }).onOk((data) => {
+        this.receta_id = data;
         this.loading = true;
         this.$axios.get("receta/" + data).then((res) => {
-          console.log(res.data);
+          // console.log(res.data);
           const receta_detalles = res.data.receta_detalles;
           if (receta_detalles.length === 0) {
             this.$alert.error("Receta vacía");
@@ -286,7 +288,7 @@ export default {
           this.productosVentas = receta_detalles
             .filter((receta_detalle) => receta_detalle.producto_id) // Filtra los elementos que tienen producto_id no vacío
             .map((receta_detalle) => {
-              console.log(receta_detalle);
+              // console.log(receta_detalle);
               return {
                 producto_id: receta_detalle.producto_id,
                 cantidad: receta_detalle.cantidad,
@@ -336,12 +338,14 @@ export default {
         productos: this.productosVentas,
         tipo_venta: this.venta.tipo_venta,
         tipo_pago: this.venta.tipo_pago,
+        receta_id: this.receta_id,
       }).then((res) => {
         this.ventaDialog = false;
         this.loading = false;
         this.$alert.success("Venta realizada con éxito");
         this.productosVentas = [];
         Imprimir.nota(res.data);
+        this.receta_id = null;
       }).catch((error) => {
         this.loading = false;
         console.error(error);

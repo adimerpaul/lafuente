@@ -36,7 +36,7 @@
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
       <label class="text-bold">Fecha de nacimiento:</label>
-      <div>
+      <div v-if="paciente.fecha_nacimiento">
         {{ paciente.fecha_nacimiento.substring(0, 10) }}
       </div>
     </div>
