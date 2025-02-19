@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pago extends Model{
     use SoftDeletes;
-    protected $fillable = ['fecha', 'observacion', 'tipo', 'total', 'pagado', 'paciente_id', 'user_id'];
+    protected $fillable = ['fecha', 'observacion', 'tipo', 'total', 'pagado', 'anulado', 'paciente_id', 'user_id'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+    function user(){
+        return $this->belongsTo(User::class);
+    }
 }

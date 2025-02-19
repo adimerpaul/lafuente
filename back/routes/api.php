@@ -55,6 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/paciente_ventas/{paciente_venta}', [App\Http\Controllers\PacienteVentaController::class, 'update']);
     Route::delete('/paciente_ventas/{paciente_venta}', [App\Http\Controllers\PacienteVentaController::class, 'destroy']);
 
+    Route::post('/cobros', [App\Http\Controllers\CobroController::class, 'store']);
+    Route::put('/cobros/{cobro}', [App\Http\Controllers\CobroController::class, 'update']);
+
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

@@ -27,6 +27,15 @@ class PacienteController extends Controller{
         return response()->json(Paciente::create($request->all()));
     }
     function show(Paciente $paciente){
+//        function cobros(){
+//            return $this->hasMany(Cobro::class);
+//        }
+//        function facturas(){
+//            return $this->hasMany(Factura::class);
+//        }
+//        function pagos(){
+//            return $this->hasMany(Pago::class);
+//        }
         return Paciente::with(
             'historialMedicos.user',
             'signosVitales.user','antecedentesFamiliares.user',
@@ -36,6 +45,9 @@ class PacienteController extends Controller{
             'diagnosticos.user',
             'pacienteVentas.user',
             'pacienteVentas.venta',
+            'cobros.user',
+            'facturas.user',
+            'pagos.user',
         )->find($paciente->id);
     }
     function update(Request $request, Paciente $paciente){

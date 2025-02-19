@@ -61,4 +61,13 @@ class Paciente extends Model{
     function pacienteVentas(){
         return $this->hasMany(PacienteVenta::class);
     }
+    function cobros(){
+        return $this->hasMany(Cobro::class);
+    }
+    function facturas(){
+        return $this->hasMany(Factura::class);
+    }
+    function pagos(){
+        return $this->hasMany(Pago::class);
+    }
 }

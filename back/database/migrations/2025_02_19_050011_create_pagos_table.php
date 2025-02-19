@@ -18,10 +18,11 @@ return new class extends Migration
             $table->string('tipo')->nullable();//tabla de tipo de cobro
             $table->decimal('total', 8, 2)->nullable();
             $table->boolean('pagado')->nullable()->default(false);
+            $table->boolean('anulado')->nullable()->default(false);
             $table->unsignedBigInteger('paciente_id')->nullable();
             $table->foreign('paciente_id')->references('id')->on('pacientes');
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->softDeletes();
             $table->timestamps();
         });
