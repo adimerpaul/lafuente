@@ -94,6 +94,9 @@
                 <q-tab-panel name="facturas">
                   <FacturasTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="pagos">
+                  <PagosTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
                 <q-tab-panel name="historial_medicos">
                   <HistorialTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
@@ -130,9 +133,11 @@ import RecetasTab from "pages/pacientes/RecetasTab.vue";
 import VentasTab from "pages/pacientes/VentasTab.vue";
 import CobrosTab from "pages/pacientes/CobrosTab.vue";
 import FacturasTab from "pages/pacientes/FacturaTab.vue";
+import PagosTab from "pages/pacientes/PagoTab.vue";
 export default {
   name: 'PacienteNewPage',
   components: {
+    PagosTab,
     FacturasTab,
     CobrosTab,
     VentasTab, RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
