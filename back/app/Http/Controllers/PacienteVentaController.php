@@ -7,6 +7,16 @@ use App\Models\Venta;
 use Illuminate\Http\Request;
 
 class PacienteVentaController extends Controller{
+    function update(Request $request,$paciente_venta_id){
+        $paciente_venta = PacienteVenta::find($paciente_venta_id);
+        $venta = Venta::find($paciente_venta->venta_id);
+        if(!$venta){
+            return response()->json(['message' => 'La venta no existe'], 404);
+        }
+        $venta->pagado_interno = $request->pagado_interno;
+        $venta->save();
+        return response()->json($venta);
+    }
     function store(Request $request){
 //        verificar que ecista le venta
         $venta = Venta::find($request->venta_id);

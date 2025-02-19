@@ -64,6 +64,10 @@
           <q-item-section side>
             <span class="text-bold">{{ venta.user?.name }}</span>
             <q-btn icon="delete" color="negative" @click="deleteVenta(venta)" size="10px" no-caps label="Quitar" :loading="$store.loading" />
+<!--            <pre>{{venta}}</pre>-->
+            <q-toggle v-model="venta.venta.pagado_interno" label="Pagado Interno" color="positive"
+                      :trueValue="1" :falseValue="0" @update:modelValue="updateVenta(venta)" :loading="$store.loading"
+            />
           </q-item-section>
         </q-item>
       </q-list>
@@ -216,6 +220,19 @@ export default {
     }
   },
   methods: {
+    updateVenta(venta) {
+      this.$store.loading = true;
+      this.$axios.put("paciente_ventas/" + venta.id, {
+        pagado_interno: venta.venta.pagado_interno,
+      }).then((res) => {
+        this.$emit("pacienteGet");
+        this.$alert.success("Venta actualizada correctamente");
+      }).catch((error) => {
+        this.$alert.error(error.response.data.message);
+      }).finally(() => {
+        this.$store.loading = false;
+      });
+    },
     deleteVenta(venta) {
       this.$alert.dialog("¿Está seguro de quitar la venta?").onOk(() => {
         this.$store.loading = true;

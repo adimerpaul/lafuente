@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('tipo_comprobante')->nullable()->default('Venta');
             $table->decimal('total', 8, 2)->nullable();
             $table->string('tipo_pago')->nullable()->default('Efectivo');
+            $table->boolean('pagado_interno')->nullable()->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

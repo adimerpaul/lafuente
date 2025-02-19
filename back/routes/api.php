@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tipoVentasChange/{venta}', [App\Http\Controllers\VentaController::class, 'tipoVentasChange']);
 
     Route::post('/paciente_ventas', [App\Http\Controllers\PacienteVentaController::class, 'store']);
+    Route::put('/paciente_ventas/{paciente_venta}', [App\Http\Controllers\PacienteVentaController::class, 'update']);
     Route::delete('/paciente_ventas/{paciente_venta}', [App\Http\Controllers\PacienteVentaController::class, 'destroy']);
 
 });
