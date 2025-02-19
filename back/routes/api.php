@@ -58,6 +58,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cobros', [App\Http\Controllers\CobroController::class, 'store']);
     Route::put('/cobros/{cobro}', [App\Http\Controllers\CobroController::class, 'update']);
 
+    Route::post('/facturas', [App\Http\Controllers\FacturaController::class, 'store']);
+    Route::put('/facturas/{factura}', [App\Http\Controllers\FacturaController::class, 'update']);
+
+    Route::post('/pagos', [App\Http\Controllers\PagoController::class, 'store']);
+    Route::put('/pagos/{pago}', [App\Http\Controllers\PagoController::class, 'update']);
+
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

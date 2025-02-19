@@ -91,6 +91,9 @@
                 <q-tab-panel name="cuentas por cobrar">
                   <CobrosTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
+                <q-tab-panel name="facturas">
+                  <FacturasTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
                 <q-tab-panel name="historial_medicos">
                   <HistorialTab :paciente="paciente" @pacienteGet="pacienteGet" />
                 </q-tab-panel>
@@ -111,7 +114,7 @@
           </div>
         </div>
       </q-card-section>
-      <pre>{{ paciente }}</pre>
+<!--      <pre>{{ paciente }}</pre>-->
     </q-card>
   </q-page>
 </template>
@@ -126,9 +129,11 @@ import DiagnosticosTab from "pages/pacientes/DiagnosticosTab.vue";
 import RecetasTab from "pages/pacientes/RecetasTab.vue";
 import VentasTab from "pages/pacientes/VentasTab.vue";
 import CobrosTab from "pages/pacientes/CobrosTab.vue";
+import FacturasTab from "pages/pacientes/FacturaTab.vue";
 export default {
   name: 'PacienteNewPage',
   components: {
+    FacturasTab,
     CobrosTab,
     VentasTab, RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
