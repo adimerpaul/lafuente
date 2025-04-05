@@ -141,6 +141,9 @@ export default {
         {title: 'Pacientes', icon: 'people', link: '/pacientes', can: ['Todos']},
         {title: 'Productos', icon: 'shopping_cart', link: '/productos', can: ['Farmacia', 'Administrador']},
         {title: 'Venta', icon: 'point_of_sale', link: '/venta' , can: ['Todos']},
+        {title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador']},
+        {title: 'Compras', icon: 'shopping_basket', link: '/compras', can: ['Farmacia', 'Administrador']},
+        {title: 'Reportes', icon: 'assessment', link: '/reportes', can: ['Todos']},
       ]
     }
   },

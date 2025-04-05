@@ -188,7 +188,7 @@
 <script>
 import moment from 'moment'
 import {Excel} from "src/addons/Excel";
-import {debounce} from "lodash";
+import {debounce} from "quasar";
 export default {
   name: 'ProductosPage',
   data() {
@@ -217,8 +217,8 @@ export default {
   },
   mounted() {
     this.productosGet()
-    this.debouncedCambioPrecio = debounce(this.cambioPrecio, 300) // 1000 ms = 1s
-    this.debouncedCambioStock = debounce(this.cambioStock, 300) // 1000 ms = 1s
+    this.debouncedCambioPrecio = debounce(this.cambioPrecio, 500)
+    this.debouncedCambioStock = debounce(this.cambioStock, 500)
   },
   methods: {
     cambioStock(producto) {
