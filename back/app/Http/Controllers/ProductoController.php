@@ -9,16 +9,16 @@ class ProductoController extends Controller{
     function productosAll(){
         return Producto::orderBy('nombre')->get();
     }
-    function index(Request $request) {
+    public function index(Request $request) {
         $search = $request->search;
+        $perPage = $request->per_page ?? 10;
 
         $productos = Producto::where(function ($query) use ($search) {
             $query->where('nombre', 'like', "%$search%")
-                ->orWhere('descripcion', 'like', "%$search%")
-                ->orWhere('id', 'like', "%$search%");
+                ->orWhere('descripcion', 'like', "%$search%");
         })
             ->orderBy('nombre')
-            ->paginate(15);
+            ->paginate($perPage);
 
         return response()->json($productos);
     }

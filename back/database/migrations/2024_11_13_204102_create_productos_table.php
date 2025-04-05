@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre')->nullable();
             $table->text('descripcion')->nullable();
             $table->string('unidad')->nullable();
-            $table->integer('precio')->nullable();
+            $table->decimal('precio', 10, 2)->nullable();
             $table->integer('stock')->nullable();
             $table->integer('stock_minimo')->nullable();
             $table->integer('stock_maximo')->nullable();
