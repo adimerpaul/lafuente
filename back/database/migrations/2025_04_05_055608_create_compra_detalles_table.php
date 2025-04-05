@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('compra_detalles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('compra_id')->constrained('compras');
+            $table->foreignId('user_id')->constrained('users');
+            $table->unsignedBigInteger('producto_id')->nullable();
+            $table->foreign('producto_id')->references('id')->on('productos');
+            $table->string('nombre')->nullable();
+            $table->decimal('precio', 8, 2)->nullable();
+            $table->decimal('cantidad', 8, 2)->nullable();
+            $table->decimal('total', 8, 2)->nullable();
+            $table->string('estado')->nullable()->default('Activo');
+            $table->string('lote')->nullable();
+            $table->date('fecha_vencimiento')->nullable();
+            $table->string('nro_factura')->nullable();
             $table->timestamps();
         });
     }

@@ -64,6 +64,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pagos', [App\Http\Controllers\PagoController::class, 'store']);
     Route::put('/pagos/{pago}', [App\Http\Controllers\PagoController::class, 'update']);
 
+    Route::get('/proveedores', [App\Http\Controllers\ProveedorController::class, 'index']);
+    Route::post('/proveedores', [App\Http\Controllers\ProveedorController::class, 'store']);
+    Route::put('/proveedores/{proveedor}', [App\Http\Controllers\ProveedorController::class, 'update']);
+    Route::delete('/proveedores/{proveedor}', [App\Http\Controllers\ProveedorController::class, 'destroy']);
+
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);
