@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('compra_id')->constrained('compras');
             $table->foreignId('user_id')->constrained('users');
+            $table->unsignedBigInteger('proveedor_id')->nullable();
+            $table->foreign('proveedor_id')->references('id')->on('proveedores');
             $table->unsignedBigInteger('producto_id')->nullable();
             $table->foreign('producto_id')->references('id')->on('productos');
             $table->string('nombre')->nullable();
@@ -25,6 +27,7 @@ return new class extends Migration
             $table->string('lote')->nullable();
             $table->date('fecha_vencimiento')->nullable();
             $table->string('nro_factura')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

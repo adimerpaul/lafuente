@@ -69,6 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/proveedores/{proveedor}', [App\Http\Controllers\ProveedorController::class, 'update']);
     Route::delete('/proveedores/{proveedor}', [App\Http\Controllers\ProveedorController::class, 'destroy']);
 
+    Route::get('compras', [App\Http\Controllers\CompraController::class, 'index']);
+    Route::put('comprasAnular/{id}', [App\Http\Controllers\CompraController::class, 'anular']);
+
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

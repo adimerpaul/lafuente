@@ -24,7 +24,6 @@ return new class extends Migration
             $table->decimal('total', 8, 2)->nullable();
             $table->string('tipo_pago')->nullable()->default('Efectivo');
             $table->string('nro_factura')->nullable();
-
             $table->softDeletes();
             $table->timestamps();
         });
