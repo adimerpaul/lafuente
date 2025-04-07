@@ -13,6 +13,8 @@ const routes = [
       { path: 'paciente/:id', name: 'paciente', component: () => import('pages/pacientes/PacienteShow.vue'), meta: { requiresAuth: true } },
       { path: 'proveedores', name: 'proveedores', component: () => import('pages/proveedores/Proveedores.vue'), meta: { requiresAuth: true } },
       { path: 'compras', name: 'compras', component: () => import('pages/compras/Compras.vue'), meta: { requiresAuth: true } },
+      // $router.push({ name: 'compras-create' })
+      { path: 'compras-create', name: 'compras-create', component: () => import('pages/compras/ComprasCreate.vue'), meta: { requiresAuth: true } },
     ]
   },
   {

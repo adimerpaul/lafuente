@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-xs">
     <div class="row">
-      <div class="col-12 col-md-6 q-pa-xs">
+      <div class="col-12 col-md-4 q-pa-xs">
         <q-card flat bordered>
           <q-card-section class="q-pa-none">
             <q-item class="bg-green">
@@ -16,7 +16,7 @@
           </q-card-section>
         </q-card>
       </div>
-      <div class="col-12 col-md-6 q-pa-xs">
+      <div class="col-12 col-md-4 q-pa-xs">
         <q-card flat bordered>
           <q-card-section class="q-pa-none">
             <q-item class="bg-negative">
@@ -31,22 +31,46 @@
           </q-card-section>
         </q-card>
       </div>
+      <div class="col-12 col-md-4 q-pa-xs">
+        <q-card flat bordered>
+          <q-card-section class="q-pa-none">
+            <q-item class="bg-indigo">
+              <q-item-section avatar>
+                <q-icon name="inventory_2" size="50px" color="white" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption class="text-white">Total Compras</q-item-label>
+                <q-item-label class="text-white text-h4">
+                  {{ (compras.length) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
 
     <q-card flat bordered class="q-mt-sm">
       <q-card-section class="q-pa-none">
         <div class="row q-col-gutter-sm q-pa-sm">
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <q-input v-model="fechaInicio" label="Fecha inicio" dense outlined type="date" />
           </div>
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <q-input v-model="fechaFin" label="Fecha fin" dense outlined type="date" />
           </div>
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <q-select v-model="user" :options="usersTodos" label="Usuario" dense outlined emit-value map-options/>
           </div>
-          <div class="col-12 col-md-3">
-            <q-btn color="primary" label="Buscar" icon="search" @click="comprasGet" :loading="loading" />
+          <div class="col-12 col-md-2">
+            <q-btn color="primary" label="Buscar" icon="search" @click="comprasGet" :loading="loading" no-caps />
+          </div>
+<!--           btn crear-->
+          <div class="col-12 col-md-2">
+            <q-btn color="positive" label="Compra" icon="add_circle_outline" @click="$router.push({ name: 'compras-create' })" no-caps :loading="loading" />
+          </div>
+          <div class="col-12 col-md-2">
+            <q-btn color="primary" label="Imprimir" icon="print" @click="imprimir()" no-caps :loading="loading" />
           </div>
         </div>
       </q-card-section>
@@ -145,11 +169,12 @@ export default {
     },
     usersGet() {
       this.$axios.get('users').then(res => {
+        console.log(res.data)
         this.users = res.data
       })
     },
     imprimir(compra) {
-      // lógica de impresión
+      console.log(compra)
     },
     anular(id) {
       this.$alert.dialog('¿Anular esta compra?').onOk(() => {
