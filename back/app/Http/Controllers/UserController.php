@@ -30,8 +30,9 @@ class UserController extends Controller{
         return $request->user();
     }
     function index(){
-        return User::where('id', '!=', 1)
-            ->orderBy('id', 'desc')
+        return User::
+//        where('id', '!=', 1)
+            orderBy('id', 'desc')
             ->get();
     }
     function update(Request $request, $id){

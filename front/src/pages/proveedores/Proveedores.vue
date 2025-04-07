@@ -3,7 +3,7 @@
     <q-card flat bordered>
       <q-card-section>
         <div class="row items-center q-gutter-sm">
-          <q-btn label="Nuevo Proveedor" color="primary" @click="nuevoProveedor" />
+          <q-btn label="Nuevo Proveedor" color="positive" @click="nuevoProveedor"  no-caps icon="add" :loading="loading" />
           <q-input v-model="filtro" label="Buscar proveedor" debounce="300" @update:model-value="filtrarProveedores" outlined dense>
             <template v-slot:append>
               <q-icon name="search" />
@@ -29,8 +29,8 @@
             <td>{{ prov.direccion }}</td>
             <td>{{ prov.email }}</td>
             <td>
-              <q-btn icon="edit" flat dense @click="editarProveedor(prov)" />
-              <q-btn icon="delete" flat dense color="negative" @click="eliminarProveedor(prov.id)" />
+              <q-btn icon="edit" flat dense @click="editarProveedor(prov)" :loading="loading" />
+              <q-btn icon="delete" flat dense color="negative" @click="eliminarProveedor(prov.id)" :loading="loading" />
             </td>
           </tr>
           </tbody>
@@ -52,8 +52,8 @@
             <q-input v-model="proveedor.direccion" label="Dirección" outlined dense />
             <q-input v-model="proveedor.email" label="Email" outlined dense type="email" />
             <div class="text-right q-mt-sm">
-              <q-btn label="Cancelar" flat @click="dialog = false" />
-              <q-btn label="Guardar" color="primary" type="submit" class="q-ml-sm" />
+              <q-btn label="Cancelar" flat @click="dialog = false" :loading="loading" />
+              <q-btn label="Guardar" color="primary" type="submit" class="q-ml-sm" :loading="loading" />
             </div>
           </q-form>
         </q-card-section>
@@ -71,7 +71,8 @@ export default {
       proveedoresFiltrados: [],
       proveedor: {},
       filtro: '',
-      dialog: false
+      dialog: false,
+      loading: false
     };
   },
   mounted() {
@@ -79,9 +80,12 @@ export default {
   },
   methods: {
     obtenerProveedores() {
+      this.loading = true;
       this.$axios.get('proveedores').then(res => {
         this.proveedores = res.data;
         this.filtrarProveedores();
+      }).finally(() => {
+        this.loading = false;
       });
     },
     filtrarProveedores() {
@@ -100,6 +104,7 @@ export default {
       this.dialog = true;
     },
     guardarProveedor() {
+      this.loading = true;
       const peticion = this.proveedor.id
         ? this.$axios.put(`proveedores/${this.proveedor.id}`, this.proveedor)
         : this.$axios.post('proveedores', this.proveedor);
