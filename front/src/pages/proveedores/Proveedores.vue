@@ -10,28 +10,28 @@
             </template>
           </q-input>
         </div>
-        <q-markup-table dense class="q-mt-sm">
+        <q-markup-table dense class="q-mt-sm" flat bordered>
           <thead>
           <tr>
+            <th>Acciones</th>
             <th>Nombre</th>
             <th>CI</th>
             <th>Teléfono</th>
             <th>Dirección</th>
             <th>Email</th>
-            <th>Acciones</th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="prov in proveedoresFiltrados" :key="prov.id">
+            <td>
+              <q-btn icon="edit" flat dense @click="editarProveedor(prov)" :loading="loading" />
+              <q-btn icon="delete" flat dense color="negative" @click="eliminarProveedor(prov.id)" :loading="loading" />
+            </td>
             <td>{{ prov.nombre }}</td>
             <td>{{ prov.ci }}</td>
             <td>{{ prov.telefono }}</td>
             <td>{{ prov.direccion }}</td>
             <td>{{ prov.email }}</td>
-            <td>
-              <q-btn icon="edit" flat dense @click="editarProveedor(prov)" :loading="loading" />
-              <q-btn icon="delete" flat dense color="negative" @click="eliminarProveedor(prov.id)" :loading="loading" />
-            </td>
           </tr>
           </tbody>
         </q-markup-table>

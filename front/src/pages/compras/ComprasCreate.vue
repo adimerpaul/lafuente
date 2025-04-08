@@ -10,13 +10,23 @@
         <q-form @submit="clickDialogCompra">
           <div class="row">
             <!-- Buscar productos -->
-            <div class="col-12 col-md-7 q-pa-xs">
+            <div class="col-12 col-md-6 q-pa-xs">
               <q-input v-model="productosSearch" outlined clearable label="Buscar producto" dense debounce="300" @update:modelValue="productosGet">
                 <template v-slot:append>
                   <q-btn flat round dense icon="search" />
                 </template>
               </q-input>
-
+              <div class="flex flex-center">
+                <q-pagination
+                  v-model="pagination.page"
+                  :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
+                  max-pages="5"
+                  size="xs"
+                  boundary-numbers
+                  @update:model-value="productosGet"
+                  class="q-mt-sm"
+                />
+              </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                 <tr>
@@ -30,33 +40,46 @@
                 <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
                   <td>{{ producto.id }}</td>
                   <td>
-                    <div>
+                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">
                       {{ producto.nombre }}
                     </div>
                   </td>
-                  <td>{{ producto.unidad }}</td>
-                  <td>{{ producto.precio }} Bs</td>
+                  <td>
+                    <div style="max-width: 100px; wrap-option: warp;line-height: 0.9;">
+                      {{ producto.unidad }}
+                    </div>
+                  </td>
+                  <td class="text-right">{{ producto.precio }}</td>
                 </tr>
                 </tbody>
               </q-markup-table>
             </div>
 
             <!-- Lista de productos agregados -->
-            <div class="col-12 col-md-5 q-pa-xs">
+            <div class="col-12 col-md-6 q-pa-xs">
+              <div>
+                <q-btn flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
+                <span class="text-h6">Productos seleccionados</span>
+              </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                 <tr>
                   <th>Producto</th>
                   <th>Cantidad</th>
-                  <th>Precio</th>
+                  <th>Precio unitario</th>
                   <th>Subtotal</th>
+                  <th>Precio unitario 1.3</th>
+                  <th>Subtotal</th>
+                  <th>Precio venta</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="(producto, index) in productosCompras" :key="index">
                   <td>
-                    <q-icon name="delete" color="red" class="cursor-pointer" @click="productosCompras.splice(index, 1)" />
-                    {{ producto.producto?.nombre }}
+                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">
+                      <q-icon name="delete" color="red" class="cursor-pointer" @click="productosCompras.splice(index, 1)" />
+                      {{ producto.producto?.nombre }}
+                    </div>
                   </td>
                   <td><input v-model="producto.cantidad" type="number" style="width: 50px;" /></td>
                   <td><input v-model="producto.precio" type="number" style="width: 50px;" step="0.01" /></td>
@@ -122,6 +145,11 @@ export default {
         nombre: "",
         tipo_pago: "Efectivo"
       },
+      pagination: {
+        page: 1,
+        rowsPerPage: 15,
+        rowsNumber: 0
+      }
     };
   },
   computed: {
@@ -136,9 +164,14 @@ export default {
     productosGet() {
       this.loading = true;
       this.$axios.get("productos", {
-        params: { search: this.productosSearch },
+        params: {
+          search: this.productosSearch,
+          page: this.pagination.page,
+          per_page: this.pagination.rowsPerPage
+        },
       }).then((res) => {
         this.productos = res.data.data;
+        this.pagination.rowsNumber = res.data.total;
       }).catch((error) => {
         console.error("Error cargando productos:", error);
       }).finally(() => {

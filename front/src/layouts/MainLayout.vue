@@ -62,7 +62,7 @@
       :breakpoint="500"
       class="bg-primary text-white"
     >
-      <q-list>
+      <q-list dense>
         <q-item dense>
           <q-item-section avatar>
             <q-icon name="account_circle" />
