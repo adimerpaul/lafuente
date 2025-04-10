@@ -23,6 +23,11 @@ return new class extends Migration
             $table->decimal('precio', 8, 2)->nullable();
             $table->decimal('cantidad', 8, 2)->nullable();
             $table->decimal('total', 8, 2)->nullable();
+
+            $table->decimal('precio13', 8, 2)->nullable();
+            $table->decimal('total13', 8, 2)->nullable();
+            $table->decimal('precio_venta', 8, 2)->nullable();
+
             $table->string('estado')->nullable()->default('Activo');
             $table->string('lote')->nullable();
             $table->date('fecha_vencimiento')->nullable();
