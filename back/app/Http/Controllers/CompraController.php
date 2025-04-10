@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Compra;
+use App\Models\CompraDetalle;
+use App\Models\Producto;
+use App\Models\Proveedor;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller
 {
@@ -24,47 +29,91 @@ class CompraController extends Controller
 
     public function anular($id)
     {
-        $compra = Compra::findOrFail($id);
-        $compra->estado = 'Anulado';
-        $compra->save();
+        DB::beginTransaction();
+        try {
+            $compra = Compra::with('compraDetalles')->findOrFail($id);
 
-        return response()->json(['message' => 'Compra anulada correctamente']);
+            if ($compra->estado === 'Anulado') {
+                return response()->json(['message' => 'La compra ya fue anulada'], 400);
+            }
+
+            foreach ($compra->compraDetalles as $detalle) {
+                Producto::where('id', $detalle->producto_id)->decrement('stock', $detalle->cantidad);
+                $detalle->estado = 'Anulado';
+                $detalle->save();
+            }
+
+            $compra->estado = 'Anulado';
+            $compra->save();
+
+            DB::commit();
+            return response()->json(['message' => 'Compra anulada correctamente']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al anular la compra', 'error' => $e->getMessage()], 500);
+        }
     }
+
+
     public function store(Request $request)
     {
-        $request->merge([
-            'user_id' => auth()->id(),
-            'fecha' => date('Y-m-d'),
-            'hora' => date('H:i:s'),
-            'estado' => 'Registrado',
-            'total' => 0,
-        ]);
+        DB::beginTransaction();
 
-        $compra = Compra::create($request->only([
-            'user_id', 'proveedor_id', 'fecha', 'hora', 'ci', 'nombre', 'estado', 'tipo_pago'
-        ]));
+        try {
+            $fecha = Carbon::now()->format('Y-m-d');
+            $hora = Carbon::now()->format('H:i:s');
 
-        $productos = $request->productos;
-        $insert = [];
-        $total = 0;
+            // Crear la compra
+            $proveedor = Proveedor::find($request->proveedor_id);
+//            error_log('Proveedor: ' . json_encode($proveedor));
+//            error_log('Ci:' . $proveedor->ci);
+            $compra = Compra::create([
+                'user_id' => auth()->id(),
+                'proveedor_id' => $request->proveedor_id ?? null,
+                'fecha' => $fecha,
+                'hora' => $hora,
+                'ci' => $proveedor->ci ?? null,
+                'nombre' => $proveedor->nombre ?? null,
+                'estado' => 'Activo',
+                'tipo_pago' => $request->tipo_pago,
+                'total' => collect($request->productos)->sum(fn($p) => $p['precio'] * $p['cantidad']),
+                'nro_factura' => $request->nro_factura ?? null,
+            ]);
 
-        foreach ($productos as $producto) {
-            $subtotal = $producto['precio'] * $producto['cantidad'];
-            $insert[] = [
-                'compra_id' => $compra->id,
-                'producto_id' => $producto['producto_id'],
-                'cantidad' => $producto['cantidad'],
-                'precio' => $producto['precio'],
-                'total' => $subtotal,
-                'estado' => 'Registrado',
-            ];
-            $total += $subtotal;
+            // Crear los detalles
+            foreach ($request->productos as $p) {
+                CompraDetalle::create([
+                    'compra_id' => $compra->id,
+                    'user_id' => auth()->id(),
+                    'producto_id' => $p['producto_id'],
+                    'proveedor_id' => $compra->proveedor_id,
+                    'nombre' => $p['producto']['nombre'],
+                    'precio' => $p['precio'],
+                    'cantidad' => $p['cantidad'],
+                    'total' => $p['precio'] * $p['cantidad'],
+                    'precio13' => $p['precio'] * 1.3,
+                    'total13' => $p['precio'] * $p['cantidad'] * 1.3,
+                    'precio_venta' => $p['precio_venta'],
+                    'estado' => 'Activo',
+                    'lote' => $p['lote'],
+                    'fecha_vencimiento' => $p['fecha_vencimiento'],
+                    'nro_factura' => $compra->nro_factura,
+                ]);
+
+                // Actualizar el stock del producto
+                Producto::where('id', $p['producto_id'])->increment('stock', $p['cantidad']);
+                $producto = Producto::find($p['producto_id']);
+                $producto->precio = $p['precio_venta'];
+                $producto->save();
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Compra registrada correctamente']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al registrar la compra', 'error' => $e->getMessage()], 500);
         }
-
-        $compra->update(['total' => $total]);
-        $compra->compraDetalles()->createMany($insert);
-
-        return Compra::with(['compraDetalles.producto', 'proveedor', 'user'])->find($compra->id);
     }
 
 }
