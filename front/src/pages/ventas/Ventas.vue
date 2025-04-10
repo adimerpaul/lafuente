@@ -96,6 +96,7 @@
         </tr>
       </thead>
       <tbody>
+      <template v-if="ventas.length != 0">
         <tr v-for="(venta, index) in ventas" :key="venta.id">
           <td>
             <q-btn-dropdown color="primary" label="Opciones" no-caps dense size="10px">
@@ -127,7 +128,7 @@
           <td>{{ venta.cliente.nombre }}</td>
           <td>{{ venta.user.name }}</td>
           <td>
-<!--            {{ venta.estado }} q-chip activo verde -->
+            <!--            {{ venta.estado }} q-chip activo verde -->
             <q-chip :color="venta.estado === 'Activo' ? 'positive' : 'negative'" class="text-white" dense>{{ venta.estado }}</q-chip>
           </td>
           <td class="text-bold">
@@ -143,6 +144,15 @@
             <q-chip :color="venta.tipo_venta === 'Interno' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
         </tr>
+      </template>
+      <template v-else>
+        <tr>
+          <td colspan="8" class="text-center">
+            <q-icon name="warning" size="50px" color="red" />
+            <div class="text-h6">No hay ventas registradas</div>
+          </td>
+        </tr>
+      </template>
       </tbody>
     </q-markup-table>
 <!--    <pre>{{ ventas }}</pre>-->

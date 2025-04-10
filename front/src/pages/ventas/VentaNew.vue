@@ -6,7 +6,7 @@
 <!--        btn volver a tras-->
         <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
       </q-card-section>
-      <q-card-section>
+      <q-card-section class="q-pa-none">
         <q-form @submit="clickDialogVenta">
           <div class="row">
             <div class="col-12 col-md-7 q-pa-xs">
@@ -15,39 +15,84 @@
                   <q-btn flat round dense icon="search" />
                 </template>
               </q-input>
-              <q-markup-table dense wrap-cells flat bordered>
-                <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombres</th>
-                  <th>Unidad</th>
-                  <th>Precio</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
-                  <td>
-                    {{ producto.id }}
-                  </td>
-                  <td style="padding: 0;margin: 0;" class="cursor-pointer">
-                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
-                      {{ $filters.textUpper( producto.nombre ) }}
-                    </div>
-                  </td>
-                  <td style="padding: 0;margin: 0;" class="cursor-pointer">
-                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
-                      {{ $filters.textUpper( producto.unidad ) }}
-                    </div>
-                  </td>
-                  <td class="cursor-pointer">
-                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;" class="text-right">
-                      {{( producto.precio ) }} Bs
-                    </div>
-                  </td>
-                </tr>
-                </tbody>
-              </q-markup-table>
+              <div class="flex flex-center">
+                <q-pagination
+                  v-model="pagination.page"
+                  :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
+                  color="primary"
+                  @update:modelValue="productosGet"
+                  boundary-numbers
+                  max-pages="5"
+                />
+              </div>
+<!--              <q-markup-table dense wrap-cells flat bordered>-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                  <th>ID</th>-->
+<!--                  <th>Nombres</th>-->
+<!--                  <th>Unidad</th>-->
+<!--                  <th>Precio</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">-->
+<!--                  <td>-->
+<!--                    {{ producto.id }}-->
+<!--                  </td>-->
+<!--                  <td style="padding: 0;margin: 0;" class="cursor-pointer">-->
+<!--                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">-->
+<!--                      {{ $filters.textUpper( producto.nombre ) }}-->
+<!--                    </div>-->
+<!--                  </td>-->
+<!--                  <td style="padding: 0;margin: 0;" class="cursor-pointer">-->
+<!--                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">-->
+<!--                      {{ $filters.textUpper( producto.unidad ) }}-->
+<!--                    </div>-->
+<!--                  </td>-->
+<!--                  <td class="cursor-pointer">-->
+<!--                    <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;" class="text-right">-->
+<!--                      {{( producto.precio ) }} Bs-->
+<!--                    </div>-->
+<!--                  </td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--              </q-markup-table>-->
+              <div class="row">
+                <template v-for="producto in productos">
+                  <div class="col-6 col-md-2">
+                    <q-card flat bordered class="cursor-pointer" @click="addProducto(producto)">
+                      <q-img
+                        :src="`${$url}../images/${producto.imagen}`"
+                        class="q-mb-xs"
+                        style="height: 120px;"
+                        >
+                        <div class="absolute-bottom text-center" style="padding: 0;margin: 0;">
+                          <div style="max-width: 190px;line-height: 0.9;">
+                            {{ $filters.textUpper( producto.nombre ) }}
+                          </div>
+                          <div style="display: flex;justify-content: space-between;">
+                            <span>{{ producto.stock }}</span>
+                            <span class="text-bold bg-orange text-black border">{{ producto.precio }} Bs</span>
+                          </div>
+                        </div>
+                      </q-img>
+                    </q-card>
+                  </div>
+                </template>
+              </div>
 <!--              <pre>{{productos}}</pre>-->
+<!--              [-->
+<!--              {-->
+<!--              "id": 3284,-->
+<!--              "nombre": "3-A OFTENO 0,1 % 5 ML",-->
+<!--              "descripcion": "Antiinflamatorio no esteroideo",-->
+<!--              "unidad": "SOLUCION OFTALMICA",-->
+<!--              "precio": "1.00",-->
+<!--              "stock": 10,-->
+<!--              "stock_minimo": null,-->
+<!--              "stock_maximo": null,-->
+<!--              "imagen": "1706022402ALGIFEO GOTAS.jpg"-->
+<!--              },-->
             </div>
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">
@@ -66,7 +111,8 @@
                 </thead>
                 <tbody>
                 <tr v-for="(producto, index) in productosVentas" :key="index">
-                  <td style="padding: 0;margin: 0;">
+                  <td style="padding: 0;margin: 0;display: flex;align-items: center;">
+                    <q-img :src="`${$url}../images/${producto.producto?.imagen}`" class="q-mb-xs" style="height: 35px;width: 35px;" />
                     <div style="max-width: 190px;overflow: hidden;text-overflow: ellipsis;line-height: 0.9;">
                       <q-icon name="delete" color="red" class="cursor-pointer" @click="productosVentas.splice(index, 1)" />
                       {{producto.producto_id}}
@@ -204,6 +250,11 @@ export default {
         nit: "0",
         nombre: "SN",
       },
+      pagination: {
+        page: 1,
+        rowsPerPage: 24,
+        rowsNumber: 0,
+      },
       receta_id: null,
       recognition: null,
       activeField: null,
@@ -321,9 +372,13 @@ export default {
       this.$axios.get("productos", {
         params: {
           search: this.productosSearch,
+          page: this.pagination.page,
+          per_page: this.pagination.rowsPerPage,
         },
       }).then((res) => {
         this.productos = res.data.data;
+        this.pagination.rowsNumber = res.data.total;
+        this.pagination.page = res.data.current_page;
         this.loading = false;
       }).catch((error) => {
         this.loading = false;
@@ -346,6 +401,7 @@ export default {
         this.productosVentas = [];
         Imprimir.nota(res.data);
         this.receta_id = null;
+        this.productosGet()
       }).catch((error) => {
         this.loading = false;
         console.error(error);
