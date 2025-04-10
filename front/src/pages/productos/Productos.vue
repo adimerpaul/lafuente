@@ -72,6 +72,7 @@
       <thead>
         <tr>
           <th>Opciones</th>
+          <th>Imagen</th>
           <th v-for="column in columns" :key="column.name" :class="column.align">
             {{ column.label }}
           </th>
@@ -100,6 +101,13 @@
                 </q-item>
               </q-list>
             </q-btn-dropdown>
+          </td>
+          <td>
+<!--            {{`${$url}../images/${producto.imagen}`}}<br>-->
+            <q-img
+              :src="`${$url}../images/${producto.imagen}`"
+              style="width: 50px; height: 50px"
+              class="q-mr-sm" ></q-img>
           </td>
           <td>
             <div style="max-width: 150px; wrap-option: wrap;line-height: 0.9;">
