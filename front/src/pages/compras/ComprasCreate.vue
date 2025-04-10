@@ -87,13 +87,15 @@
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                 <tr>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Producto</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Cantidad</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio unitario</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Subtotal</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio unitario 1.3</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Subtotal</th>
-                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio venta</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Producto</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Cantidad</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario 1.3</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
+                  <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Lote</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Fecha vencimiento</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -106,9 +108,30 @@
                         {{ $filters.textUpper( producto.producto?.nombre ) }}
                     </div>
                   </td>
-                  <td class="pm-none"><input v-model="producto.cantidad" type="number" style="width: 50px;" /></td>
-                  <td class="pm-none"><input v-model="producto.precio" type="number" style="width: 55px;" step="0.01" /></td>
-                  <td class="text-right pm-none">{{ producto.cantidad * producto.precio }} Bs</td>
+                  <td class="pm-none">
+                    <input v-model="producto.cantidad" type="number" style="width: 50px;" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
+                  </td>
+                  <td class="pm-none">
+                    <input v-model="producto.precio" type="number" style="width: 55px;" step="0.01" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
+                  </td>
+                  <td class="text-right pm-none">
+                    {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}
+                  </td>
+                  <td class="text-right pm-none text-bold">
+                    {{ parseFloat(producto.precio * 1.3).toFixed(2) }}
+                  </td>
+                  <td class="text-right pm-none">
+                    {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}
+                  </td>
+                  <td class="pm-none">
+                    <input v-model="producto.precio_venta" type="number" style="width: 55px;" step="0.01" />
+                  </td>
+                  <td class="pm-none">
+                    <input v-model="producto.lote" type="text" style="width: 70px;" />
+                  </td>
+                  <td class="pm-none">
+                    <input v-model="producto.fecha_vencimiento" type="date" style="width: 100px;" />
+                  </td>
                 </tr>
                 </tbody>
                 <tfoot>
@@ -179,13 +202,22 @@ export default {
   },
   computed: {
     totalCompra() {
-      return this.productosCompras.reduce(
-        (acc, p) => acc + (p.cantidad * p.precio),
-        0
-      );
+      // return this.productosCompras.reduce(
+      //   (acc, p) => acc + (p.cantidad * p.precio),
+      //   0
+      // );
+      let total = 0;
+      this.productosCompras.forEach((p) => {
+        total += p.cantidad * p.precio;
+      });
+      return parseFloat(total).toFixed(2);
     },
   },
   methods: {
+    updatePrecioVenta(productoVenta) {
+      const precio_venta = Math.ceil(productoVenta.precio * 1.3);
+      productoVenta.precio_venta = precio_venta;
+    },
     productosGet() {
       this.loading = true;
       this.$axios.get("productos", {
@@ -211,7 +243,9 @@ export default {
         this.productosCompras.push({
           producto_id: producto.id,
           cantidad: 1,
-          precio: producto.precio,
+          precio: '',
+          lote: '',
+          fecha_vencimiento: '',
           producto,
         });
       }
