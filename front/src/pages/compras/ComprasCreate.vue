@@ -275,10 +275,12 @@ export default {
     submitCompra() {
       this.loading = true;
       const data = {
-        ci: this.compra.nit,
-        nombre: this.compra.nombre,
+        // ci: this.compra.nit,
+        // nombre: this.compra.nombre,
         tipo_pago: this.compra.tipo_pago,
-        productos: this.productosCompras,
+        proveedor_id: this.proveedor.id,
+        nro_factura: this.compra.nro_factura,
+        productos: this.productosCompras
       };
 
       this.$axios.post("compras", data).then((res) => {
