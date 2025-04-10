@@ -161,13 +161,13 @@
           <q-form @submit="submitCompra">
             <div class="row">
               <div class="col-12 col-md-6 q-pa-xs">
-                <q-input v-model="compra.nit" outlined dense label="CI/NIT proveedor" @update:modelValue="buscarProveedor" />
-              </div>
-              <div class="col-12 col-md-6 q-pa-xs">
-                <q-input v-model="compra.nombre" outlined dense label="Nombre proveedor" />
+                <q-select v-model="proveedor" :options="proveedores" option-label="nombre" option-value="id" label="Proveedor" dense outlined @update:modelValue="buscarProveedor" ></q-select>
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR']" label="Tipo de pago" dense outlined />
+              </div>
+              <div class="col-12 col-md-6 q-pa-xs">
+                <q-input v-model="compra.nro_factura" outlined dense label="Nro. factura" />
               </div>
             </div>
 
@@ -188,6 +188,8 @@ export default {
       productos: [],
       productosSearch: "",
       productosCompras: [],
+      proveedores: [],
+      proveedor: null,
       compra: {
         nit: "",
         nombre: "",
@@ -290,9 +292,20 @@ export default {
         this.loading = false;
       });
     },
+    proveedoresGet() {
+      // this.loading = true;
+      this.$axios.get("proveedores").then((res) => {
+        this.proveedores = res.data;
+      }).catch((error) => {
+        console.error("Error cargando proveedores:", error);
+      }).finally(() => {
+        // this.loading = false;
+      });
+    }
   },
   mounted() {
     this.productosGet();
+    this.proveedoresGet();
   }
 };
 </script>
