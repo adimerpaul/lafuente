@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Producto;
 use App\Models\Receta;
 use App\Models\Venta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VentaController extends Controller{
     function anular(Request $request, $id){
@@ -26,36 +28,49 @@ class VentaController extends Controller{
         return $venta;
     }
     function store(Request $request){
-        $cliente = $this->clienteUpdateOrCreate($request);
+        DB::beginTransaction();
+        try {
+            $cliente = $this->clienteUpdateOrCreate($request);
 
-        $request->merge(['user_id' => auth()->user()->id,]);
-        $request->merge(['cliente_id' => $cliente->id,]);
-        $request->merge(['fecha' => date('Y-m-d'),]);
-        $request->merge(['hora' => date('H:i:s'),]);
-        $venta = Venta::create($request->all());
-        $productos = $request->productos;
-        $insertProductos = [];
-        $total = 0;
-        foreach ($productos as $producto) {
-            $insertProductos[] = [
-                'venta_id' => $venta->id,
-                'producto_id' => $producto['producto_id'],
-                'cantidad' => $producto['cantidad'],
-                'precio' => $producto['precio'],
-            ];
-            $total += $producto['cantidad'] * $producto['precio'];
-        }
-        $venta->update(['total' => $total]);
-        $receta_id = $request->receta_id;
-        if ($receta_id != '') {
-            error_log('receta_id: ' . $receta_id);
-            $receta = Receta::findOrFail($receta_id);
-            $receta->numero_factura = $venta->id;
-            $receta->save();
-        }
-        $venta->ventaDetalles()->createMany($insertProductos);
+            $request->merge(['user_id' => auth()->user()->id,]);
+            $request->merge(['cliente_id' => $cliente->id,]);
+            $request->merge(['fecha' => date('Y-m-d'),]);
+            $request->merge(['hora' => date('H:i:s'),]);
+            $venta = Venta::create($request->all());
+            $productos = $request->productos;
+            $insertProductos = [];
+            $total = 0;
+            foreach ($productos as $producto) {
+                $insertProductos[] = [
+                    'venta_id' => $venta->id,
+                    'producto_id' => $producto['producto_id'],
+                    'cantidad' => $producto['cantidad'],
+                    'precio' => $producto['precio'],
+                ];
+                $total += $producto['cantidad'] * $producto['precio'];
 
-        return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);
+                $productoFind = Producto::findOrFail($producto['producto_id']);
+                if ($productoFind->stock > 0) {
+                    $productoFind->stock -= $producto['cantidad'];
+                    $productoFind->save();
+                }
+            }
+            $venta->update(['total' => $total]);
+            $receta_id = $request->receta_id;
+            if ($receta_id != '') {
+                error_log('receta_id: ' . $receta_id);
+                $receta = Receta::findOrFail($receta_id);
+                $receta->numero_factura = $venta->id;
+                $receta->save();
+            }
+            $venta->ventaDetalles()->createMany($insertProductos);
+
+            DB::commit();
+            return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => 'Error al guardar la venta: ' . $e->getMessage()], 500);
+        }
     }
     function clienteUpdateOrCreate($request){
         $ci = $request->ci;
