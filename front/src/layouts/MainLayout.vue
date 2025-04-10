@@ -15,8 +15,11 @@
         />
 
         <q-toolbar-title>
-          <q-btn no-caps flat dense round icon="o_search" />
+<!--          <q-btn no-caps flat dense round icon="o_search" />-->
 <!--          {{ rutaActual }}-->
+          <span class="text-subtitle2">
+            {{ $version }}
+          </span>
         </q-toolbar-title>
         <div>
 <!--          Quasar v{{ $q.version }}-->
@@ -144,6 +147,8 @@ export default {
         {title: 'Venta Nueva', icon: 'point_of_sale', link: '/ventaNuevo' , can: ['Todos']},
         {title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador']},
         {title: 'Compras', icon: 'shopping_basket', link: '/compras', can: ['Farmacia', 'Administrador']},
+        // compras-create
+        {title: 'Compras Nueva', icon: 'shopping_basket', link: '/compras-create', can: ['Farmacia', 'Administrador']},
         {title: 'Reportes', icon: 'assessment', link: '/reportes', can: ['Todos']},
       ]
     }

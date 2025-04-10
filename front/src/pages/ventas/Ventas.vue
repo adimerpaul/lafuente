@@ -146,12 +146,12 @@
         </tr>
       </template>
       <template v-else>
-        <tr>
-          <td colspan="8" class="text-center">
-            <q-icon name="warning" size="50px" color="red" />
-            <div class="text-h6">No hay ventas registradas</div>
-          </td>
-        </tr>
+<!--        <tr>-->
+<!--          <td colspan="8" class="text-center">-->
+<!--&lt;!&ndash;            <q-icon name="warning" size="50px" color="red" />&ndash;&gt;-->
+<!--            <div class="text-h6">No hay ventas registradas</div>-->
+<!--          </td>-->
+<!--        </tr>-->
       </template>
       </tbody>
     </q-markup-table>

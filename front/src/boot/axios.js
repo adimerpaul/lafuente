@@ -17,6 +17,7 @@ export default boot(({ app, router }) => {
   app.config.globalProperties.$alert = Alert
   app.config.globalProperties.$store = useCounterStore()
   app.config.globalProperties.$url = import.meta.env.VITE_API_BACK
+  app.config.globalProperties.$version = import.meta.env.VITE_VERSION
   app.config.globalProperties.$filters = {
     date: (value) => {
       if (!value) return ''

@@ -6,7 +6,7 @@
         <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
       </q-card-section>
 
-      <q-card-section>
+      <q-card-section class="q-pa-none">
         <q-form @submit="clickDialogCompra">
           <div class="row">
             <!-- Buscar productos -->
@@ -27,63 +27,88 @@
                   class="q-mt-sm"
                 />
               </div>
-              <q-markup-table dense wrap-cells flat bordered>
-                <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Unidad</th>
-                  <th>Precio</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">
-                  <td>{{ producto.id }}</td>
-                  <td>
-                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">
-                      {{ producto.nombre }}
-                    </div>
-                  </td>
-                  <td>
-                    <div style="max-width: 100px; wrap-option: warp;line-height: 0.9;">
-                      {{ producto.unidad }}
-                    </div>
-                  </td>
-                  <td class="text-right">{{ producto.precio }}</td>
-                </tr>
-                </tbody>
-              </q-markup-table>
+<!--              <q-markup-table dense wrap-cells flat bordered>-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                  <th>ID</th>-->
+<!--                  <th>Nombre</th>-->
+<!--                  <th>Unidad</th>-->
+<!--                  <th>Precio</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">-->
+<!--                  <td>{{ producto.id }}</td>-->
+<!--                  <td>-->
+<!--                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">-->
+<!--                      {{ producto.nombre }}-->
+<!--                    </div>-->
+<!--                  </td>-->
+<!--                  <td>-->
+<!--                    <div style="max-width: 100px; wrap-option: warp;line-height: 0.9;">-->
+<!--                      {{ producto.unidad }}-->
+<!--                    </div>-->
+<!--                  </td>-->
+<!--                  <td class="text-right">{{ producto.precio }}</td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--              </q-markup-table>-->
+              <div class="row">
+                <template v-for="producto in productos">
+                  <div class="col-6 col-md-2">
+                    <q-card flat bordered class="cursor-pointer" @click="addProducto(producto)">
+                      <q-img
+                        :src="`${$url}../images/${producto.imagen}`"
+                        class="q-mb-xs"
+                        style="height: 120px;"
+                      >
+                        <div class="absolute-bottom text-center" style="padding: 0;margin: 0;">
+                          <div style="max-width: 190px;line-height: 0.9;">
+                            {{ $filters.textUpper( producto.nombre ) }}
+                          </div>
+                          <div style="display: flex;justify-content: space-between;">
+                            <span>{{ producto.stock }}</span>
+                            <span class="text-bold bg-orange text-black border">{{ producto.precio }} Bs</span>
+                          </div>
+                        </div>
+                      </q-img>
+                    </q-card>
+                  </div>
+                </template>
+              </div>
             </div>
 
             <!-- Lista de productos agregados -->
             <div class="col-12 col-md-6 q-pa-xs">
               <div>
-                <q-btn flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
-                <span class="text-h6">Productos seleccionados</span>
+                <q-btn size="xs" flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
+                <span class="text-subtitle2">Productos seleccionados</span>
               </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
                 <tr>
-                  <th>Producto</th>
-                  <th>Cantidad</th>
-                  <th>Precio unitario</th>
-                  <th>Subtotal</th>
-                  <th>Precio unitario 1.3</th>
-                  <th>Subtotal</th>
-                  <th>Precio venta</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Producto</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Cantidad</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio unitario</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Subtotal</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio unitario 1.3</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Subtotal</th>
+                  <th class="pm-none" style="max-width: 100px;line-height: 0.9">Precio venta</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="(producto, index) in productosCompras" :key="index">
-                  <td>
-                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">
+                  <td class="pm-none" style="display: flex;align-items: center;">
+                    <q-img :src="`${$url}../images/${producto.producto?.imagen}`" class="q-mb-xs" style="height: 35px;width: 35px;" />
+                    <div style="max-width: 120px; wrap-option: warp;line-height: 0.9;">
                       <q-icon name="delete" color="red" class="cursor-pointer" @click="productosCompras.splice(index, 1)" />
-                      {{ producto.producto?.nombre }}
+<!--                      {{ producto.producto?.nombre }}-->
+                        {{ $filters.textUpper( producto.producto?.nombre ) }}
                     </div>
                   </td>
-                  <td><input v-model="producto.cantidad" type="number" style="width: 50px;" /></td>
-                  <td><input v-model="producto.precio" type="number" style="width: 50px;" step="0.01" /></td>
-                  <td class="text-right">{{ producto.cantidad * producto.precio }} Bs</td>
+                  <td class="pm-none"><input v-model="producto.cantidad" type="number" style="width: 50px;" /></td>
+                  <td class="pm-none"><input v-model="producto.precio" type="number" style="width: 55px;" step="0.01" /></td>
+                  <td class="text-right pm-none">{{ producto.cantidad * producto.precio }} Bs</td>
                 </tr>
                 </tbody>
                 <tfoot>
@@ -147,7 +172,7 @@ export default {
       },
       pagination: {
         page: 1,
-        rowsPerPage: 15,
+        rowsPerPage: 24,
         rowsNumber: 0
       }
     };

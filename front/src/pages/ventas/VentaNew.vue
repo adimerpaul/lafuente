@@ -17,6 +17,7 @@
               </q-input>
               <div class="flex flex-center">
                 <q-pagination
+                  size="xs"
                   v-model="pagination.page"
                   :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
                   color="primary"
