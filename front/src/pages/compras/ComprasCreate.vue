@@ -124,7 +124,8 @@
                     {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}
                   </td>
                   <td class="pm-none">
-                    <input v-model="producto.precio_venta" type="number" style="width: 55px;" step="0.01" />
+                    <input v-model="producto.precio_venta" type="number" style="width: 55px;color: red;font-weight: bold"
+                           step="0.01"/>
                   </td>
                   <td class="pm-none">
                     <input v-model="producto.lote" type="text" style="width: 70px;" />
@@ -161,7 +162,18 @@
           <q-form @submit="submitCompra">
             <div class="row">
               <div class="col-12 col-md-6 q-pa-xs">
-                <q-select v-model="proveedor" :options="proveedores" option-label="nombre" option-value="id" label="Proveedor" dense outlined @update:modelValue="buscarProveedor" ></q-select>
+                <q-select v-model="proveedor" :options="proveedores" option-label="nombre" option-value="id" label="Proveedor" dense outlined @update:modelValue="buscarProveedor"
+                          :rules="[
+                            val => !!val || 'Campo requerido',
+                            val => {
+                              if (val) {
+                                this.compra.nit = val.nit;
+                                this.compra.nombre = val.nombre;
+                              }
+                              return true;
+                            }
+                          ]"
+                ></q-select>
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR']" label="Tipo de pago" dense outlined />
@@ -169,16 +181,72 @@
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="compra.nro_factura" outlined dense label="Nro. factura" />
               </div>
+              <div class="col-12">
+<!--                table-->
+                <q-markup-table flat dense wrap-cells bordered>
+                  <thead>
+                  <tr>
+                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Producto</th>
+                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Cantidad</th>
+<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario</th>-->
+<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
+<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario 1.3</th>-->
+<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
+                    <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
+                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Lote</th>
+                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Fecha vencimiento</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="(producto, index) in productosCompras" :key="index">
+                    <td class="pm-none" style="display: flex;align-items: center;">
+                      <q-img :src="`${$url}../images/${producto.producto?.imagen}`" class="q-mb-xs" style="height: 35px;width: 35px;" />
+                      <div style="max-width: 120px; wrap-option: warp;line-height: 0.9;">
+                        {{ $filters.textUpper( producto.producto?.nombre ) }}
+                      </div>
+                    </td>
+                    <td class="pm-none">
+                      {{ producto.cantidad }}
+                    </td>
+<!--                    <td class="pm-none">-->
+<!--                      {{ producto.precio }}-->
+<!--                    </td>-->
+<!--                    <td class="text-right pm-none">-->
+<!--                      {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}-->
+<!--                    </td>-->
+<!--                    <td class="text-right pm-none text-bold">-->
+<!--                      {{ parseFloat(producto.precio * 1.3).toFixed(2) }}-->
+<!--                    </td>-->
+<!--                    <td class="text-right pm-none">-->
+<!--                      {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}-->
+<!--                    </td>-->
+                    <td class="pm-none text-red text-bold text-right">
+<!--                      {{ parseFloat(producto.precio_venta).toFixed(2) }}-->
+                      {{ producto.precio_venta }} Bs
+                    </td>
+                    <td class="pm-none">
+                      {{ producto.lote }}
+                    </td>
+                    <td class="pm-none">
+                      {{ producto.fecha_vencimiento }}
+                    </td>
+                  </tr>
+                  </tbody>
+                </q-markup-table>
+              </div>
             </div>
-
-            <q-btn label="Guardar compra" color="primary" class="full-width q-mt-md" type="submit" />
+            <q-btn label="Guardar compra" color="primary" class="full-width q-mt-md" type="submit" no-caps icon="save" :loading="loading" />
           </q-form>
         </q-card-section>
       </q-card>
     </q-dialog>
+<!--    myElement-->
+    <div id="myElement" class="hidden"></div>
   </q-page>
 </template>
 <script>
+import {Imprimir} from "src/addons/Imprimir";
+
 export default {
   name: "ComprasCreate",
   data() {
@@ -257,6 +325,12 @@ export default {
         this.$alert.error("Debe agregar al menos un producto");
         return;
       }
+
+      const sinPrecio = this.productosCompras.filter(p => !p.precio);
+      if (sinPrecio.length > 0) {
+        this.$alert.error("Todos los productos deben tener precio unitario");
+        return;
+      }
       this.compraDialog = true;
     },
     buscarProveedor() {
@@ -287,11 +361,13 @@ export default {
         this.$alert.success("Compra registrada correctamente");
         this.compraDialog = false;
         this.productosCompras = [];
+        Imprimir.reciboCompra(res.data);
+        this.productosGet();
       }).catch((err) => {
         console.error("Error registrando compra:", err);
         this.$alert.error("Error al registrar la compra");
       }).finally(() => {
-        this.loading = false;
+        // this.loading = false;
       });
     },
     proveedoresGet() {

@@ -240,6 +240,91 @@ ${cantidad}
       })
     })
   }
+  static reciboCompra(compra, imprimir = true) {
+    return new Promise((resolve, reject) => {
+      const a = this.numeroALetras(parseFloat(compra.total).toFixed(2))
+      const opts = {
+        errorCorrectionLevel: 'M',
+        type: 'png',
+        quality: 0.95,
+        width: 100,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFF'
+        }
+      }
+
+      const proveedorNombre = compra.proveedor?.nombre || compra.nombre || ''
+      const proveedorCi = compra.proveedor?.ci || compra.ci || ''
+
+      QRCode.toDataURL(`Fecha: ${compra.fecha} Monto: ${parseFloat(compra.total).toFixed(2)}`, opts).then(url => {
+        let cadena = `${this.head()}
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    .mono {
+      font-family: Monospace,serif !important;
+      font-size: 18px !important;
+    }
+  </style>
+  <title>Recibo Compra</title>
+</head>
+<body>
+<div class="mono">
+  <hr>
+  <div class='titulo'>RECIBO DE COMPRA</div>
+  <table>
+    <tr><td class='titder'>ID:</td><td class='contenido'>${compra.id}</td></tr>
+    <tr><td class='titder'>PROVEEDOR:</td><td class='contenido'>${proveedorNombre}</td></tr>
+    <tr><td class='titder'>CI/NIT:</td><td class='contenido'>${proveedorCi}</td></tr>
+    <tr><td class='titder'>FECHA:</td><td class='contenido'>${compra.fecha}</td></tr>
+    <tr><td class='titder'>HORA:</td><td class='contenido'>${compra.hora}</td></tr>
+    <tr><td class='titder'>TIPO PAGO:</td><td class='contenido'>${compra.tipo_pago}</td></tr>
+    <tr><td class='titder'>FACTURA:</td><td class='contenido'>${compra.nro_factura ?? ''}</td></tr>
+  </table>
+  <hr>
+  <div class='titulo'>DETALLE DE PRODUCTOS</div>`
+
+        compra.compra_detalles.forEach(p => {
+          cadena += `
+        <div><b>${p.nombre}</b></div>
+        <div>
+          <span style='font-size: 18px;font-weight: bold'>${p.cantidad}</span>
+          <span> x ${parseFloat(p.precio).toFixed(2)} Bs</span>
+          <span style='float:right'>${parseFloat(p.total).toFixed(2)} Bs</span>
+        </div>
+        <div style="font-size: 12px">
+          Lote: ${p.lote || '-'} | Vence: ${p.fecha_vencimiento || '-'}
+        </div>
+        `
+        })
+
+        cadena += `<hr>
+      <table>
+        <tr><td class='titder'>TOTAL Bs</td><td class='titder'>${parseFloat(compra.total).toFixed(2)}</td></tr>
+      </table>
+      <br>
+      <div>Son: ${a} ${((parseFloat(compra.total) - Math.floor(parseFloat(compra.total))) * 100).toFixed(2)}/100 Bolivianos</div>
+      <hr>
+      <div style='display: flex; justify-content: center;'>
+        <img src="${url}" style="width: 75px; height: 75px;" />
+      </div>
+</div>
+</body>
+</html>`
+
+        document.getElementById('myElement').innerHTML = cadena
+        if (imprimir) {
+          const d = new Printd()
+          d.print(document.getElementById('myElement'))
+        }
+        resolve(url)
+      }).catch(err => reject(err))
+    })
+  }
+
 
   static cotizacion (detalle, cliente, total, descuento, imprimir = true) {
     // console.log('detalle', detalle)
@@ -441,7 +526,7 @@ Oruro</div>
     })
   }
 
-  static reciboCompra (buy) {
+  static reciboCompra2 (buy) {
     return new Promise((resolve, reject) => {
       const ClaseConversor = conversor.conversorNumerosALetras
       const miConversor = new ClaseConversor()
