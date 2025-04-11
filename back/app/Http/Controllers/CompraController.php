@@ -11,6 +11,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller{
+    function historialCompras($id){
+        $historial = \App\Models\CompraDetalle::with('compra')
+            ->where('producto_id', $id)
+            ->orderByDesc('fecha_vencimiento')
+            ->get();
+
+        return response()->json($historial);
+    }
     public function productosPorVencer(Request $request){
         $dias = (int) ($request->dias ?? 5); // Conversión explícita
 

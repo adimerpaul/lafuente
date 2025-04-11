@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompraController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -74,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('compras', [App\Http\Controllers\CompraController::class, 'store']);
     Route::get('/productosPorVencer', [App\Http\Controllers\CompraController::class, 'productosPorVencer']);
     Route::get('/productosVencidos', [App\Http\Controllers\CompraController::class, 'productosVencidos']);
+    Route::get('/productos/{id}/historial-compras', [App\Http\Controllers\CompraController::class, 'historialCompras']);
 
 
 });
