@@ -70,7 +70,7 @@
             <q-btn color="positive" label="Compra" icon="add_circle_outline" @click="$router.push({ name: 'compras-create' })" no-caps :loading="loading" />
           </div>
           <div class="col-12 col-md-2">
-            <q-btn color="primary" label="Imprimir" icon="print" @click="imprimir()" no-caps :loading="loading" />
+            <q-btn color="primary" label="Excel" icon="file_download" @click="excel" no-caps :loading="loading" />
           </div>
         </div>
       </q-card-section>
@@ -126,6 +126,7 @@
 <script>
 import moment from 'moment'
 import {Imprimir} from "src/addons/Imprimir";
+import {Excel} from "src/addons/Excel";
 export default {
   data() {
     return {
@@ -153,6 +154,23 @@ export default {
     }
   },
   methods: {
+    excel() {
+      const data = [{
+        columns: [
+          { label: "ID", value: "id" },
+          { label: "Fecha", value: row => `${row.fecha} ${row.hora}` },
+          { label: "Proveedor", value: row => row.proveedor?.nombre || row.nombre || '' },
+          { label: "Usuario", value: row => row.user?.name || '' },
+          { label: "Estado", value: "estado" },
+          { label: "Total (Bs)", value: "total" },
+          { label: "Detalle", value: "detailsText" },
+          { label: "Tipo de pago", value: "tipo_pago" },
+          { label: "Factura", value: "nro_factura" }
+        ],
+        content: this.compras
+      }]
+      Excel.export(data, `Compras_${this.fechaInicio}_a_${this.fechaFin}`)
+    },
     comprasGet() {
       this.loading = true
       this.$axios.get('compras', {

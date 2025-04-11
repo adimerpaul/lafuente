@@ -149,7 +149,9 @@ export default {
         {title: 'Compras', icon: 'shopping_basket', link: '/compras', can: ['Farmacia', 'Administrador']},
         // compras-create
         {title: 'Compras Nueva', icon: 'shopping_basket', link: '/compras-create', can: ['Farmacia', 'Administrador']},
-        {title: 'Reportes', icon: 'assessment', link: '/reportes', can: ['Todos']},
+      //   productos por vencer y productos vencideo
+        {title: 'Productos por vencer', icon: 'warning', link: '/productos-vencer', can: ['Farmacia', 'Administrador']},
+        {title: 'Productos vencidos', icon: 'warning', link: '/productos-vencidos', can: ['Farmacia', 'Administrador']},
       ]
     }
   },
