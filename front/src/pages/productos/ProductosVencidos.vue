@@ -30,6 +30,7 @@
             <th>Cantidad</th>
             <th>Lote</th>
             <th>Fecha de Vencimiento</th>
+            <th>Estado</th>
             <th>Días vencido</th>
           </tr>
           </thead>
@@ -40,6 +41,11 @@
             <td>{{ p.cantidad }}</td>
             <td>{{ p.lote }}</td>
             <td>{{ p.fecha_vencimiento }}</td>
+            <td>
+              <q-badge :color="p.estado === 'Activo' ? 'green' : 'red'" class="q-pa-xs">
+                {{ p.estado }}
+              </q-badge>
+            </td>
             <td>
               <q-badge color="negative" class="q-pa-xs">
                 {{ diasVencido(p.fecha_vencimiento) }} días

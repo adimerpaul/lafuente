@@ -99,6 +99,10 @@
                     <q-item-label>Eliminar</q-item-label>
                   </q-item-section>
                 </q-item>
+                <q-item clickable @click="verHistorial(producto)" v-close-popup>
+                  <q-item-section avatar><q-icon name="history" /></q-item-section>
+                  <q-item-section><q-item-label>Historial de compras</q-item-label></q-item-section>
+                </q-item>
               </q-list>
             </q-btn-dropdown>
           </td>
@@ -191,6 +195,41 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="historialDialog" persistent>
+      <q-card style="width: 800px;">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Historial de Compras: {{ productoHistorialNombre }}</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="historialDialog = false" />
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-markup-table dense wrap-cells flat bordered>
+            <thead>
+            <tr>
+              <th>#</th>
+              <th>Fecha</th>
+              <th>Lote</th>
+              <th>Vencimiento</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item, i) in historialCompras" :key="item.id">
+              <td>{{ i + 1 }}</td>
+              <td>{{ item.compra?.fecha }}</td>
+              <td>{{ item.lote }}</td>
+              <td>{{ item.fecha_vencimiento }}</td>
+              <td>{{ item.cantidad }}</td>
+              <td>{{ item.precio }}</td>
+              <td>{{ item.total }}</td>
+            </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <script>
@@ -220,7 +259,10 @@ export default {
         { name: 'stock', label: 'Stock', align: 'left', field: 'stock' },
         { name: 'stock_minimo', label: 'Stock mínimo', align: 'left', field: 'stock_minimo' },
         { name: 'stock_maximo', label: 'Stock máximo', align: 'left', field: 'stock_maximo' },
-      ]
+      ],
+      historialDialog: false,
+      historialCompras: [],
+      productoHistorialNombre: '',
     }
   },
   mounted() {
@@ -229,6 +271,19 @@ export default {
     this.debouncedCambioStock = debounce(this.cambioStock, 500)
   },
   methods: {
+    verHistorial(producto) {
+      this.loading = true;
+      this.productoHistorialNombre = producto.nombre;
+      this.$axios.get(`productos/${producto.id}/historial-compras`)
+        .then(res => {
+          this.historialCompras = res.data;
+          this.historialDialog = true;
+        }).catch(err => {
+        this.$alert.error("Error al obtener historial");
+      }).finally(() => {
+        this.loading = false;
+      });
+    },
     cambioStock(producto) {
       this.loading = true
       this.$axios.put('productos/' + producto.id, { stock: producto.stock }).then(res => {
