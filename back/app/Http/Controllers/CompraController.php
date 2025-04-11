@@ -10,10 +10,24 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class CompraController extends Controller
-{
-    public function index(Request $request)
+class CompraController extends Controller{
+    public function productosPorVencer(Request $request)
     {
+        $dias = (int) ($request->dias ?? 5); // Conversión explícita
+
+        $hoy = Carbon::now();
+        $limite = $hoy->copy()->addDays($dias);
+
+        $productos = \App\Models\CompraDetalle::with('producto')
+            ->whereNotNull('fecha_vencimiento')
+            ->whereBetween('fecha_vencimiento', [$hoy->format('Y-m-d'), $limite->format('Y-m-d')])
+            ->orderBy('fecha_vencimiento')
+            ->get();
+
+        return response()->json($productos);
+    }
+
+    public function index(Request $request){
         $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->orderBy('id', 'desc');
 
         if ($request->fechaInicio && $request->fechaFin) {
