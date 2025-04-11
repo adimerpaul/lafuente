@@ -11,8 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller{
-    public function productosPorVencer(Request $request)
-    {
+    public function productosPorVencer(Request $request){
         $dias = (int) ($request->dias ?? 5); // Conversión explícita
 
         $hoy = Carbon::now();
@@ -26,6 +25,20 @@ class CompraController extends Controller{
 
         return response()->json($productos);
     }
+    public function productosVencidos(Request $request)
+    {
+        $hoy = Carbon::now()->format('Y-m-d');
+        $perPage = $request->per_page ?? 10;
+
+        $productos = \App\Models\CompraDetalle::with('producto')
+            ->whereNotNull('fecha_vencimiento')
+            ->where('fecha_vencimiento', '<', $hoy)
+            ->orderBy('fecha_vencimiento', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($productos);
+    }
+
 
     public function index(Request $request){
         $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->orderBy('id', 'desc');
