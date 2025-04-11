@@ -14,7 +14,7 @@ class CompraController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto']);
+        $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->orderBy('id', 'desc');
 
         if ($request->fechaInicio && $request->fechaFin) {
             $query->whereBetween('fecha', [$request->fechaInicio, $request->fechaFin]);
@@ -108,8 +108,8 @@ class CompraController extends Controller
             }
 
             DB::commit();
-
-            return response()->json(['message' => 'Compra registrada correctamente']);
+            $compraSearch = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->find($compra->id);
+            return $compraSearch;
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error al registrar la compra', 'error' => $e->getMessage()], 500);
