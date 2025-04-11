@@ -120,10 +120,12 @@
       </tbody>
     </q-markup-table>
   </q-page>
+  <div id="myElement" class="hidden"></div>
 </template>
 
 <script>
 import moment from 'moment'
+import {Imprimir} from "src/addons/Imprimir";
 export default {
   data() {
     return {
@@ -174,10 +176,11 @@ export default {
       })
     },
     imprimir(compra) {
-      console.log(compra)
+      Imprimir.reciboCompra(compra)
     },
     anular(id) {
       this.$alert.dialog('¿Anular esta compra?').onOk(() => {
+        this.loading = true
         this.$axios.put(`comprasAnular/${id}`).then(() => {
           this.$alert.success('Compra anulada')
           this.comprasGet()
