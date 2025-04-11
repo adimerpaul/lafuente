@@ -8,7 +8,7 @@
             <q-slider
               v-model="dias"
               :min="1"
-              :max="100"
+              :max="365"
               label-always
               :label-value="`${dias} días`"
               color="primary"
