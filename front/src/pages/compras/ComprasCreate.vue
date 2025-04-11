@@ -112,7 +112,7 @@
                     <input v-model="producto.cantidad" type="number" style="width: 50px;" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
                   </td>
                   <td class="pm-none">
-                    <input v-model="producto.precio" type="number" style="width: 55px;" step="0.01" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
+                    <input v-model="producto.precio" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
                   </td>
                   <td class="text-right pm-none">
                     {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}

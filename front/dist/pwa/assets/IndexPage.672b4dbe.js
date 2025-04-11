@@ -1,0 +1,1 @@
+import{Q as e}from"./QImg.89c0d88b.js";import{Q as a}from"./QPage.dc5941e2.js";import{_ as o,aB as t,B as r,C as s,E as n,F as c}from"./index.edcbe16c.js";const p=t({name:"IndexPage"});function f(d,m,_,i,l,x){return r(),s(a,{class:"flex flex-center"},{default:n(()=>[c(e,{src:"logoLargo.png",style:{width:"400px"}})]),_:1})}var Q=o(p,[["render",f]]);export{Q as default};
