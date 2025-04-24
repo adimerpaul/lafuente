@@ -147,9 +147,7 @@ export default {
         {title: 'Venta Nueva', icon: 'point_of_sale', link: '/ventaNuevo' , can: ['Todos']},
         {title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador']},
         {title: 'Compras', icon: 'shopping_basket', link: '/compras', can: ['Farmacia', 'Administrador']},
-        // compras-create
         {title: 'Compras Nueva', icon: 'shopping_basket', link: '/compras-create', can: ['Farmacia', 'Administrador']},
-      //   productos por vencer y productos vencideo
         {title: 'Productos por vencer', icon: 'warning', link: '/productos-vencer', can: ['Farmacia', 'Administrador']},
         {title: 'Productos vencidos', icon: 'warning', link: '/productos-vencidos', can: ['Farmacia', 'Administrador']},
       ]
