@@ -67,7 +67,7 @@
         </q-td>
       </template>
     </q-table>
-    <pre>{{ users }}</pre>
+<!--    <pre>{{ users }}</pre>-->
 <!--    {-->
 <!--    "id": 2,-->
 <!--    "name": "Adimer Paul Chambi Ajata",-->

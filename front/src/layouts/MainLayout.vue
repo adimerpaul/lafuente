@@ -100,7 +100,7 @@
             exact
             class="text-grey"
             active-class="menu"
-            v-if="link && $store.user && (link.can.includes($store.user.role) || link.can.includes('Todos'))"
+            v-if="link && $store.permissions.some(p => p.name === link.can || link.can === 'Todos')"
           >
             <q-item-section avatar>
               <q-icon
@@ -139,17 +139,40 @@ export default {
     return {
       leftDrawerOpen: false,
       linksList: [
-        { title: 'Principal', icon: 'dashboard', link: '/', can: ['Todos'] },
-        { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: ['Administrador'] },
-        { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: ['Todos'] },
-        { title: 'Productos', icon: 'inventory_2', link: '/productos', can: ['Farmacia', 'Administrador'] },
-        { title: 'Ventas', icon: 'sell', link: '/venta', can: ['Todos'] },
-        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: ['Todos'] },
-        { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador'] },
-        { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: ['Farmacia', 'Administrador'] },
-        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: ['Farmacia', 'Administrador'] },
-        { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: ['Farmacia', 'Administrador'] },
-        { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Principal', icon: 'dashboard', link: '/', can: ['Todos'] },
+        // { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: ['Administrador'] },
+        // { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: ['Todos'] },
+        // { title: 'Productos', icon: 'inventory_2', link: '/productos', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Ventas', icon: 'sell', link: '/venta', can: ['Todos'] },
+        // { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: ['Todos'] },
+        // { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: ['Farmacia', 'Administrador'] },
+        // { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: ['Farmacia', 'Administrador'] },
+
+        // Usuarios
+        // Pacientes
+        // Productos
+        // Ventas
+        // Nueva venta
+        // Proveedores
+        // Compras
+        // Compras nuevas
+        // Productos por vencer
+        // Productos vencidos
+
+        { title: 'Principal', icon: 'dashboard', link: '/', can: 'Todos'},
+        { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios'},
+        { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes'},
+        { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos'},
+        { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas'},
+        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Venta Nueva'},
+        { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores'},
+        { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: 'Compras'},
+        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras Nueva'},
+        { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer'},
+        { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
       ]
     }
   },
