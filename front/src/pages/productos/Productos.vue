@@ -103,6 +103,11 @@
                   <q-item-section avatar><q-icon name="history" /></q-item-section>
                   <q-item-section><q-item-label>Historial de compras</q-item-label></q-item-section>
                 </q-item>
+<!--                opcion de cambiar foto-->
+                <q-item clickable v-close-popup @click="productoEditFoto(producto)">
+                  <q-item-section avatar><q-icon name="photo" /></q-item-section>
+                  <q-item-section><q-item-label>Ver foto</q-item-label></q-item-section>
+                </q-item>
               </q-list>
             </q-btn-dropdown>
           </td>
@@ -230,6 +235,34 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="dialogFoto">
+      <q-card style="width: 400px">
+        <q-card-section class="q-pb-none text-bold row items-center">
+          Cambiar foto de producto
+          {{ producto.nombre }}
+          <q-space />
+          <q-btn icon="close" flat round dense @click="dialogFoto = false" />
+        </q-card-section>
+        <q-card-section class="row items-center q-pb-none">
+          <q-btn
+            label="Subir foto"
+            color="primary"
+            @click="$refs.fileInput.click()"
+            class="q-mr-sm"
+            no-caps dense
+            icon="cloud_upload"
+            :loading="loading"
+          />
+          <input
+            type="file"
+            ref="fileInput"
+            accept="image/*"
+            @change="onFileChange"
+            style="display: none">
+          <img :src="`${$url}../images/${producto.imagen}`" style="width: 350px; height: 350px" class="q-mr-sm" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <script>
@@ -263,6 +296,7 @@ export default {
       historialDialog: false,
       historialCompras: [],
       productoHistorialNombre: '',
+      dialogFoto: false,
     }
   },
   mounted() {
@@ -271,6 +305,31 @@ export default {
     this.debouncedCambioStock = debounce(this.cambioStock, 500)
   },
   methods: {
+    onFileChange(event) {
+      const file = event.target.files[0]
+      if (file) {
+        const formData = new FormData()
+        formData.append('file', file)
+        this.loading = true
+        this.$axios.post(`productos/${this.producto.id}/foto`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then(res => {
+          this.productosGet()
+          this.$alert.success('Foto actualizada')
+          this.dialogFoto = false
+        }).catch(error => {
+          this.$alert.error(error.response.data.message)
+        }).finally(() => {
+          this.loading = false
+        })
+      }
+    },
+    productoEditFoto(producto) {
+      this.dialogFoto = true
+      this.producto = { ...producto }
+    },
     verHistorial(producto) {
       this.loading = true;
       this.productoHistorialNombre = producto.nombre;
