@@ -139,17 +139,17 @@ export default {
     return {
       leftDrawerOpen: false,
       linksList: [
-        {title: 'Principal', icon: 'home', link: '/', can: ['Todos']},
-        {title: 'Usuarios', icon: 'account_circle', link: '/usuarios', can: ['Administrador']},
-        {title: 'Pacientes', icon: 'people', link: '/pacientes', can: ['Todos']},
-        {title: 'Productos', icon: 'shopping_cart', link: '/productos', can: ['Farmacia', 'Administrador']},
-        {title: 'Ventas', icon: 'point_of_sale', link: '/venta' , can: ['Todos']},
-        {title: 'Venta Nueva', icon: 'point_of_sale', link: '/ventaNuevo' , can: ['Todos']},
-        {title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador']},
-        {title: 'Compras', icon: 'shopping_basket', link: '/compras', can: ['Farmacia', 'Administrador']},
-        {title: 'Compras Nueva', icon: 'shopping_basket', link: '/compras-create', can: ['Farmacia', 'Administrador']},
-        {title: 'Productos por vencer', icon: 'warning', link: '/productos-vencer', can: ['Farmacia', 'Administrador']},
-        {title: 'Productos vencidos', icon: 'warning', link: '/productos-vencidos', can: ['Farmacia', 'Administrador']},
+        { title: 'Principal', icon: 'dashboard', link: '/', can: ['Todos'] },
+        { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: ['Administrador'] },
+        { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: ['Todos'] },
+        { title: 'Productos', icon: 'inventory_2', link: '/productos', can: ['Farmacia', 'Administrador'] },
+        { title: 'Ventas', icon: 'sell', link: '/venta', can: ['Todos'] },
+        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: ['Todos'] },
+        { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador'] },
+        { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: ['Farmacia', 'Administrador'] },
+        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: ['Farmacia', 'Administrador'] },
+        { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: ['Farmacia', 'Administrador'] },
+        { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: ['Farmacia', 'Administrador'] },
       ]
     }
   },

@@ -38,6 +38,14 @@
                     <q-item-label>Cambiar contraseña</q-item-label>
                   </q-item-section>
                 </q-item>
+                <q-item clickable @click="dialogPermisosClick(props.row)" v-close-popup>
+                  <q-item-section avatar>
+                    <q-icon name="lock_open" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>Permisos</q-item-label>
+                  </q-item-section>
+                </q-item>
               </q-list>
           </q-btn-dropdown>
         </q-td>
@@ -49,7 +57,63 @@
                   text-color="white" dense  size="14px"/>
         </q-td>
       </template>
+      <template v-slot:body-cell-permisos="props">
+        <q-td :props="props">
+          <ul style="padding: 0;margin: 0;width: 150px;">
+            <li v-for="(permiso, index) in props.row.permissions" :key="index" style="list-style: none;padding: 0;margin: 0;">
+              {{ permiso.name }}
+            </li>
+          </ul>
+        </q-td>
+      </template>
     </q-table>
+    <pre>{{ users }}</pre>
+<!--    {-->
+<!--    "id": 2,-->
+<!--    "name": "Adimer Paul Chambi Ajata",-->
+<!--    "username": "adimer",-->
+<!--    "email": null,-->
+<!--    "role": "Farmacia",-->
+<!--    "color": "green",-->
+<!--    "permissions": [-->
+<!--    {-->
+<!--    "id": 9,-->
+<!--    "name": "ver productos",-->
+<!--    "guard_name": "web",-->
+<!--    "created_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "updated_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "pivot": {-->
+<!--    "model_type": "App\\Models\\User",-->
+<!--    "model_id": 2,-->
+<!--    "permission_id": 9-->
+<!--    }-->
+<!--    },-->
+<!--    {-->
+<!--    "id": 13,-->
+<!--    "name": "ver ventas",-->
+<!--    "guard_name": "web",-->
+<!--    "created_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "updated_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "pivot": {-->
+<!--    "model_type": "App\\Models\\User",-->
+<!--    "model_id": 2,-->
+<!--    "permission_id": 13-->
+<!--    }-->
+<!--    },-->
+<!--    {-->
+<!--    "id": 14,-->
+<!--    "name": "crear venta",-->
+<!--    "guard_name": "web",-->
+<!--    "created_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "updated_at": "2025-05-12T08:19:01.000000Z",-->
+<!--    "pivot": {-->
+<!--    "model_type": "App\\Models\\User",-->
+<!--    "model_id": 2,-->
+<!--    "permission_id": 14-->
+<!--    }-->
+<!--    }-->
+<!--    ]-->
+<!--    },-->
     <q-dialog v-model="userDialog" persistent>
       <q-card>
         <q-card-section class="q-pb-none row items-center">
@@ -74,6 +138,35 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="dialogPermisos">
+      <q-card>
+        <q-card-section class="q-pb-none row items-center">
+          <div>
+            Permisos de {{ user.name }}
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="dialogPermisos = false" />
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+<!--          <q-option-group-->
+<!--            v-model="group"-->
+<!--            :options="options"-->
+<!--            color="green"-->
+<!--            type="checkbox"-->
+<!--          />-->
+          <q-option-group
+            v-model="user.permissionsSelected"
+            :options="permisos.map(p => ({ label: p.name, value: p.name }))"
+            type="checkbox"
+            color="green"
+            dense
+          />
+          <div class="text-right q-mt-md">
+            <q-btn label="Guardar permisos" color="primary" @click="guardarPermisos" :loading="loading" no-caps />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <script>
@@ -95,14 +188,49 @@ export default {
         { name: 'name', label: 'Nombre', align: 'left', field: 'name' },
         { name: 'username', label: 'Usuario', align: 'left', field: 'username' },
         { name: 'role', label: 'Rol', align: 'left', field: 'role' },
-        { name: 'email', label: 'Email', align: 'left', field: 'email' }
-      ]
+        { name: 'permisos', label: 'Permisos', align: 'left', field: 'permisos' }
+      ],
+      permisos: [],
+      dialogPermisos: false,
     }
   },
   mounted() {
     this.usersGet()
+    this.permisosGet()
   },
   methods: {
+    guardarPermisos() {
+      this.loading = true
+      this.$axios.put(`users/${this.user.id}/permisos`, {
+        permissions: this.user.permissionsSelected
+      }).then(() => {
+        this.$alert.success('Permisos actualizados')
+        this.dialogPermisos = false
+        this.usersGet()
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'Error al actualizar permisos')
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    permisosGet() {
+      this.loading = true
+      this.$axios.get('permisos').then(res => {
+        this.permisos = res.data
+        this.loading = false
+          // [
+          // {
+          //   "id": 1,
+          //   "name": "ver usuarios",
+          //   "guard_name": "web",
+          //   "created_at": "2025-05-12T08:19:01.000000Z",
+          //   "updated_at": "2025-05-12T08:19:01.000000Z"
+          // },
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+        this.loading = false
+      })
+    },
     userNew() {
       this.user = {
         name: '',
@@ -159,6 +287,13 @@ export default {
       }).finally(() => {
         this.loading = false
       })
+    },
+    dialogPermisosClick(user) {
+      this.dialogPermisos = true
+      this.user = {
+        ...user,
+        permissionsSelected: user.permissions?.map(p => p.name) || []
+      }
     },
     userEditPassword(user) {
       this.user = { ...user }
