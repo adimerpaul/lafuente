@@ -2,22 +2,28 @@
   <q-page class="q-pa-xs">
     <q-card flat bordered>
       <q-card-section class="q-pa-xs">
-        <div class="text-h6">Productos por Vencer en {{ dias }} días</div>
-        <div class="row">
-          <div class="col-12 col-md-10 q-pa-xs">
-            <q-slider
-              v-model="dias"
-              :min="1"
-              :max="365"
-              label-always
-              :label-value="`${dias} días`"
-              color="primary"
-              class="q-mt-md"
-              @change="consultar"
+        <div class="text-h6">Productos por vencer en {{ dias }} días</div>
+
+        <div class="row items-end q-col-gutter-md">
+          <div class="col-12 col-md-2">
+            <q-input v-model.number="valor" type="number" min="1" label="Cantidad" dense outlined />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-option-group
+              v-model="unidad"
+              :options="[
+                { label: 'Días', value: 'dias' },
+                { label: 'Semanas', value: 'semanas' },
+                { label: 'Meses', value: 'meses' },
+                { label: 'Años', value: 'anios' }
+              ]"
+              type="radio"
+              inline
+              dense
             />
           </div>
           <div class="col-12 col-md-2">
-            <q-btn label="Consultar" color="green" icon="search" class="q-mt-md" @click="consultar" :loading="loading" no-caps />
+            <q-btn label="Consultar" color="green" icon="search" class="q-mt-sm" @click="consultar" :loading="loading" no-caps />
           </div>
         </div>
 
@@ -53,20 +59,19 @@
           </tr>
           </tbody>
         </q-markup-table>
-
       </q-card-section>
     </q-card>
   </q-page>
 </template>
-
 <script>
-import moment from "moment";
-
+import moment from 'moment';
 export default {
   name: "ProductosPorVencer",
   data() {
     return {
-      dias: 30,
+      valor: 1,
+      unidad: 'meses', // o 'semanas', 'meses'
+      dias: 1,
       productos: [],
       loading: false
     };
@@ -76,6 +81,8 @@ export default {
   },
   methods: {
     consultar() {
+      this.dias = this.convertirADias(this.valor, this.unidad);
+
       this.loading = true;
       this.$axios.get('/productosPorVencer', { params: { dias: this.dias } })
         .then(res => {
@@ -86,6 +93,18 @@ export default {
         }).finally(() => {
         this.loading = false;
       });
+    },
+    convertirADias(valor, unidad) {
+      switch (unidad) {
+        case 'semanas':
+          return valor * 7;
+        case 'meses':
+          return valor * 30;
+        case 'anios':
+          return valor * 365;
+        default:
+          return valor;
+      }
     },
     diasRestantesColor(fechaVencimiento) {
       const hoy = moment();
@@ -103,6 +122,6 @@ export default {
       }
     }
   }
-
 }
+
 </script>

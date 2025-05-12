@@ -24,8 +24,8 @@
         <div>
 <!--          Quasar v{{ $q.version }}-->
           <q-btn-group flat>
-            <q-btn no-caps icon="o_notifications" />
-            <q-btn no-caps icon="o_account_circle" >
+            <q-btn no-caps icon="o_notifications" dense />
+            <q-btn no-caps icon="o_account_circle" dense :label="$store.user.name">
               <q-menu>
                 <q-list>
                   <q-item clickable>
@@ -167,10 +167,10 @@ export default {
         { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes'},
         { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos'},
         { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas'},
-        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Venta Nueva'},
+        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Nueva venta'},
         { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores'},
         { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: 'Compras'},
-        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras Nueva'},
+        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas'},
         { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer'},
         { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
       ]
