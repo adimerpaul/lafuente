@@ -49,7 +49,9 @@ class UserController extends Controller{
         ]);
     }
     function me(Request $request){
-        return $request->user();
+        $user = $request->user();
+        $user->load('permissions');
+        return $user;
     }
     function index(){
         return User::
