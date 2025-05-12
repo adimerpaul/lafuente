@@ -15,6 +15,7 @@ class Producto extends Model{
         'stock',
         'stock_minimo',
         'stock_maximo',
+        'imagen',
     ];
     protected $hidden = [
         'created_at',

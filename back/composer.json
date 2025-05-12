@@ -9,6 +9,7 @@
         "algolia/algoliasearch-client-php": "^4.13",
         "barryvdh/laravel-dompdf": "^3.0",
         "http-interop/http-factory-guzzle": "^1.2",
+        "intervention/image": "^3.11",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/scout": "^10.12",
