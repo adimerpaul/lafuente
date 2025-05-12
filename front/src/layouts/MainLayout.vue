@@ -24,7 +24,27 @@
         <div>
 <!--          Quasar v{{ $q.version }}-->
           <q-btn-group flat>
-            <q-btn no-caps icon="o_notifications" dense />
+            <q-btn icon="notifications" flat dense>
+              <q-badge v-if="notificaciones.length" color="red" floating>{{ notificaciones.length }}</q-badge>
+              <q-menu>
+                <q-list style="min-width: 250px; max-height: 300px" separator>
+                  <q-item v-if="notificaciones.length === 0">
+                    <q-item-section>No hay productos por vencer</q-item-section>
+                  </q-item>
+                  <q-item v-for="(n, index) in notificaciones" :key="index" clickable>
+                    <q-item-section avatar>
+                      <q-avatar size="36px">
+                        <img :src="`${$url}../images/${n.imagen}`" />
+                      </q-avatar>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>{{ n.producto }}</q-item-label>
+                      <q-item-label caption>Vence en {{ n.dias_restantes }} días</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
             <q-btn no-caps icon="o_account_circle" dense :label="$store.user.name">
               <q-menu>
                 <q-list>
@@ -139,29 +159,6 @@ export default {
     return {
       leftDrawerOpen: false,
       linksList: [
-        // { title: 'Principal', icon: 'dashboard', link: '/', can: ['Todos'] },
-        // { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: ['Administrador'] },
-        // { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: ['Todos'] },
-        // { title: 'Productos', icon: 'inventory_2', link: '/productos', can: ['Farmacia', 'Administrador'] },
-        // { title: 'Ventas', icon: 'sell', link: '/venta', can: ['Todos'] },
-        // { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: ['Todos'] },
-        // { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: ['Farmacia', 'Administrador'] },
-        // { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: ['Farmacia', 'Administrador'] },
-        // { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: ['Farmacia', 'Administrador'] },
-        // { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: ['Farmacia', 'Administrador'] },
-        // { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: ['Farmacia', 'Administrador'] },
-
-        // Usuarios
-        // Pacientes
-        // Productos
-        // Ventas
-        // Nueva venta
-        // Proveedores
-        // Compras
-        // Compras nuevas
-        // Productos por vencer
-        // Productos vencidos
-
         { title: 'Principal', icon: 'dashboard', link: '/', can: 'Todos'},
         { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios'},
         { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes'},
@@ -173,10 +170,21 @@ export default {
         { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas'},
         { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer'},
         { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
-      ]
+      ],
+      notificaciones: [],
     }
   },
+  mounted() {
+    this.getNotificaciones()
+  },
   methods: {
+    getNotificaciones() {
+      this.$axios.get('/productos-por-vencer-campana').then(res => {
+        this.notificaciones = res.data;
+      }).catch(() => {
+        this.notificaciones = [];
+      });
+    },
     logout () {
       this.$alert.dialog('¿Desea salir del sistema?')
         .onOk(() => {
