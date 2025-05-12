@@ -10,7 +10,7 @@
         <q-form @submit="clickDialogCompra">
           <div class="row">
             <!-- Buscar productos -->
-            <div class="col-12 col-md-6 q-pa-xs">
+            <div class="col-12 col-md-5 q-pa-xs">
               <q-input v-model="productosSearch" outlined clearable label="Buscar producto" dense debounce="300" @update:modelValue="productosGet">
                 <template v-slot:append>
                   <q-btn flat round dense icon="search" />
@@ -79,7 +79,7 @@
             </div>
 
             <!-- Lista de productos agregados -->
-            <div class="col-12 col-md-6 q-pa-xs">
+            <div class="col-12 col-md-7 q-pa-xs">
               <div>
                 <q-btn size="xs" flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
                 <span class="text-subtitle2">Productos seleccionados</span>
@@ -96,6 +96,7 @@
                   <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Lote</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Fecha vencimiento</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Días restantes</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -115,7 +116,8 @@
                     <input v-model="producto.precio" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
                   </td>
                   <td class="text-right pm-none">
-                    {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}
+                    <input v-model="producto.total" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioUnitario(producto)" @update="updatePrecioUnitario(producto)" />
+<!--                    {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}-->
                   </td>
                   <td class="text-right pm-none text-bold">
                     {{ parseFloat(producto.precio * 1.3).toFixed(2) }}
@@ -133,6 +135,12 @@
                   <td class="pm-none">
                     <input v-model="producto.fecha_vencimiento" type="date" style="width: 100px;" />
                   </td>
+                  <td class="pm-none">
+                    <q-badge :color="diasRestantesColor(producto.fecha_vencimiento).color">
+                      {{ diasRestantesColor(producto.fecha_vencimiento).texto }}
+                    </q-badge>
+                  </td>
+
                 </tr>
                 </tbody>
                 <tfoot>
@@ -284,9 +292,34 @@ export default {
     },
   },
   methods: {
+    diasRestantesColor(fechaVencimiento) {
+      if (!fechaVencimiento) return { color: 'grey', texto: 'Sin fecha' }
+
+      const hoy = new Date();
+      const venc = new Date(fechaVencimiento);
+      const diffTime = venc.getTime() - hoy.getTime();
+      const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (dias <= 14) {
+        return { color: 'red', texto: `${dias} días` };
+      } else if (dias <= 28) {
+        return { color: 'orange', texto: `${dias} días` };
+      } else {
+        return { color: 'green', texto: `${dias} días` };
+      }
+    },
+    updatePrecioUnitario(productoVenta) {
+      const precio_unitario = parseFloat(productoVenta.total / productoVenta.cantidad);
+      productoVenta.precio = precio_unitario;
+      productoVenta.precio_venta = this.redondear50Centavos(precio_unitario * 1.3);
+    },
+
     updatePrecioVenta(productoVenta) {
-      const precio_venta = Math.ceil(productoVenta.precio * 1.3);
-      productoVenta.precio_venta = precio_venta;
+      productoVenta.total = parseFloat(productoVenta.cantidad * productoVenta.precio).toFixed(2);
+      productoVenta.precio_venta = this.redondear50Centavos(productoVenta.precio * 1.3);
+    },
+    redondear50Centavos(valor) {
+      return Math.ceil(valor * 2) / 2;
     },
     productosGet() {
       this.loading = true;
