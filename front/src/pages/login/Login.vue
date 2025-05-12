@@ -79,6 +79,7 @@ export default {
         this.$axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
         this.$store.isLogged = true
         this.$store.user = user
+        this.$store.permissions = user.permissions
         localStorage.setItem('tokenEducation', token)
         this.$alert.success('Bienvenido ' + user.name)
         this.$router.push('/')
