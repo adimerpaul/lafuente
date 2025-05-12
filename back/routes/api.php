@@ -81,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productosVencidos', [App\Http\Controllers\CompraController::class, 'productosVencidos']);
     Route::get('/productos/{id}/historial-compras', [App\Http\Controllers\CompraController::class, 'historialCompras']);
 
+    Route::get('/productos-por-vencer-campana', [\App\Http\Controllers\CompraDetalleController::class, 'vencimientosCampana']);
+
 
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
