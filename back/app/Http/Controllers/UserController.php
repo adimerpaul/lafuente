@@ -30,7 +30,7 @@ class UserController extends Controller{
     }
     function login(Request $request){
         $credentials = $request->only('username', 'password');
-        $user = User::where('username', $credentials['username'])->first();
+        $user = User::where('username', $credentials['username'])->with('permissions')->first();
         if (!$user || !password_verify($credentials['password'], $user->password)) {
             return response()->json([
                 'message' => 'Usuario o contraseña incorrectos',
