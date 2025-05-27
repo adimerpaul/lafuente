@@ -310,7 +310,8 @@ export default {
     },
     updatePrecioUnitario(productoVenta) {
       const precio_unitario = parseFloat(productoVenta.total / productoVenta.cantidad);
-      productoVenta.precio = precio_unitario;
+      // redondear a 2 decimal
+      productoVenta.precio = parseFloat(precio_unitario).toFixed(2);
       productoVenta.precio_venta = this.redondear50Centavos(precio_unitario * 1.3);
     },
 
