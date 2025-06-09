@@ -184,7 +184,7 @@
                 ></q-select>
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
-                <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR']" label="Tipo de pago" dense outlined />
+                <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR','CREDITO']" label="Tipo de pago" dense outlined />
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="compra.nro_factura" outlined dense label="Nro. factura" />
@@ -346,7 +346,7 @@ export default {
       } else {
         this.productosCompras.push({
           producto_id: producto.id,
-          cantidad: 1,
+          cantidad: '',
           precio: '',
           lote: '',
           fecha_vencimiento: '',
@@ -363,6 +363,12 @@ export default {
       const sinPrecio = this.productosCompras.filter(p => !p.precio);
       if (sinPrecio.length > 0) {
         this.$alert.error("Todos los productos deben tener precio unitario");
+        return;
+      }
+
+      const sinCantidad = this.productosCompras.filter(p => !p.cantidad);
+      if (sinCantidad.length > 0) {
+        this.$alert.error("Todos los productos deben tener cantidad");
         return;
       }
       this.compraDialog = true;
