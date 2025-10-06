@@ -21,8 +21,10 @@ return new class extends Migration
             $table->foreign('producto_id')->references('id')->on('productos');
             $table->string('nombre')->nullable();
             $table->decimal('precio', 8, 2)->nullable();
-            $table->decimal('cantidad', 8, 2)->nullable();
+            $table->integer('cantidad')->nullable();
+            $table->integer('cantidad_venta')->nullable();
             $table->decimal('total', 8, 2)->nullable();
+            $table->decimal('factor', 8, 2)->nullable();
 
             $table->decimal('precio13', 8, 2)->nullable();
             $table->decimal('total13', 8, 2)->nullable();

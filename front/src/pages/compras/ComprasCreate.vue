@@ -3,7 +3,7 @@
     <q-card flat bordered>
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Compras</div>
-        <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
+        <q-btn flat round dense icon="arrow_back" @click="$router.back()" class="q-mr-sm" />
       </q-card-section>
 
       <q-card-section class="q-pa-none">
@@ -27,32 +27,32 @@
                   class="q-mt-sm"
                 />
               </div>
-<!--              <q-markup-table dense wrap-cells flat bordered>-->
-<!--                <thead>-->
-<!--                <tr>-->
-<!--                  <th>ID</th>-->
-<!--                  <th>Nombre</th>-->
-<!--                  <th>Unidad</th>-->
-<!--                  <th>Precio</th>-->
-<!--                </tr>-->
-<!--                </thead>-->
-<!--                <tbody>-->
-<!--                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">-->
-<!--                  <td>{{ producto.id }}</td>-->
-<!--                  <td>-->
-<!--                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">-->
-<!--                      {{ producto.nombre }}-->
-<!--                    </div>-->
-<!--                  </td>-->
-<!--                  <td>-->
-<!--                    <div style="max-width: 100px; wrap-option: warp;line-height: 0.9;">-->
-<!--                      {{ producto.unidad }}-->
-<!--                    </div>-->
-<!--                  </td>-->
-<!--                  <td class="text-right">{{ producto.precio }}</td>-->
-<!--                </tr>-->
-<!--                </tbody>-->
-<!--              </q-markup-table>-->
+              <!--              <q-markup-table dense wrap-cells flat bordered>-->
+              <!--                <thead>-->
+              <!--                <tr>-->
+              <!--                  <th>ID</th>-->
+              <!--                  <th>Nombre</th>-->
+              <!--                  <th>Unidad</th>-->
+              <!--                  <th>Precio</th>-->
+              <!--                </tr>-->
+              <!--                </thead>-->
+              <!--                <tbody>-->
+              <!--                <tr v-for="(producto, index) in productos" :key="index" @click="addProducto(producto)">-->
+              <!--                  <td>{{ producto.id }}</td>-->
+              <!--                  <td>-->
+              <!--                    <div style="max-width: 200px; wrap-option: warp;line-height: 0.9;">-->
+              <!--                      {{ producto.nombre }}-->
+              <!--                    </div>-->
+              <!--                  </td>-->
+              <!--                  <td>-->
+              <!--                    <div style="max-width: 100px; wrap-option: warp;line-height: 0.9;">-->
+              <!--                      {{ producto.unidad }}-->
+              <!--                    </div>-->
+              <!--                  </td>-->
+              <!--                  <td class="text-right">{{ producto.precio }}</td>-->
+              <!--                </tr>-->
+              <!--                </tbody>-->
+              <!--              </q-markup-table>-->
               <div class="row">
                 <template v-for="producto in productos">
                   <div class="col-6 col-md-2">
@@ -80,9 +80,14 @@
 
             <!-- Lista de productos agregados -->
             <div class="col-12 col-md-7 q-pa-xs">
-              <div>
-                <q-btn size="xs" flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
-                <span class="text-subtitle2">Productos seleccionados</span>
+              <div style="display: flex;align-items: center;justify-content: space-between;">
+                <span>
+                  <q-btn size="xs" flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
+                  <span class="text-subtitle2">Productos seleccionados</span>
+                </span>
+                <span>
+                  <q-btn size="xs" dense icon="restore" color="blue" class="q-mb-sm" label="Recuperar pedidos" no-caps @click="recuperarPedido" />
+                </span>
               </div>
               <q-markup-table dense wrap-cells flat bordered>
                 <thead>
@@ -91,12 +96,13 @@
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Cantidad</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
-                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario 1.3</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Factor</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario 1.25</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
                   <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Lote</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Fecha vencimiento</th>
-                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Días restantes</th>
+                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Dias vencimiento</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -105,25 +111,69 @@
                     <q-img :src="`${$url}../images/${producto.producto?.imagen}`" class="q-mb-xs" style="height: 35px;width: 35px;" />
                     <div style="max-width: 120px; wrap-option: warp;line-height: 0.9;">
                       <q-icon name="delete" color="red" class="cursor-pointer" @click="productosCompras.splice(index, 1)" />
-<!--                      {{ producto.producto?.nombre }}-->
-                        {{ $filters.textUpper( producto.producto?.nombre ) }}
+                      <!--                      {{ producto.producto?.nombre }}-->
+                      {{ $filters.textUpper( producto.producto?.nombre ) }}
                     </div>
                   </td>
+                  <!--                  <td class="pm-none">-->
+                  <!--                    <input v-model="producto.cantidad" type="number" style="width: 50px;" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />-->
+                  <!--                  </td>-->
+                  <!--                  <td class="pm-none">-->
+                  <!--                    <input v-model="producto.precio" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />-->
+                  <!--                  </td>-->
+                  <!--                  <td class="text-right pm-none">-->
+                  <!--                    <input v-model="producto.total" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />-->
+                  <!--                  </td>-->
+                  <!--                  <td class="pm-none">-->
+                  <!--                    <input v-model="producto.factor" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />-->
+                  <!--                  </td>-->
                   <td class="pm-none">
-                    <input v-model="producto.cantidad" type="number" style="width: 50px;" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
+                    <input
+                      v-model.number="producto.cantidad"
+                      type="number"
+                      min="0"
+                      style="width: 60px;"
+                      @input="onCantidadChange(producto)"
+                    />
                   </td>
+
                   <td class="pm-none">
-                    <input v-model="producto.precio" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioVenta(producto)" @update="updatePrecioVenta(producto)" />
+                    <input
+                      v-model.number="producto.precio"
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      style="width: 70px;"
+                      @input="onPrecioChange(producto)"
+                    />
                   </td>
+
                   <td class="text-right pm-none">
-                    <input v-model="producto.total" type="number" style="width: 55px;" step="0.001" @keyup="updatePrecioUnitario(producto)" @update="updatePrecioUnitario(producto)" />
-<!--                    {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}-->
+                    <input
+                      v-model.number="producto.total"
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      style="width: 70px;"
+                      @input="onTotalChange(producto)"
+                    />
+                  </td>
+
+                  <td class="pm-none">
+                    <input
+                      v-model.number="producto.factor"
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      style="width: 60px;"
+                      @input="onFactorChange(producto)"
+                    />
                   </td>
                   <td class="text-right pm-none text-bold">
-                    {{ parseFloat(producto.precio * 1.3).toFixed(2) }}
+                    {{ parseFloat(producto.precio * producto.factor).toFixed(2) }}
                   </td>
                   <td class="text-right pm-none">
-                    {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}
+                    {{ parseFloat(producto.cantidad * producto.precio * producto.factor).toFixed(2) }}
                   </td>
                   <td class="pm-none">
                     <input v-model="producto.precio_venta" type="number" style="width: 55px;color: red;font-weight: bold"
@@ -135,12 +185,11 @@
                   <td class="pm-none">
                     <input v-model="producto.fecha_vencimiento" type="date" style="width: 100px;" />
                   </td>
-                  <td class="pm-none">
-                    <q-badge :color="diasRestantesColor(producto.fecha_vencimiento).color">
-                      {{ diasRestantesColor(producto.fecha_vencimiento).texto }}
-                    </q-badge>
+                  <td class="pm-none text-right">
+                    <span :class="`text-bold ${(new Date(producto.fecha_vencimiento) - new Date()) < 0 ? 'text-red' : (Math.ceil((new Date(producto.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24)) < 30 ? 'text-red' : (Math.ceil((new Date(producto.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24)) < 60 ? 'text-orange' : 'text-green'))}`">
+                      {{ producto.fecha_vencimiento ? Math.ceil((new Date(producto.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24)) : '' }}
+                    </span>
                   </td>
-
                 </tr>
                 </tbody>
                 <tfoot>
@@ -170,36 +219,59 @@
           <q-form @submit="submitCompra">
             <div class="row">
               <div class="col-12 col-md-6 q-pa-xs">
-                <q-select v-model="proveedor" :options="proveedores" option-label="nombre" option-value="id" label="Proveedor" dense outlined @update:modelValue="buscarProveedor"
-                          :rules="[
-                            val => !!val || 'Campo requerido',
-                            val => {
-                              if (val) {
-                                this.compra.nit = val.nit;
-                                this.compra.nombre = val.nombre;
-                              }
-                              return true;
-                            }
-                          ]"
-                ></q-select>
+                <q-select
+                  v-model="proveedor"
+                  :options="proveedores"
+                  option-label="nombre"
+                  option-value="id"
+                  label="Proveedor"
+                  dense
+                  outlined
+                  :rules="[val => !!val || 'Campo requerido']"
+                  @update:model-value="val => {
+    if (val) {
+      this.compra.nombre = val.nombre || ''
+      this.compra.ci     = val.ci || ''
+    } else {
+      this.compra.nombre = ''
+      this.compra.ci     = ''
+    }
+  }"
+                >
+                  <template #append>
+                    <q-btn
+                      round dense flat
+                      icon="person_add"
+                      @click.stop="openProveedorDialog"
+                      title="Nuevo proveedor"
+                    />
+                  </template>
+                </q-select>
+
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
-                <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR','CREDITO']" label="Tipo de pago" dense outlined />
+                <q-select v-model="compra.tipo_pago" :options="['Efectivo', 'QR']" label="Tipo de pago" dense outlined />
               </div>
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="compra.nro_factura" outlined dense label="Nro. factura" />
               </div>
+              <!--              <div class="col-12 col-md-6 q-pa-xs">-->
+              <!--&lt;!&ndash;                agencias&ndash;&gt;-->
+              <!--                <q-select v-model="compra.agencia" :options="$agencias" label="Agencia" dense outlined :rules="[-->
+              <!--                  val => !!val || 'Campo requerido',-->
+              <!--                ]" />-->
+              <!--              </div>-->
               <div class="col-12">
-<!--                table-->
+                <!--                table-->
                 <q-markup-table flat dense wrap-cells bordered>
                   <thead>
                   <tr>
                     <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Producto</th>
                     <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Cantidad</th>
-<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario</th>-->
-<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
-<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario 1.3</th>-->
-<!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
+                    <!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario</th>-->
+                    <!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
+                    <!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Precio unitario 1.3</th>-->
+                    <!--                    <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Total</th>-->
                     <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
                     <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Lote</th>
                     <th class="pm-none" style="max-width: 60px;wrap-option: wrap;line-height: 0.9">Fecha vencimiento</th>
@@ -216,20 +288,20 @@
                     <td class="pm-none">
                       {{ producto.cantidad }}
                     </td>
-<!--                    <td class="pm-none">-->
-<!--                      {{ producto.precio }}-->
-<!--                    </td>-->
-<!--                    <td class="text-right pm-none">-->
-<!--                      {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}-->
-<!--                    </td>-->
-<!--                    <td class="text-right pm-none text-bold">-->
-<!--                      {{ parseFloat(producto.precio * 1.3).toFixed(2) }}-->
-<!--                    </td>-->
-<!--                    <td class="text-right pm-none">-->
-<!--                      {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}-->
-<!--                    </td>-->
+                    <!--                    <td class="pm-none">-->
+                    <!--                      {{ producto.precio }}-->
+                    <!--                    </td>-->
+                    <!--                    <td class="text-right pm-none">-->
+                    <!--                      {{ parseFloat(producto.cantidad * producto.precio).toFixed(2) }}-->
+                    <!--                    </td>-->
+                    <!--                    <td class="text-right pm-none text-bold">-->
+                    <!--                      {{ parseFloat(producto.precio * 1.3).toFixed(2) }}-->
+                    <!--                    </td>-->
+                    <!--                    <td class="text-right pm-none">-->
+                    <!--                      {{ parseFloat(producto.cantidad * producto.precio * 1.3).toFixed(2) }}-->
+                    <!--                    </td>-->
                     <td class="pm-none text-red text-bold text-right">
-<!--                      {{ parseFloat(producto.precio_venta).toFixed(2) }}-->
+                      <!--                      {{ parseFloat(producto.precio_venta).toFixed(2) }}-->
                       {{ producto.precio_venta }} Bs
                     </td>
                     <td class="pm-none">
@@ -248,7 +320,60 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-<!--    myElement-->
+    <!-- Diálogo: Nuevo proveedor -->
+    <q-dialog v-model="proveedorDialog" persistent>
+      <q-card style="width: 520px; max-width: 90vw;">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Nuevo proveedor</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="closeProveedorDialog" />
+        </q-card-section>
+
+        <q-card-section>
+          <q-form ref="formProveedorRef" @submit="saveProveedor">
+            <div class="row q-col-gutter-sm">
+              <div class="col-12">
+                <q-input
+                  v-model="proveedorForm.nombre"
+                  label="Nombre *"
+                  dense outlined
+                  :rules="[v => !!v || 'El nombre es obligatorio']"
+                />
+              </div>
+
+              <div class="col-12 col-md-6">
+                <q-input v-model="proveedorForm.ci" label="CI" dense outlined />
+              </div>
+
+              <div class="col-12 col-md-6">
+                <q-input v-model="proveedorForm.telefono" label="Teléfono" dense outlined />
+              </div>
+
+              <div class="col-12">
+                <q-input v-model="proveedorForm.email" label="Email" type="email" dense outlined />
+              </div>
+
+              <div class="col-12">
+                <q-input
+                  v-model="proveedorForm.direccion"
+                  label="Dirección"
+                  type="textarea"
+                  autogrow
+                  dense outlined
+                />
+              </div>
+            </div>
+
+            <div class="row q-gutter-sm q-mt-md">
+              <q-space />
+              <q-btn flat label="Cancelar" color="grey-8" @click="closeProveedorDialog" />
+              <q-btn color="primary" label="Guardar" icon="save" type="submit" :loading="loading" />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+    <!--    myElement-->
     <div id="myElement" class="hidden"></div>
   </q-page>
 </template>
@@ -259,6 +384,15 @@ export default {
   name: "ComprasCreate",
   data() {
     return {
+      proveedorDialog: false,
+      formProveedorRef: null,
+      proveedorForm: {
+        nombre: '',
+        ci: '',
+        telefono: '',
+        email: '',
+        direccion: ''
+      },
       loading: false,
       compraDialog: false,
       productos: [],
@@ -292,35 +426,151 @@ export default {
     },
   },
   methods: {
-    diasRestantesColor(fechaVencimiento) {
-      if (!fechaVencimiento) return { color: 'grey', texto: 'Sin fecha' }
+    openProveedorDialog() {
+      this.resetProveedorForm()
+      this.proveedorDialog = true
+    },
 
-      const hoy = new Date();
-      const venc = new Date(fechaVencimiento);
-      const diffTime = venc.getTime() - hoy.getTime();
-      const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    closeProveedorDialog() {
+      this.proveedorDialog = false
+    },
 
-      if (dias <= 14) {
-        return { color: 'red', texto: `${dias} días` };
-      } else if (dias <= 28) {
-        return { color: 'orange', texto: `${dias} días` };
-      } else {
-        return { color: 'green', texto: `${dias} días` };
+    resetProveedorForm() {
+      this.proveedorForm = {
+        nombre: '',
+        ci: '',
+        telefono: '',
+        email: '',
+        direccion: ''
       }
     },
-    updatePrecioUnitario(productoVenta) {
-      const precio_unitario = parseFloat(productoVenta.total / productoVenta.cantidad);
-      // redondear a 2 decimal
-      productoVenta.precio = parseFloat(precio_unitario).toFixed(2);
-      productoVenta.precio_venta = this.redondear50Centavos(precio_unitario * 1.3);
+
+    async saveProveedor() {
+      const ok = await this.$refs.formProveedorRef.validate()
+      if (!ok) return
+
+      this.loading = true
+      this.$axios.post('proveedores', this.proveedorForm)
+        .then(res => {
+          const creado = res.data  // {id, nombre, ci, telefono, email, direccion, ...}
+
+          // 1) Agregar a la lista local
+          this.proveedores.unshift(creado)
+
+          // 2) Seleccionarlo y propagar a 'compra'
+          this.proveedor      = creado
+          this.compra.nombre  = creado.nombre || ''
+          this.compra.ci      = creado.ci || ''
+
+          // 3) Feedback y cerrar
+          this.$alert?.success?.('Proveedor creado correctamente')
+          || this.$q.notify({ type: 'positive', message: 'Proveedor creado correctamente' })
+
+          this.proveedorDialog = false
+          this.resetProveedorForm()
+        })
+        .catch(err => {
+          console.error('Error creando proveedor:', err)
+          this.$alert?.error?.('No se pudo crear el proveedor')
+          || this.$q.notify({ type: 'negative', message: 'No se pudo crear el proveedor' })
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    onCantidadChange(row) {
+      const qty = Number(row.cantidad) || 0
+      const unit = Number(row.precio) || 0
+      // si hay precio, recalcular total; si no, dejar total tal cual
+      row.total = this.round2(qty * unit)
+      this.updatePrecioVenta(row)
     },
 
-    updatePrecioVenta(productoVenta) {
-      productoVenta.total = parseFloat(productoVenta.cantidad * productoVenta.precio).toFixed(2);
-      productoVenta.precio_venta = this.redondear50Centavos(productoVenta.precio * 1.3);
+    onPrecioChange(row) {
+      const qty = Number(row.cantidad) || 0
+      const unit = Number(row.precio) || 0
+      row.total = this.round2(qty * unit)
+      this.updatePrecioVenta(row)
     },
-    redondear50Centavos(valor) {
-      return Math.ceil(valor * 2) / 2;
+
+    onTotalChange(row) {
+      const qty = Number(row.cantidad) || 0
+      const tot = Number(row.total) || 0
+      // si cantidad > 0, calcular precio desde total; si no, precio = 0
+      row.precio = qty > 0 ? this.round3(tot / qty) : 0
+      this.updatePrecioVenta(row)
+    },
+
+    onFactorChange(row) {
+      this.updatePrecioVenta(row)
+    },
+
+    updatePrecioVenta(row) {
+      const unit = Number(row.precio) || 0
+      const factor = Number(row.factor) || 0
+      // tu lógica original con ceil, o usa redondeo a 2 decimales
+      // row.precio_venta = Math.ceil(unit * factor)
+      row.precio_venta = this.round2(unit * factor)
+    },
+
+    round2(v) { return Math.round((Number(v) || 0) * 100) / 100 },
+    round3(v) { return Math.round((Number(v) || 0) * 1000) / 1000 },
+    recuperarPedido() {
+      // COlcoar el id del pedido
+      this.$q.dialog({
+        title: "Recuperar pedido",
+        message: "Ingrese el ID del pedido",
+        prompt: {
+          model: "",
+          type: "text",
+          isValid: (val) => {
+            return !!val || "Campo requerido";
+          },
+        },
+        persistent: true,
+        cancel: true,
+        ok: {
+          label: "Recuperar",
+          color: "primary",
+        },
+      }).onOk((data) => {
+        this.loading = true;
+        this.$axios.get("recuperarPedido", {
+          params: {
+            id: data
+          }
+        }).then((res) => {
+          if (!res.data.detalles || res.data.detalles.length === 0) {
+            this.$alert.error("No se encontraron productos en el pedido");
+            return;
+          }
+          res.data.detalles.forEach((prod) => {
+            const producto = prod.producto;
+            const existente = this.productosCompras.find(p => p.producto_id === producto.id);
+            if (existente) {
+              existente.cantidad += 1;
+            } else {
+              this.productosCompras.push({
+                producto_id: producto.id,
+                cantidad: parseInt(prod.cantidad),
+                precio: '',
+                lote: '',
+                fecha_vencimiento: '',
+                producto,
+                factor: 1.25,
+              });
+            }
+          });
+        }).catch((error) => {
+          console.error("Error recuperando pedido:", error);
+        }).finally(() => {
+          this.loading = false;
+        });
+      });
+    },
+    updatePrecioVenta(productoVenta) {
+      const precio_venta = Math.ceil(productoVenta.precio * productoVenta.factor);
+      productoVenta.precio_venta = precio_venta;
     },
     productosGet() {
       this.loading = true;
@@ -340,19 +590,20 @@ export default {
       });
     },
     addProducto(producto) {
-      const existente = this.productosCompras.find(p => p.producto_id === producto.id);
-      if (existente) {
-        existente.cantidad += 1;
-      } else {
-        this.productosCompras.push({
-          producto_id: producto.id,
-          cantidad: '',
-          precio: '',
-          lote: '',
-          fecha_vencimiento: '',
-          producto,
-        });
-      }
+      // const existente = this.productosCompras.find(p => p.producto_id === producto.id);
+      // if (existente) {
+      //   existente.cantidad += 1;
+      // } else {
+      this.productosCompras.push({
+        producto_id: producto.id,
+        cantidad: 1,
+        precio: '',
+        lote: '',
+        fecha_vencimiento: '',
+        producto,
+        factor: 1.25,
+      });
+      // }
     },
     clickDialogCompra() {
       if (this.productosCompras.length === 0) {
@@ -363,12 +614,6 @@ export default {
       const sinPrecio = this.productosCompras.filter(p => !p.precio);
       if (sinPrecio.length > 0) {
         this.$alert.error("Todos los productos deben tener precio unitario");
-        return;
-      }
-
-      const sinCantidad = this.productosCompras.filter(p => !p.cantidad);
-      if (sinCantidad.length > 0) {
-        this.$alert.error("Todos los productos deben tener cantidad");
         return;
       }
       this.compraDialog = true;
@@ -394,7 +639,8 @@ export default {
         tipo_pago: this.compra.tipo_pago,
         proveedor_id: this.proveedor.id,
         nro_factura: this.compra.nro_factura,
-        productos: this.productosCompras
+        productos: this.productosCompras,
+        agencia: this.compra.agencia,
       };
 
       this.$axios.post("compras", data).then((res) => {
@@ -403,6 +649,12 @@ export default {
         this.productosCompras = [];
         Imprimir.reciboCompra(res.data);
         this.productosGet();
+        this.compra = {
+          nit: "",
+          nombre: "",
+          tipo_pago: "Efectivo"
+        };
+        this.proveedor = null;
       }).catch((err) => {
         console.error("Error registrando compra:", err);
         this.$alert.error("Error al registrar la compra");

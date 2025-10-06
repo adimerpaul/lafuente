@@ -145,15 +145,8 @@
             />
           </td>
           <td>
-<!--            {{ producto.stock }}-->
-            <input
-              v-model.number="producto.stock"
-              type="number"
-              step="1"
-              min="0"
-              style="width: 60px; text-align: right"
-              @keyup="debouncedCambioStock(producto)"
-            />
+            <div v-if="producto.stock !== null">{{ producto.stock }}</div>
+            <div v-else class="text-grey">-</div>
           </td>
           <td>{{ producto.stock_minimo }}</td>
           <td>{{ producto.stock_maximo }}</td>

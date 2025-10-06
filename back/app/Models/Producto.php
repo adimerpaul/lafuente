@@ -12,7 +12,7 @@ class Producto extends Model{
         'descripcion',
         'unidad',
         'precio',
-        'stock',
+//        'stock',
         'stock_minimo',
         'stock_maximo',
         'imagen',
@@ -22,4 +22,13 @@ class Producto extends Model{
         'updated_at',
         'deleted_at',
     ];
+//    appende sotkc tien que de delas compras detalles
+    protected $appends = ['cantidad'];
+    public function getCantidadAttribute(){
+        $cantidad = $this->hasMany(CompraDetalle::class, 'producto_id')
+            ->where('estado', 'Activo')
+            ->where('cantidad_venta', '>', 0)
+            ->sum('cantidad_venta');
+        return $cantidad;
+    }
 }

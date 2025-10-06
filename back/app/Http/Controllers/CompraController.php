@@ -125,6 +125,8 @@ class CompraController extends Controller{
                     'nombre' => $p['producto']['nombre'],
                     'precio' => $p['precio'],
                     'cantidad' => $p['cantidad'],
+                    'cantidad_venta' => $p['cantidad'],
+                    'factor' => $p['factor'],
                     'total' => $p['precio'] * $p['cantidad'],
                     'precio13' => $p['precio'] * 1.3,
                     'total13' => $p['precio'] * $p['cantidad'] * 1.3,
@@ -136,7 +138,7 @@ class CompraController extends Controller{
                 ]);
 
                 // Actualizar el stock del producto
-                Producto::where('id', $p['producto_id'])->increment('stock', $p['cantidad']);
+//                Producto::where('id', $p['producto_id'])->increment('stock', $p['cantidad']);
                 $producto = Producto::find($p['producto_id']);
                 $producto->precio = $p['precio_venta'];
                 $producto->save();
