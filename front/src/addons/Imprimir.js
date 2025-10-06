@@ -849,88 +849,99 @@ Oruro</div>
       const centavos = Math.round((total - enteros) * 100).toString().padStart(2, '0');
       const literal  = `Son ${miConversor.convertToText(enteros)} ${centavos}/100 Bolivianos`;
 
-      // Detalles (del JSON)
       const detalles = Array.isArray(venta.venta_detalles) ? venta.venta_detalles : [];
 
-      // Construcción HTML (ticket ~ 80mm)
+      // ===== CSS SCOPEADO SOLO PARA LA IMPRESIÓN =====
+      const styles = `
+      @page { margin: 6mm; }
+      .imprimir-scope { font-family: "Courier New", Courier, monospace; font-size:10px; }
+      .imprimir-scope .ticket { width:300px; margin:0 auto; }
+      .imprimir-scope .center{ text-align:center; }
+      .imprimir-scope .right{ text-align:right; }
+      .imprimir-scope .left{ text-align:left; }
+      .imprimir-scope .bold{ font-weight:700; }
+      .imprimir-scope .mt4{ margin-top:4px; }
+      .imprimir-scope .mt6{ margin-top:6px; }
+      .imprimir-scope hr{ border:0; border-top:1px dashed #000; margin:6px 0; }
+      .imprimir-scope table{ width:100%; border-collapse:collapse; }
+      .imprimir-scope td{ vertical-align:top; padding:1px 0; }
+      .imprimir-scope .small{ font-size:9px; line-height:1.2; }
+    `;
+
+      // ===== HTML ENVUELTO EN ".imprimir-scope" =====
       let html = `
-<style>
-  .ticket { width:300px; margin:0 auto; font-family: "Courier New", Courier, monospace; font-size:10px; }
-  .center{ text-align:center; } .right{ text-align:right; } .left{ text-align:left; }
-  .bold{ font-weight:700; } .mt4{ margin-top:4px; } .mt6{ margin-top:6px; }
-  hr{ border:0; border-top:1px dashed #000; margin:6px 0; }
-  table{ width:100%; border-collapse:collapse; }
-  td{ vertical-align:top; padding:1px 0; }
-  .row { display:flex; justify-content:space-between; }
-  .small{ font-size:9px; line-height:1.2; }
-  @page { margin: 6mm; }
-</style>
+      <div class="imprimir-scope">
+        <div class="ticket">
+          <div class="center bold" style="font-size:12px;">RECIBO DE VENTA</div>
+          <div class="center small">
+            ${S(env.razon, '—')}<br>
+            ${S(env.direccion, '')}<br>
+            Tel. ${S(env.telefono, '')} · Oruro
+          </div>
 
-<div class="ticket">
-  <div class="center bold" style="font-size:12px;">RECIBO DE VENTA</div>
-  <div class="center small">
-    ${S(env.razon, '—')}<br>
-    ${S(env.direccion, '')}<br>
-    Tel. ${S(env.telefono, '')} · Oruro
-  </div>
+          <hr>
 
-  <hr>
+          <table>
+            <tr><td class="bold">Nro:</td><td>${S(venta.id)}</td></tr>
+            <tr><td class="bold">Fecha/Hora:</td><td>${S(venta.fecha)} ${S(venta.hora,'')}</td></tr>
+            <tr><td class="bold">Usuario:</td><td>${S(venta.user?.name, '')}</td></tr>
+            <tr><td class="bold">Tipo venta:</td><td>${S(venta.tipo_venta, '')}</td></tr>
+            <tr><td class="bold">Pago:</td><td>${S(venta.tipo_pago, '')}</td></tr>
+          </table>
 
-  <table>
-    <tr><td class="bold">Nro:</td><td>${S(venta.id)}</td></tr>
-    <tr><td class="bold">Fecha/Hora:</td><td>${S(venta.fecha)} ${S(venta.hora,'')}</td></tr>
-    <tr><td class="bold">Usuario:</td><td>${S(venta.user?.name, '')}</td></tr>
-    <tr><td class="bold">Tipo venta:</td><td>${S(venta.tipo_venta, '')}</td></tr>
-    <tr><td class="bold">Pago:</td><td>${S(venta.tipo_pago, '')}</td></tr>
-  </table>
+          <hr>
 
-  <hr>
-
-  <table>
-    <tr class="bold"><td>Detalle</td><td class="right">Subt.</td></tr>`;
-
-      detalles.forEach(d => {
+          <table>
+            <tr class="bold"><td>Detalle</td><td class="right">Subt.</td></tr>
+            ${detalles.map(d => {
         const nombre  = S(d.producto?.nombre ?? d.nombre ?? '');
         const qty     = Number(d.cantidad || 0);
         const precio  = Number(d.precio || 0);
         const sub     = qty * precio;
         const unidad  = S(d.unidad ?? d.producto?.unidad ?? '');
         const idProd  = S(d.producto_id ?? d.producto?.id ?? '');
+        return `
+                <tr>
+                  <td>
+                    <div class="bold">${idProd ? idProd + ' - ' : ''}${nombre}</div>
+                    <div class="small">${unidad ? 'UM: ' + unidad + ' · ' : ''}${F2(qty)} x ${F2(precio)}</div>
+                  </td>
+                  <td class="right bold">${F2(sub)}</td>
+                </tr>
+              `;
+      }).join('')}
+          </table>
 
-        html += `
-    <tr>
-      <td>
-        <div class="bold">${idProd ? idProd + ' - ' : ''}${nombre}</div>
-        <div class="small">${unidad ? 'UM: ' + unidad + ' · ' : ''}${F2(qty)} x ${F2(precio)}</div>
-      </td>
-      <td class="right bold">${F2(sub)}</td>
-    </tr>`;
-      });
+          <hr>
 
-      html += `
-  </table>
+          <table>
+            <tr><td class="bold">TOTAL (Bs)</td><td class="right bold">${F2(total)}</td></tr>
+          </table>
 
-  <hr>
+          <div class="mt6">${literal}</div>
 
-  <table>
-    <tr><td class="bold">TOTAL (Bs)</td><td class="right bold">${F2(total)}</td></tr>
-  </table>
+          <hr>
 
-  <div class="mt6">${literal}</div>
+          <div class="center small">
+            ¡Gracias por su compra!
+          </div>
+        </div>
+      </div>
+    `;
 
-  <hr>
+      const mount = document.getElementById('myElement');
+      if (mount) {
+        mount.innerHTML = html;
+        const node = mount.querySelector('.imprimir-scope');
 
-  <div class="center small">
-    ¡Gracias por su compra!
-  </div>
-</div>`;
+        if (imprimir) {
+          const d = new Printd();
+          // Pasamos el nodo + CSS scopeado solo al iframe de impresión:
+          d.print(node, styles);
+        }
 
-      const el = document.getElementById('myElement');
-      if (el) el.innerHTML = html;
-
-      if (imprimir) {
-        const d = new Printd();
-        d.print(el);
+        // Limpia el contenedor para no dejar HTML colgado:
+        // setTimeout(() => { mount.innerHTML = ''; }, 0);
       }
 
       return true;
