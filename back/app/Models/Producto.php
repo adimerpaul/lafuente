@@ -12,7 +12,7 @@ class Producto extends Model{
         'descripcion',
         'unidad',
         'precio',
-//        'stock',
+        'stock',
         'stock_minimo',
         'stock_maximo',
         'imagen',
@@ -29,6 +29,11 @@ class Producto extends Model{
             ->where('estado', 'Activo')
             ->where('cantidad_venta', '>', 0)
             ->sum('cantidad_venta');
+        error_log("Cantidad for Producto ID {$this->id}: {$cantidad}");
         return $cantidad;
+    }
+//comprasDetalles
+    function comprasDetalles(){
+        return $this->hasMany(CompraDetalle::class);
     }
 }

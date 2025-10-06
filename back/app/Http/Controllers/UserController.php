@@ -40,6 +40,14 @@ class UserController extends Controller{
         return response()->json([
             'token' => $token,
             'user' => $user,
+            'datos' => [
+                'nit' => env('NIT'),
+                'razon' => env("RAZON"),
+                'direccion' => env("DIRECCION"),
+                'telefono' => env("TELEFONO"),
+                'url' => env("URL_SIAT"),
+                'url2' => env("URL_SIAT2")
+            ]
         ]);
     }
     function logout(Request $request){
@@ -48,10 +56,27 @@ class UserController extends Controller{
             'message' => 'Token eliminado',
         ]);
     }
+//    function me(Request $request){
+//        $user = $request->user();
+//        $user->load('permissions');
+//        return $user;
+//    }
     function me(Request $request){
-        $user = $request->user();
-        $user->load('permissions');
-        return $user;
+//        return $request->user();
+        $user = User::where('id', $request->user()->id)
+            ->with('permissions')
+            ->firstOrFail();
+        return [
+            'user' => $user,
+            'datos' => [
+                'nit' => env('NIT'),
+                'razon' => env("RAZON"),
+                'direccion' => env("DIRECCION"),
+                'telefono' => env("TELEFONO"),
+                'url' => env("URL_SIAT"),
+                'url2' => env("URL_SIAT2")
+            ]
+        ];
     }
     function index(){
         return User::

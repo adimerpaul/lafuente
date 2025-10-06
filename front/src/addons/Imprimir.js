@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import { useCounterStore } from 'stores/example-store'
 import { Printd } from 'printd'
-// import conversor from 'conversor-numero-a-letras-es-ar'
+import conversor from 'conversor-numero-a-letras-es-ar'
 import { Unidades } from 'numero-a-letras';
 
 import moment from 'moment'
@@ -42,90 +42,182 @@ export class Imprimir {
 
     return (milesTexto + ' ' + restoTexto).trim();
   }
-  static factura (factura) {
-    return new Promise((resolve, reject) => {
-      const ClaseConversor = conversor.conversorNumerosALetras
-      const miConversor = new ClaseConversor()
-      const a = miConversor.convertToText(parseInt(factura.montoTotal))
-      const opts = {
-        errorCorrectionLevel: 'M',
-        type: 'png',
-        quality: 0.95,
-        width: 100,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFF'
+  static imprimirCaja (caja) {
+
+  }
+  static async factura(venta) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // ===== helpers =====
+        const ClaseConversor = conversor.conversorNumerosALetras;
+        const miConversor = new ClaseConversor();
+        const env = useCounterStore().env;
+
+        const F2 = (n) => Number(n || 0).toFixed(2);
+        const S  = (v) => (v ?? '').toString();
+
+        const total          = Number(venta.total ?? venta.montoTotal ?? 0);
+        const numeroFactura  = venta.numeroFactura ?? venta.numero_factura ?? venta.id ?? '—';
+        const fechaEmision   = venta.fechaEmision ?? (venta.fecha && venta.hora ? `${venta.fecha} ${venta.hora}` : '—');
+        const clienteNombre  = venta.nombre ?? venta?.cliente?.nombre ?? 'SN';
+        const clienteComplemento = venta.complemento ?? venta?.cliente?.complemento ?? '';
+        const clienteDoc     = venta.ci ?? venta?.cliente?.ci ?? '0';
+        const codigoCliente  = venta.cliente_id ?? venta?.cliente?.id ?? '—';
+        const puntoVenta     = env?.puntoVenta ?? 0;
+        const cufVenta            = venta.cuf ?? null;
+        const cuf = cufVenta ? cufVenta.match(/.{1,20}/g).join('<br>') : null;
+
+        const titulo = cufVenta ? 'FACTURA<br>CON DERECHO A CRÉDITO FISCAL' : 'NOTA DE VENTA';
+
+        const leyenda = venta.leyenda ?? 'Ley N° 453: Puedes acceder a la reclamación cuando tus derechos han sido vulnerados.';
+        const detalles = Array.isArray(venta.venta_detalles) ? venta.venta_detalles
+          : Array.isArray(venta.details) ? venta.details : [];
+
+        const enteros = Math.floor(total);
+        const centavos = Math.round((total - enteros) * 100)
+          .toString().padStart(2, '0');
+        const SON = `Son ${miConversor.convertToText(enteros)} ${centavos}/100 Bolivianos`;
+
+        // QR
+        let qrUrl = null;
+        if (cuf) {
+          qrUrl = await QRCode.toDataURL(
+            `${env.url2}consulta/QR?nit=${env.nit}&cuf=${cuf}&numero=${numeroFactura}&t=2`,
+            { errorCorrectionLevel:'M', type:'png', width:110, margin:0, color:{dark:'#000', light:'#FFF'} }
+          );
         }
+
+        // ===== HTML + CSS =====
+        let html = `${this.head()}
+<style>
+/* Ticket 80mm ~ 300px */
+.ticket { width:300px; margin:0 auto; }
+.mono { font-family: "Courier New", Courier, monospace; }
+.fs9 { font-size:9px; } .fs10{font-size:10px;} .fs11{font-size:11px;} .fs12{font-size:12px;}
+.center{ text-align:center; } .right{ text-align:right; } .left{ text-align:left; }
+hr{ border:0; border-top:1px dashed #000; margin:6px 0; }
+.title{ font-weight:700; text-transform:uppercase; line-height:1.15; }
+.small { font-size:8px; line-height:1.25; }
+
+.tbl{ width:100%; border-collapse:collapse; }
+.tbl td{ padding:2px 0; vertical-align:top; }
+
+.lbl{ width:135px; font-weight:700; text-transform:uppercase; }
+.val{ width:auto; }
+
+.det-header{ font-weight:700; text-transform:uppercase; margin:4px 0; }
+.item-desc{ font-weight:700; }
+.item-meta{ color:#111; }
+
+.tot td{ padding:1px 0; }
+.tot .l{ width:70%; }
+.tot .r{ width:30%; text-align:right; }
+
+.qr{ display:flex; justify-content:center; margin-top:6px; }
+@page { margin: 6mm; }
+</style>
+
+<div class="ticket mono fs10">
+  <div class="title fs12 center">${titulo}</div>
+
+  <div class="center small">
+    ${S(env.razon)}<br>
+    Casa Matriz<br>
+    No. Punto de Venta ${puntoVenta}<br>
+    ${S(env.direccion)}<br>
+    Tel. ${S(env.telefono)}<br>
+    Oruro
+  </div>
+
+  <hr>
+
+  <table class="tbl fs10">
+    <tr><td class="lbl">NIT</td><td class="val">${S(env.nit)}</td></tr>
+    <tr><td class="lbl">FACTURA N°</td><td class="val">${numeroFactura}</td></tr>
+    <tr><td class="lbl">CÓD. AUTORIZACIÓN</td><td class="val">${cuf ?? '—'}</td></tr>
+  </table>
+
+  <hr>
+
+  <table class="tbl fs10">
+    <tr><td class="lbl">NOMBRE/RAZÓN SOCIAL</td><td class="val">${S(clienteNombre)}</td></tr>
+    <tr><td class="lbl">NIT/CI/CEX</td><td class="val">${S(clienteDoc)}${S(clienteComplemento? '-' + clienteComplemento : '')}</td></tr>
+    <tr><td class="lbl">NRO. CLIENTE</td><td class="val">${S(codigoCliente)}</td></tr>
+    <tr><td class="lbl">FECHA DE EMISIÓN</td><td class="val">${S(fechaEmision)}</td></tr>
+  </table>
+
+  <hr>
+  <div class="det-header center">DETALLE</div>`;
+
+        // ===== DETALLES (tabla fija para que no se desplace) =====
+        detalles.forEach(d => {
+          const prodId   = d.producto_id ?? d.product_id ?? d?.producto?.id ?? '—';
+          const desc     = S(d.nombre ?? d.descripcion ?? d?.producto?.nombre ?? '');
+          const unidad   = S(d.unidad ?? d?.producto?.unidad ?? '');
+          const qty      = Number(d.cantidad ?? d.qty ?? 0);
+          const precioU  = Number(d.precio ?? d.precioUnitario ?? 0);
+          const descMonto= Number(d.descuento ?? d.montoDescuento ?? 0);
+          const sub      = d.subTotal ?? (qty * precioU - descMonto);
+
+          html += `
+      <table class="tbl fs10">
+        <tr>
+          <td class="left item-desc" colspan="3">${prodId} - ${desc}</td>
+          <td class="right item-desc">${F2(sub)}</td>
+        </tr>
+        <tr><td class="left item-meta" colspan="4">Unidad de Medida: ${unidad || 'Unidad (Servicios)'}</td></tr>
+        <tr>
+          <td class="right" style="width:22%;">${F2(qty)}</td>
+          <td class="center" style="width:6%;">x</td>
+          <td class="right" style="width:32%;">${F2(precioU)} - ${F2(descMonto)}</td>
+          <td class="right" style="width:40%;"></td>
+        </tr>
+      </table>`;
+        });
+
+        // ===== TOTALES =====
+        html += `
+  <hr>
+  <table class="tbl tot fs10">
+    <tr><td class="l left strong">TOTAL Bs</td><td class="r strong">${F2(total)}</td></tr>
+    <tr><td class="l left">(-) DESCUENTO Bs</td><td class="r">0.00</td></tr>
+    <tr><td class="l left strong">SUBTOTAL A PAGAR Bs</td><td class="r strong">${F2(total)}</td></tr>
+    <tr><td class="l left">(-) AJUSTES NO SUJETOS A IVA Bs</td><td class="r">0.00</td></tr>
+    <tr><td class="l left strong">MONTO TOTAL A PAGAR Bs</td><td class="r strong">${F2(total)}</td></tr>
+    <tr><td class="l left">(-) TASAS Bs</td><td class="r">0.00</td></tr>
+    <tr><td class="l left">(-) OTROS PAGOS NO SUJETO IVA Bs</td><td class="r">0.00</td></tr>
+    <tr><td class="l left">(+) AJUSTES NO SUJETOS A IVA Bs</td><td class="r">0.00</td></tr>
+    <tr><td class="l left strong">IMPORTE BASE CRÉDITO FISCAL</td><td class="r strong">${F2(total)}</td></tr>
+  </table>
+
+  <div class="fs10" style="margin-top:6px;">${SON}</div>
+
+  <hr>
+  <div class="center small">
+    ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS,<br>
+    EL USO ILÍCITO SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY
+  </div>
+  <div class="center small" style="margin-top:4px;">${S(leyenda)}</div>
+  <div class="center small" style="margin-top:4px;">“Este documento es la Representación Gráfica de un<br>Documento Fiscal Digital emitido en una modalidad de facturación en línea”</div>
+  ${qrUrl ? `<div class="qr"><img src="${qrUrl}" alt="QR"></div>` : ``}
+</div>`;
+
+        // imprimir
+        const el = document.getElementById('myElement');
+        if (el) el.innerHTML = html;
+        const d = new Printd();
+        d.print(el);
+        resolve(qrUrl);
+      } catch (e) {
+        reject(e);
       }
-      const env = useCounterStore().env
-      QRCode.toDataURL(env.url2 + 'consulta/QR?nit=' + env.nit + '&cuf=' + factura.cuf + '&numero=' + factura.numeroFactura + '&t=2', opts).then(url => {
-        let cadena = `${this.head()}
-  <div style='padding-left: 0.5cm;padding-right: 0.5cm'>
-      <div class='titulo'>FACTURA <br>CON DERECHO A CREDITO FISCAL</div>
-      <div class='titulo2'>${env.razon} <br>
-      Casa Matriz<br>
-      No. Punto de Venta 0<br>
-${env.direccion}<br>
-Tel. ${env.telefono}<br>
-Oruro</div>
-<hr>
-<div class='titulo'>NIT</div>
-<div class='titulo2'>${env.nit}</div>
-<div class='titulo'>FACTURA N°</div>
-<div class='titulo2'>${factura.numeroFactura}</div>
-<div class='titulo'>CÓD. AUTORIZACIÓN</div>
-<div class='titulo2'>${factura.cuf}</div>
-<hr>
-<table>
-<tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='contenido'>${factura.client.nombreRazonSocial}</td>
-</tr><tr><td class='titder'>NIT/CI/CEX:</td><td class='contenido'>${factura.client.numeroDocumento}</td></tr>
-<tr><td class='titder'>COD. CLIENTE:</td ><td class='contenido'>${factura.client.id}</td></tr>
-<tr><td class='titder'>FECHA DE EMISIÓN:</td><td class='contenido'>${factura.fechaEmision}</td></tr>
-</table><hr><div class='titulo'>DETALLE</div>`
-        factura.details.forEach(r => {
-          cadena += `<div style='font-size: 12px'><b>${r.product_id} ${r.descripcion} </b></div>`
-          cadena += `<div>${r.cantidad} ${parseFloat(r.precioUnitario).toFixed(2)} 0.00
-                    <span style='float:right'>${parseFloat(r.subTotal).toFixed(2)}</span></div>`
-        })
-        cadena += `<hr>
-      <table style='font-size: 8px;'>
-      <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='conte2'>${parseFloat(factura.montoTotal).toFixed(2)}</td></tr>
-      <tr><td class='titder'>DESCUENTO Bs</td><td class='conte2'>0.00</td></tr>
-      <tr><td class='titder'>TOTAL Bs</td><td class='conte2'>${parseFloat(factura.montoTotal).toFixed(2)}</td></tr>
-      <tr><td class='titder'>MONTO GIFT CARD Bs</td ><td class='conte2'>0.00</td></tr>
-      <tr><td class='titder'>MONTO A PAGAR Bs</td><td class='conte2'>${parseFloat(factura.montoTotal).toFixed(2)}</td></tr>
-      <tr><td class='titder' style='font-size: 8px'>IMPORTE BASE CRÉDITO FISCAL Bs</td>
-      <td class='conte2'>${parseFloat(factura.montoTotal).toFixed(2)}</td></tr>
-      </table>
-      <br>
-      <div>Son ${a} ${((parseFloat(factura.montoTotal) - Math.floor(parseFloat(factura.montoTotal))) * 100).toFixed(2)} /100 Bolivianos</div><hr>
-      <div class='titulo2' style='font-size: 9px'>
-      ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS,<br>
-      EL USO ILÍCITO SERÁ SANCIONADO PENALMENTE DE<br>
-      ACUERDO A LEY<br><br>
-      ${factura.leyenda} <br><br>
-      “Este documento es la Representación Gráfica de un<br>
-      Documento Fiscal Digital emitido en una modalidad de<br>
-      facturación en línea”</div><br>
-      <div style='display: flex;justify-content: center;'> <img  src="${url}" ></div></div>
-      </div>
-</body>
-</html>`
-        document.getElementById('myElement').innerHTML = cadena
-        const d = new Printd()
-        d.print(document.getElementById('myElement'))
-        resolve(url)
-      }).catch(err => {
-        reject(err)
-      })
-    })
+    });
   }
 
   static nota (factura, imprimir = true) {
     console.log('factura', factura)
     return new Promise((resolve, reject) => {
-      const a = this.numeroALetras( parseFloat(factura.total).toFixed(2))
+      const a = this.numeroALetras(123)
       const opts = {
         errorCorrectionLevel: 'M',
         type: 'png',
@@ -185,7 +277,7 @@ ${cantidad}
         factura.venta_detalles.forEach(r => {
           console.log('r', r)
           cadena += `<div style='font-size: 12px'><b> ${r.producto?.nombre} </b></div>`
-          if (true) {
+          if (r.visible === 1) {
             cadena += `<div>
                     <span style='font-size: 18px;font-weight: bold'>
                         ${r.cantidad}
@@ -240,91 +332,6 @@ ${cantidad}
       })
     })
   }
-  static reciboCompra(compra, imprimir = true) {
-    return new Promise((resolve, reject) => {
-      const a = this.numeroALetras(parseFloat(compra.total).toFixed(2))
-      const opts = {
-        errorCorrectionLevel: 'M',
-        type: 'png',
-        quality: 0.95,
-        width: 100,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFF'
-        }
-      }
-
-      const proveedorNombre = compra.proveedor?.nombre || compra.nombre || ''
-      const proveedorCi = compra.proveedor?.ci || compra.ci || ''
-
-      QRCode.toDataURL(`Fecha: ${compra.fecha} Monto: ${parseFloat(compra.total).toFixed(2)}`, opts).then(url => {
-        let cadena = `${this.head()}
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    .mono {
-      font-family: Monospace,serif !important;
-      font-size: 18px !important;
-    }
-  </style>
-  <title>Recibo Compra</title>
-</head>
-<body>
-<div class="mono">
-  <hr>
-  <div class='titulo'>RECIBO DE COMPRA</div>
-  <table>
-    <tr><td class='titder'>ID:</td><td class='contenido'>${compra.id}</td></tr>
-    <tr><td class='titder'>PROVEEDOR:</td><td class='contenido'>${proveedorNombre}</td></tr>
-    <tr><td class='titder'>CI/NIT:</td><td class='contenido'>${proveedorCi}</td></tr>
-    <tr><td class='titder'>FECHA:</td><td class='contenido'>${compra.fecha}</td></tr>
-    <tr><td class='titder'>HORA:</td><td class='contenido'>${compra.hora}</td></tr>
-    <tr><td class='titder'>TIPO PAGO:</td><td class='contenido'>${compra.tipo_pago}</td></tr>
-    <tr><td class='titder'>FACTURA:</td><td class='contenido'>${compra.nro_factura ?? ''}</td></tr>
-  </table>
-  <hr>
-  <div class='titulo'>DETALLE DE PRODUCTOS</div>`
-
-        compra.compra_detalles.forEach(p => {
-          cadena += `
-        <div><b>${p.nombre}</b></div>
-        <div>
-          <span style='font-size: 18px;font-weight: bold'>${p.cantidad}</span>
-          <span> x ${parseFloat(p.precio).toFixed(2)} Bs</span>
-          <span style='float:right'>${parseFloat(p.total).toFixed(2)} Bs</span>
-        </div>
-        <div style="font-size: 12px">
-          Lote: ${p.lote || '-'} | Vence: ${p.fecha_vencimiento || '-'}
-        </div>
-        `
-        })
-
-        cadena += `<hr>
-      <table>
-        <tr><td class='titder'>TOTAL Bs</td><td class='titder'>${parseFloat(compra.total).toFixed(2)}</td></tr>
-      </table>
-      <br>
-      <div>Son: ${a} ${((parseFloat(compra.total) - Math.floor(parseFloat(compra.total))) * 100).toFixed(2)}/100 Bolivianos</div>
-      <hr>
-      <div style='display: flex; justify-content: center;'>
-        <img src="${url}" style="width: 75px; height: 75px;" />
-      </div>
-</div>
-</body>
-</html>`
-
-        document.getElementById('myElement').innerHTML = cadena
-        if (imprimir) {
-          const d = new Printd()
-          d.print(document.getElementById('myElement'))
-        }
-        resolve(url)
-      }).catch(err => reject(err))
-    })
-  }
-
 
   static cotizacion (detalle, cliente, total, descuento, imprimir = true) {
     // console.log('detalle', detalle)
@@ -526,7 +533,8 @@ Oruro</div>
     })
   }
 
-  static reciboCompra2 (buy) {
+  static reciboCompra (buy) {
+    console.log('reciboCompra', buy)
     return new Promise((resolve, reject) => {
       const ClaseConversor = conversor.conversorNumerosALetras
       const miConversor = new ClaseConversor()
@@ -557,11 +565,77 @@ Oruro</div>
     <hr>
     <table>
     </table><hr><div class='titulo'>DETALLE</div>`
-        // factura.details.forEach(r => {
-        cadena += `<div style='font-size: 12px'><b>${buy.product_id} ${buy.product.descripcion} </b></div>`
-        cadena += `<div>${buy.quantity} ${parseFloat(buy.price).toFixed(2)} 0.00
-          //           <span style='float:right'>${parseFloat(buy.total).toFixed(2)}</span></div>`
-        // })
+        buy.compra_detalles.forEach(r => {
+          cadena += `<div style='font-size: 12px'><b>${r.nombre} </b></div>`
+          cadena += `<div>${r.cantidad} ${parseFloat(r.precio).toFixed(2)} 0.00
+          <span style='float:right'>${parseFloat(r.total).toFixed(2)}</span></div>`
+        })
+        cadena += `<hr>
+      <table style='font-size: 8px;'>
+      <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='conte2'>${parseFloat(buy.total).toFixed(2)}</td></tr>
+      </table>
+      <br>
+      <div>Son ${a} ${((parseFloat(buy.total) - Math.floor(parseFloat(buy.total))) * 100).toFixed(2)} /100 Bolivianos</div><hr>
+      <div style='display: flex;justify-content: center;'>
+        <img  src="${url}" style="width: 75px; height: 75px; display: block; margin-left: auto; margin-right: auto;">
+      </div></div>
+      </div>
+    </body>
+    </html>`
+        document.getElementById('myElement').innerHTML = cadena
+        const d = new Printd()
+        d.print(document.getElementById('myElement'))
+        resolve(url)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  }
+  static reciboPedido (buy) {
+    console.log('reciboPedido', buy)
+    return new Promise((resolve, reject) => {
+      const ClaseConversor = conversor.conversorNumerosALetras
+      const miConversor = new ClaseConversor()
+      const a = miConversor.convertToText(parseInt(buy.total))
+      const opts = {
+        errorCorrectionLevel: 'M',
+        type: 'png',
+        quality: 0.95,
+        width: 100,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFF'
+        }
+      }
+      const env = useCounterStore().env
+      QRCode.toDataURL(`Fecha: ${buy.date} Monto: ${parseFloat(buy.total).toFixed(2)}`, opts).then(url => {
+        let cadena = `${this.head()}
+    <div style='padding-left: 0.5cm;padding-right: 0.5cm'>
+    <img src="logo.png" alt="logo" style="width: 100px; height: 100px; display: block; margin-left: auto; margin-right: auto;">
+      <div class='titulo'>RECIBO DE PEDIDO</div>
+      <div class='titulo2'>${env.razon} <br>
+      Casa Matriz<br>
+      No. Punto de Venta 0<br>
+    ${env.direccion}<br>
+    Tel. ${env.telefono}<br>
+    Oruro</div>
+    <hr>
+    <div style='display: flex;justify-content: space-between;'>
+        <div class='titulo'>FECHA HORA</div>
+        <div class='titulo2'>${buy.fecha} ${buy.hora}</div>
+    </div>
+    <div style='display: flex;justify-content: space-between;'>
+        <div class='titulo'>ID</div>
+        <div class='titulo2'>${buy.id}</div>
+    </div>
+    <hr>
+    <div class='titulo'>DETALLE</div>`
+        buy.detalles.forEach(r => {
+          cadena += `<div style='font-size: 12px'><b>${r.producto?.nombre} </b></div>`
+          cadena += `<div>${r.cantidad} ${parseFloat(r.cantidad).toFixed(2)} 0.00
+          <span style='float:right'>${parseFloat(r.cantidad).toFixed(2)}</span></div>`
+        })
         cadena += `<hr>
       <table style='font-size: 8px;'>
       <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='conte2'>${parseFloat(buy.total).toFixed(2)}</td></tr>
@@ -682,5 +756,187 @@ Oruro</div>
   </style>
 <body>
 <div style="width: 300px;">`
+  }
+  static async printFactura(factura) {
+    const ClaseConversor = conversor.conversorNumerosALetras;
+    const miConversor = new ClaseConversor();
+    const literal = miConversor.convertToText(parseInt(factura.total));
+    const env = useCounterStore().env;
+    const qr = await QRCode.toDataURL(`${env.url2}consulta/QR?nit=${env.nit}&cuf=${factura.cuf}&numero=${factura.id}&t=2`, {
+      errorCorrectionLevel: 'M',
+      type: 'png',
+      quality: 0.95,
+      width: 100,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFF'
+      }
+    });
+    const online = factura.online ? 'en' : 'fuera de';
+
+    let html = `<style>
+    .titulo { font-size: 12px; text-align: center; font-weight: bold; }
+    .titulo2 { font-size: 10px; text-align: center; }
+    .contenido { font-size: 10px; text-align: left; }
+    .conte2 { font-size: 10px; text-align: right; }
+    .titder { font-size: 12px; text-align: right; font-weight: bold; }
+    hr { border-top: 1px dashed; }
+  </style>
+  <div style='padding: 0.5cm'>
+    <div class='titulo'>FACTURA CON DERECHO A CREDITO FISCAL</div>
+    <div class='titulo2'>
+      ${env.razon}<br>Casa Matriz<br>No. Punto de Venta 0<br>
+      ${env.direccion}<br>Tel. ${env.telefono}<br>Oruro
+    </div>
+    <hr>
+    <div class='titulo'>NIT</div><div class='titulo2'>${env.nit}</div>
+    <div class='titulo'>FACTURA N°</div><div class='titulo2'>${factura.id}</div>
+    <div class='titulo'>CÓD. AUTORIZACIÓN</div><div class='titulo2'>${factura.cuf}</div>
+    <hr>
+    <table>
+      <tr><td class='titder'>NOMBRE/RAZÓN SOCIAL:</td><td class='contenido'>${factura.nombre}</td></tr>
+      <tr><td class='titder'>NIT/CI/CEX:</td><td class='contenido'>${factura.ci}${factura.cliente?.complemento? '-' + factura.cliente?.complemento : ''}</td></tr>
+      <tr><td class='titder'>COD. CLIENTE:</td><td class='contenido'>${factura.cliente.id}</td></tr>
+      <tr><td class='titder'>FECHA DE EMISIÓN:</td><td class='contenido'>${factura.fecha}</td></tr>
+    </table>
+    <hr>
+    <div class='titulo'>DETALLE</div>`;
+
+    factura.venta_detalles.forEach(r => {
+      html += `<div style='font-size: 12px'><b>${r.id} - ${r.nombre}</b></div>
+             <div>${r.cantidad} ${parseFloat(r.precio).toFixed(2)} 0.00
+             <span style='float:right'>${parseFloat(r.cantidad*r.precio).toFixed(2)}</span></div>`;
+    });
+
+    html += `<hr>
+    <table style='font-size: 8px;'>
+      <tr><td class='titder'>SUBTOTAL Bs</td><td class='conte2'>${parseFloat(factura.total).toFixed(2)}</td></tr>
+      <tr><td class='titder'>DESCUENTO Bs</td><td class='conte2'>0.00</td></tr>
+      <tr><td class='titder'>TOTAL Bs</td><td class='conte2'>${parseFloat(factura.total).toFixed(2)}</td></tr>
+      <tr><td class='titder'>MONTO GIFT CARD Bs</td><td class='conte2'>0.00</td></tr>
+      <tr><td class='titder'>MONTO A PAGAR Bs</td><td class='conte2'>${parseFloat(factura.total).toFixed(2)}</td></tr>
+      <tr><td class='titder'>IMPORTE BASE CRÉDITO FISCAL Bs</td><td class='conte2'>${parseFloat(factura.total).toFixed(2)}</td></tr>
+    </table><br>
+    <div>Son ${literal} ${((parseFloat(factura.total) - Math.floor(factura.total)) * 100).toFixed(0)}/100 Bolivianos</div>
+    <hr>
+    <div class='titulo2' style='font-size: 9px'>ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS,<br>
+    EL USO ILÍCITO SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY<br><br>
+    ${factura.leyenda}<br><br>
+    “Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación ${online} línea”</div>
+    <div style='display: flex; justify-content: center;'>
+      <img src="${qr}" />
+    </div>
+  </div>`;
+
+    // document.getElementById('myelement').innerHTML = html;
+    const el = document.getElementById('myElement');
+    if (el) el.innerHTML = html;
+    const d = new Printd();
+    d.print(el);
+  }
+  static async reciboVentaSimple(venta, imprimir = true) {
+    try {
+      const env = useCounterStore().env || {};
+      const ClaseConversor = conversor.conversorNumerosALetras;
+      const miConversor = new ClaseConversor();
+
+      const F2 = (n) => Number(n || 0).toFixed(2);
+      const S  = (v, d='—') => (v ?? d).toString();
+
+      const total = Number(venta.total ?? 0);
+      const enteros  = Math.floor(total);
+      const centavos = Math.round((total - enteros) * 100).toString().padStart(2, '0');
+      const literal  = `Son ${miConversor.convertToText(enteros)} ${centavos}/100 Bolivianos`;
+
+      // Detalles (del JSON)
+      const detalles = Array.isArray(venta.venta_detalles) ? venta.venta_detalles : [];
+
+      // Construcción HTML (ticket ~ 80mm)
+      let html = `
+<style>
+  .ticket { width:300px; margin:0 auto; font-family: "Courier New", Courier, monospace; font-size:10px; }
+  .center{ text-align:center; } .right{ text-align:right; } .left{ text-align:left; }
+  .bold{ font-weight:700; } .mt4{ margin-top:4px; } .mt6{ margin-top:6px; }
+  hr{ border:0; border-top:1px dashed #000; margin:6px 0; }
+  table{ width:100%; border-collapse:collapse; }
+  td{ vertical-align:top; padding:1px 0; }
+  .row { display:flex; justify-content:space-between; }
+  .small{ font-size:9px; line-height:1.2; }
+  @page { margin: 6mm; }
+</style>
+
+<div class="ticket">
+  <div class="center bold" style="font-size:12px;">RECIBO DE VENTA</div>
+  <div class="center small">
+    ${S(env.razon, '—')}<br>
+    ${S(env.direccion, '')}<br>
+    Tel. ${S(env.telefono, '')} · Oruro
+  </div>
+
+  <hr>
+
+  <table>
+    <tr><td class="bold">Nro:</td><td>${S(venta.id)}</td></tr>
+    <tr><td class="bold">Fecha/Hora:</td><td>${S(venta.fecha)} ${S(venta.hora,'')}</td></tr>
+    <tr><td class="bold">Usuario:</td><td>${S(venta.user?.name, '')}</td></tr>
+    <tr><td class="bold">Tipo venta:</td><td>${S(venta.tipo_venta, '')}</td></tr>
+    <tr><td class="bold">Pago:</td><td>${S(venta.tipo_pago, '')}</td></tr>
+  </table>
+
+  <hr>
+
+  <table>
+    <tr class="bold"><td>Detalle</td><td class="right">Subt.</td></tr>`;
+
+      detalles.forEach(d => {
+        const nombre  = S(d.producto?.nombre ?? d.nombre ?? '');
+        const qty     = Number(d.cantidad || 0);
+        const precio  = Number(d.precio || 0);
+        const sub     = qty * precio;
+        const unidad  = S(d.unidad ?? d.producto?.unidad ?? '');
+        const idProd  = S(d.producto_id ?? d.producto?.id ?? '');
+
+        html += `
+    <tr>
+      <td>
+        <div class="bold">${idProd ? idProd + ' - ' : ''}${nombre}</div>
+        <div class="small">${unidad ? 'UM: ' + unidad + ' · ' : ''}${F2(qty)} x ${F2(precio)}</div>
+      </td>
+      <td class="right bold">${F2(sub)}</td>
+    </tr>`;
+      });
+
+      html += `
+  </table>
+
+  <hr>
+
+  <table>
+    <tr><td class="bold">TOTAL (Bs)</td><td class="right bold">${F2(total)}</td></tr>
+  </table>
+
+  <div class="mt6">${literal}</div>
+
+  <hr>
+
+  <div class="center small">
+    ¡Gracias por su compra!
+  </div>
+</div>`;
+
+      const el = document.getElementById('myElement');
+      if (el) el.innerHTML = html;
+
+      if (imprimir) {
+        const d = new Printd();
+        d.print(el);
+      }
+
+      return true;
+    } catch (e) {
+      console.error('reciboVentaSimple error:', e);
+      throw e;
+    }
   }
 }

@@ -82,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productos/{id}/historial-compras', [App\Http\Controllers\CompraController::class, 'historialCompras']);
 
     Route::get('/productos-por-vencer-campana', [\App\Http\Controllers\CompraDetalleController::class, 'vencimientosCampana']);
+    Route::get('/productosCantidad', [\App\Http\Controllers\ProductoController::class, 'productosCantidad']);
+
+    Route::get('/productos/{id}/historial-compras-ventas', [App\Http\Controllers\ProductoController::class, 'historialComprasVentas']);
 
 
 });

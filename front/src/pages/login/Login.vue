@@ -80,6 +80,7 @@ export default {
         this.$store.isLogged = true
         this.$store.user = user
         this.$store.permissions = user.permissions
+        this.$store.env = res.data.datos
         localStorage.setItem('tokenEducation', token)
         this.$alert.success('Bienvenido ' + user.name)
         this.$router.push('/')

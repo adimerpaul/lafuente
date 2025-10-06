@@ -145,7 +145,7 @@
             />
           </td>
           <td>
-            <div v-if="producto.stock !== null">{{ producto.stock }}</div>
+            <div v-if="producto.stock !== null">{{ producto.cantidad }}</div>
             <div v-else class="text-grey">-</div>
           </td>
           <td>{{ producto.stock_minimo }}</td>

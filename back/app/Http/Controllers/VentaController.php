@@ -3,110 +3,234 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\CompraDetalle;
 use App\Models\Producto;
 use App\Models\Receta;
 use App\Models\Venta;
+use App\Models\VentaDetalle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class VentaController extends Controller{
-    function anular(Request $request, $id){
-        $venta = Venta::findOrFail($id);
-        $venta->update(['estado' => 'Anulada']);
-        return $venta;
+class VentaController extends Controller
+{
+    public function searchCliente(Request $request)
+    {
+        $nit = trim((string)$request->input('nit', ''));
+        if ($nit === '') return response()->json([]);
+
+        $c = Cliente::where('ci', $nit)->first();
+        if (!$c) return response()->json([]);
+        return response()->json([
+            'nombre' => $c->nombre,
+            'email' => $c->email ?? null,
+            'codigoTipoDocumentoIdentidad' => 1,
+            'complemento' => $c->complemento ?? null,
+        ]);
     }
-    function tipoVentasChange(Request $request, $id){
-        $venta = Venta::findOrFail($id);
-        $tipo_venta = $venta->tipo_venta;
-        if ($tipo_venta == 'Interno') {
-            $venta->tipo_venta = 'Externo';
-            $venta->save();
-        } else {
-            $venta->tipo_venta = 'Interno';
-            $venta->save();
-        }
-        return $venta;
-    }
-    function store(Request $request){
+
+    public function store(Request $request)
+    {
         DB::beginTransaction();
         try {
+            // 1) Cliente
             $cliente = $this->clienteUpdateOrCreate($request);
 
-            $request->merge(['user_id' => auth()->user()->id,]);
-            $request->merge(['cliente_id' => $cliente->id,]);
-            $request->merge(['fecha' => date('Y-m-d'),]);
-            $request->merge(['hora' => date('H:i:s'),]);
-            $venta = Venta::create($request->all());
-            $productos = $request->productos;
-            $insertProductos = [];
-            $total = 0;
-            foreach ($productos as $producto) {
-                $insertProductos[] = [
-                    'venta_id' => $venta->id,
-                    'producto_id' => $producto['producto_id'],
-                    'cantidad' => $producto['cantidad'],
-                    'precio' => $producto['precio'],
-                ];
-                $total += $producto['cantidad'] * $producto['precio'];
+            // 2) Venta cabecera
+            $request->merge([
+                'user_id'    => auth()->id(),
+                'cliente_id' => $cliente->id,
+                'fecha'      => date('Y-m-d'),
+                'hora'       => date('H:i:s'),
+                'estado'     => 'Activo',
+                'tipo_comprobante' => 'Venta',
+            ]);
+            /** @var Venta $venta */
+            $venta = Venta::create($request->only([
+                'user_id','cliente_id','fecha','hora','ci','nombre','estado',
+                'tipo_comprobante','total','tipo_venta','tipo_pago','pagado_interno',
+            ]));
 
-                $productoFind = Producto::findOrFail($producto['producto_id']);
-                if ($productoFind->stock > 0) {
-                    $productoFind->stock -= $producto['cantidad'];
-                    $productoFind->save();
+            // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
+            $productos = (array)$request->input('productos', []);
+            $total = 0.0;
+
+            foreach ($productos as $item) {
+                $productoId = (int)($item['producto_id'] ?? 0);
+                $cantidad   = (float)($item['cantidad'] ?? 0);
+                $precio     = (float)($item['precio'] ?? 0);
+                if ($productoId <= 0 || $cantidad <= 0) {
+                    abort(422, 'Producto o cantidad inválida.');
+                }
+
+                $producto = Producto::select('id','nombre')->findOrFail($productoId);
+                $nombreProducto = $producto->nombre;
+
+                // Si vino un lote concreto, usarlo
+                if (!empty($item['compra_detalle_id'])) {
+                    $loteId = (int)$item['compra_detalle_id'];
+
+                    $cd = CompraDetalle::where('id', $loteId)
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    if ((int)$cd->producto_id !== $productoId) {
+                        abort(422, 'El lote seleccionado no corresponde al producto.');
+                    }
+                    if ($cd->estado !== 'Activo') {
+                        abort(422, 'El lote seleccionado no está activo.');
+                    }
+                    if ((float)$cd->cantidad_venta < $cantidad) {
+                        abort(422, 'Stock insuficiente en el lote seleccionado.');
+                    }
+
+                    VentaDetalle::create([
+                        'venta_id'          => $venta->id,
+                        'producto_id'       => $productoId,
+                        'compra_detalle_id' => $cd->id,
+                        'nombre'            => $nombreProducto,
+                        'cantidad'          => $cantidad,
+                        'precio'            => $precio,
+                        'lote'              => $cd->lote,
+                        'fecha_vencimiento' => $cd->fecha_vencimiento,
+                    ]);
+
+                    // Descontar del lote
+                    $cd->cantidad_venta = (float)$cd->cantidad_venta - $cantidad;
+                    $cd->save();
+
+                    $total += $cantidad * $precio;
+                    continue;
+                }
+
+                // FIFO por fecha de vencimiento (nulos al final)
+                $restante = $cantidad;
+                $lotes = CompraDetalle::where('producto_id', $productoId)
+                    ->where('estado', 'Activo')
+                    ->whereNull('deleted_at')
+                    ->where('cantidad_venta', '>', 0)
+                    ->orderByRaw("CASE WHEN fecha_vencimiento IS NULL THEN 1 ELSE 0 END, fecha_vencimiento ASC")
+                    ->lockForUpdate()
+                    ->get(['id','cantidad_venta','lote','fecha_vencimiento']);
+
+                foreach ($lotes as $l) {
+                    if ($restante <= 0) break;
+
+                    $take = min((float)$l->cantidad_venta, $restante);
+                    if ($take <= 0) continue;
+
+                    VentaDetalle::create([
+                        'venta_id'          => $venta->id,
+                        'producto_id'       => $productoId,
+                        'compra_detalle_id' => $l->id,
+                        'nombre'            => $nombreProducto,
+                        'cantidad'          => $take,
+                        'precio'            => $precio,
+                        'lote'              => $l->lote,
+                        'fecha_vencimiento' => $l->fecha_vencimiento,
+                    ]);
+
+                    $l->cantidad_venta = (float)$l->cantidad_venta - $take;
+                    $l->save();
+
+                    $total    += $take * $precio;
+                    $restante -= $take;
+                }
+
+                if ($restante > 1e-9) {
+                    abort(422, 'Stock insuficiente por lotes.');
                 }
             }
+
+            // 4) Totales + receta
             $venta->update(['total' => $total]);
-            $receta_id = $request->receta_id;
-            if ($receta_id != '') {
-                error_log('receta_id: ' . $receta_id);
-                $receta = Receta::findOrFail($receta_id);
+
+            if ($request->filled('receta_id')) {
+                $receta = Receta::findOrFail((int)$request->input('receta_id'));
                 $receta->numero_factura = $venta->id;
                 $receta->save();
             }
-            $venta->ventaDetalles()->createMany($insertProductos);
 
             DB::commit();
-            return Venta::with('user', 'ventaDetalles.producto')->findOrFail($venta->id);
-        } catch (\Exception $e) {
-            DB::rollback();
+
+            // Respuesta con usuario, cliente y detalles + producto
+            return Venta::with('user', 'ventaDetalles.producto', 'cliente')->findOrFail($venta->id);
+        } catch (\Throwable $e) {
+            DB::rollBack();
             return response()->json(['message' => 'Error al guardar la venta: ' . $e->getMessage()], 500);
         }
     }
-    function clienteUpdateOrCreate($request){
-        $ci = $request->ci;
-        $findCliente = Cliente::where('ci', $ci)->first();
-        if ($findCliente) {
-            $findCliente->update($request->all());
-            return $findCliente;
-        } else {
-            return Cliente::create($request->all());
-        }
-    }
-    function index(Request $request){
-        $fechaInicio = $request->fechaInicio;
-        $fechaFin = $request->fechaFin;
-        $user = $request->user;
 
-        $ventas = Venta::with('user', 'cliente')
-            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->orderBy('created_at', 'desc')
-            ->get();
-        if ($user != '') {
-            $ventas = $ventas->where('user_id', $user);
+    public function anular(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            /** @var Venta $venta */
+            $venta = Venta::with('ventaDetalles')->lockForUpdate()->findOrFail($id);
+
+            if ($venta->estado === 'Anulada') {
+                DB::commit();
+                return $venta;
+            }
+
+            // Restaurar stock a cada lote
+            foreach ($venta->ventaDetalles as $det) {
+                if ($det->compra_detalle_id) {
+                    $cd = CompraDetalle::where('id', $det->compra_detalle_id)->lockForUpdate()->first();
+                    if ($cd) {
+                        $cd->cantidad_venta = (float)$cd->cantidad_venta + (float)$det->cantidad;
+                        $cd->save();
+                    }
+                }
+            }
+
+            $venta->estado = 'Anulada';
+            $venta->save();
+
+            DB::commit();
+            return $venta;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'No se pudo anular: ' . $e->getMessage()], 500);
         }
-        return $ventas;
     }
-    function show($id){
-        return Venta::with('user', 'cliente')->findOrFail($id);
-    }
-    function update(Request $request, $id){
+
+    public function tipoVentasChange(Request $request, $id)
+    {
         $venta = Venta::findOrFail($id);
-        $venta->update($request->all());
+        $venta->tipo_venta = $venta->tipo_venta === 'Interno' ? 'Externo' : 'Interno';
+        $venta->save();
         return $venta;
     }
-    function destroy($id){
-        $venta = Venta::findOrFail($id);
-        $venta->delete();
-        return $venta;
+
+    public function index(Request $request)
+    {
+        $fechaInicio = $request->input('fechaInicio');
+        $fechaFin    = $request->input('fechaFin');
+        $user        = $request->input('user');
+
+        $q = Venta::with('user', 'cliente')
+            ->when($fechaInicio && $fechaFin, fn($qq)=>$qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
+            ->orderBy('created_at', 'desc');
+
+        if ($user) $q->where('user_id', $user);
+
+        return $q->get();
+    }
+
+    public function show($id)
+    {
+        return Venta::with('user', 'cliente', 'ventaDetalles.producto')->findOrFail($id);
+    }
+
+    private function clienteUpdateOrCreate(Request $request)
+    {
+        $ci = trim((string)$request->input('ci', '0'));
+        $data = $request->only(['ci','nombre','email','complemento','direccion','telefono']);
+        $c = Cliente::where('ci', $ci)->first();
+        if ($c) {
+            $c->update($data);
+            return $c;
+        }
+        return Cliente::create($data + ['ci' => $ci ?: '0', 'nombre' => $data['nombre'] ?? 'SN']);
     }
 }
