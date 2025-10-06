@@ -67,7 +67,7 @@
                             {{ $filters.textUpper( producto.nombre ) }}
                           </div>
                           <div style="display: flex;justify-content: space-between;">
-                            <span>{{ producto.stock }}</span>
+                            <span>{{ producto.cantidad }}</span>
                             <span class="text-bold bg-orange text-black border">{{ producto.precio }} Bs</span>
                           </div>
                         </div>
