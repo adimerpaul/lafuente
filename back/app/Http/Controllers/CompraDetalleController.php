@@ -17,6 +17,8 @@ class CompraDetalleController extends Controller{
             ->whereDate('fecha_vencimiento', '>=', $hoy)
             ->whereDate('fecha_vencimiento', '<=', $limite)
             ->orderBy('fecha_vencimiento', 'asc')
+//            estado
+            ->where('estado', 'Activo')
             ->get()
             ->map(function ($item) use ($hoy) {
                 return [
