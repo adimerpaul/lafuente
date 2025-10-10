@@ -173,7 +173,7 @@
                 <q-input v-model="venta.email" outlined dense label="Email" />
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta" :options="['Interno', 'Externo']" />
+                <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta" :options="['Internado', 'Externo']" />
               </div>
               <!--              <div class="col-12 complemtno-->
               <div class="col-12 col-md-3 q-pa-xs">
@@ -359,7 +359,7 @@ export default {
         nit: "0",
         nombre: "SN",
         codigoTipoDocumentoIdentidad: 1,
-        tipo_venta: "Interno",
+        tipo_venta: "Internado",
         tipo_pago: "Efectivo",
       },
 
@@ -499,6 +499,8 @@ export default {
       this.ventaDialog = true;
       // reset efectivo
       this.efectivo = '';
+      // defecto externo
+      this.venta.tipo_venta = 'Externo';
     },
 
     productosGet() {
@@ -547,7 +549,7 @@ export default {
           nit: "0",
           nombre: "SN",
           codigoTipoDocumentoIdentidad: 1,
-          tipo_venta: "Interno",
+          tipo_venta: "Internado",
           tipo_pago: "Efectivo",
         };
         Imprimir.reciboVentaSimple(res.data);
