@@ -56,7 +56,7 @@ class ProductoController extends Controller{
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('productos.nombre', 'like', "%{$search}%")
-                        ->orWhere('productos.descripcion', 'like', "%{$search}%")
+                        ->orWhere('productos.descripcion', 'like', "%{$search}%");
 //                        ->orWhere('productos.barra', 'like', "%{$search}%");
                 });
             })
