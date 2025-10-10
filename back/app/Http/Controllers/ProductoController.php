@@ -57,7 +57,7 @@ class ProductoController extends Controller{
                 $q->where(function ($q) use ($search) {
                     $q->where('productos.nombre', 'like', "%{$search}%")
                         ->orWhere('productos.descripcion', 'like', "%{$search}%")
-                        ->orWhere('productos.barra', 'like', "%{$search}%");
+//                        ->orWhere('productos.barra', 'like', "%{$search}%");
                 });
             })
             // Filtra solo los que tienen cantidad > 0 (en SQL, no en PHP)
