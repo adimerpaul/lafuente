@@ -125,7 +125,7 @@
             {{ venta.fecha }}
             {{ venta.hora }}
           </td>
-          <td>{{ venta.cliente.nombre }}</td>
+          <td>{{ venta.nombre }}</td>
           <td>{{ venta.user.name }}</td>
           <td>
             <!--            {{ venta.estado }} q-chip activo verde -->
