@@ -80,7 +80,7 @@ class VentaController extends Controller
                         abort(422, 'El lote seleccionado no está activo.');
                     }
                     if ((float)$cd->cantidad_venta < $cantidad) {
-                        abort(422, 'Stock insuficiente en el lote seleccionado.');
+                        abort(422, "Stock insuficiente para el producto '{$nombreProducto}' en el lote {$cd->lote} (disponible: {$cd->cantidad_venta}, solicitado: {$cantidad}).");
                     }
 
                     VentaDetalle::create([
