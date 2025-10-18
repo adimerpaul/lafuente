@@ -92,6 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'update']);
     Route::delete('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'destroy']);
     Route::post('/ventasDevolverProducto', [App\Http\Controllers\VentaController::class, 'ventasDevolverProducto']);
+
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);
