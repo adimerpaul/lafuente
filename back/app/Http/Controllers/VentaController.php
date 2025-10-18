@@ -8,11 +8,53 @@ use App\Models\Producto;
 use App\Models\Receta;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class VentaController extends Controller
 {
+    public function proformaPacientePdf(\App\Models\Paciente $paciente)
+    {
+        // Trae las ventas vinculadas (paciente_ventas) con la venta y sus detalles
+        $paciente->load([
+            'pacienteVentas' => function ($q) {
+                $q->orderBy('fecha', 'asc');
+            },
+            'pacienteVentas.venta' => function ($q) {
+                $q->with(['ventaDetalles.producto', 'doctor']);
+            },
+            'pacienteVentas.user'
+        ]);
+
+        // Total general
+        $totalGeneral = 0;
+        foreach ($paciente->pacienteVentas as $pv) {
+            $venta = $pv->venta;
+            if (!$venta) continue;
+            // si no viene total, sumar por si acaso
+            if ($venta->total === null) {
+                $subtotal = 0;
+                foreach ($venta->ventaDetalles as $d) {
+                    $subtotal += floatval($d->cantidad) * floatval($d->precio);
+                }
+                $venta->total = $subtotal;
+            }
+            $totalGeneral += floatval($venta->total);
+        }
+
+        $hoy = now();
+
+        $pdf = Pdf::loadView('pdf.proforma_paciente', [
+            'paciente'     => $paciente,
+            'pacienteVentas' => $paciente->pacienteVentas,
+            'totalGeneral' => $totalGeneral,
+            'hoy'          => $hoy,
+        ])->setPaper('letter'); // tamaño carta; usa 'a4' si prefieres
+
+        return $pdf->stream('proforma_paciente_'.$paciente->id.'.pdf');
+        // ->download('proforma_paciente_'.$paciente->id.'.pdf');
+    }
     public function searchCliente(Request $request)
     {
         $nit = trim((string)$request->input('nit', ''));

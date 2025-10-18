@@ -94,3 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);
 
+Route::get('pacientes/{paciente}/proforma-pdf', [\App\Http\Controllers\VentaController::class, 'proformaPacientePdf']);
+
+
