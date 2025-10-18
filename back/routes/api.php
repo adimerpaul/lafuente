@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CompraController;
+use App\Http\Controllers\VentaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -90,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/doctores', [App\Http\Controllers\DoctorController::class, 'store']);
     Route::put('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'update']);
     Route::delete('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'destroy']);
+    Route::post('/ventasDevolverProducto', [App\Http\Controllers\VentaController::class, 'ventasDevolverProducto']);
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

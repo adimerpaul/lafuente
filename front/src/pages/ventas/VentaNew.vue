@@ -73,6 +73,7 @@
             <!-- CARRITO / DETALLE DE VENTA -->
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">
+                Cantidad de productos: {{ productosVentas.length }}
                 <q-space/>
                 <q-btn
                   icon="delete"

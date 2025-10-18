@@ -29,14 +29,25 @@
         @click="imprimirProforma"
       />
 
+<!--      <q-btn-->
+<!--        icon="add_shopping_cart"-->
+<!--        :loading="$store.loading || loading"-->
+<!--        unelevated-->
+<!--        color="positive"-->
+<!--        label="Nueva venta"-->
+<!--        no-caps-->
+<!--        @click="initNuevaVenta"-->
+<!--      />-->
+<!--      btn vicular venta-->
       <q-btn
-        icon="add_shopping_cart"
-        :loading="$store.loading || loading"
+        icon="link"
+        :loading="loading"
         unelevated
-        color="positive"
-        label="Nueva venta"
+        color="green"
+        label="Vincular venta existente"
         no-caps
-        @click="initNuevaVenta"
+        class="q-ml-sm"
+        @click="vincularVentaExistente"
       />
     </div>
 
@@ -592,6 +603,35 @@ export default {
     initNuevaVenta () {
       // abre el flujo dejando el cursor en buscar producto
       this.$nextTick(() => this.$refs.inputBuscarProducto?.focus());
+    },
+    vincularVentaExistente(){
+      this.$q.dialog({
+        title: 'Vincular venta existente',
+        message: 'Ingrese el ID de la venta que desea vincular al paciente:',
+        prompt: {
+          model: '',
+          type: 'number',
+          label: 'ID de la venta',
+          isValid: val => val > 0
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(ventaId => {
+        this.loading = true;
+        this.$axios.post("paciente_ventas", {
+          venta_id: ventaId,
+          paciente_id: this.paciente.id
+        }).then(() => {
+          this.$alert?.success?.("Venta vinculada con éxito") || this.$q.notify({ type: 'positive', message: 'Venta vinculada con éxito' });
+          this.$emit("pacienteGet");
+        }).catch(error => {
+          console.error(error);
+          this.$alert?.error?.(error?.response?.data?.message || "No se pudo vincular la venta")
+          || this.$q.notify({ type:'negative', message: error?.response?.data?.message || 'No se pudo vincular la venta' });
+        }).finally(() => {
+          this.loading = false;
+        });
+      });
     },
     imprimirProforma () {
       if (!this.paciente?.id) {

@@ -118,6 +118,10 @@
                 </q-item-section>
                 <q-item-section>Cambiar a {{ venta.tipo_venta === 'Interno' ? 'Externo' : 'Interno' }}</q-item-section>
               </q-item>
+              <q-item clickable v-ripple v-if="venta.estado==='Activo'" @click="openDevolver(venta)" v-close-popup>
+                <q-item-section avatar><q-icon name="undo" /></q-item-section>
+                <q-item-section>Devolver productos</q-item-section>
+              </q-item>
             </q-btn-dropdown>
           </td>
           <td>{{ venta.id }}</td>
@@ -371,8 +375,339 @@
 <!--    ]-->
 <!--    }-->
 <!--    ]-->
+    <!-- Dialog devolución -->
+    <q-dialog v-model="devDialog" persistent>
+      <q-card style="max-width: 860px; width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Devolver productos</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="devDialog=false" />
+        </q-card-section>
+
+        <q-card-section>
+          <q-markup-table dense wrap-cells flat bordered>
+            <thead>
+            <tr>
+              <th>#</th>
+              <th>Producto</th>
+              <th>Lote</th>
+              <th>Vencimiento</th>
+              <th style="width:100px;">Vendido</th>
+              <th style="width:140px;">Devolver</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(d,i) in venta.venta_detalles" :key="d.id">
+              <td class="text-center">{{ i+1 }}</td>
+              <td style="max-width:360px;overflow:hidden;text-overflow:ellipsis;">
+                {{ d.nombre || d.producto?.nombre || '—' }}
+              </td>
+              <td class="text-center">{{ d.lote || '—' }}</td>
+              <td class="text-center">{{ d.fecha_vencimiento || '—' }}</td>
+              <td class="text-center">{{ d.cantidad }}</td>
+              <td>
+<!--                devolver btn-->
+                <q-btn size="sm" color="negative" label="Devolver" no-caps @click="devolverProducto(venta.id, d.id, d.cantidad)"
+                       icon="undo"
+                />
+              </td>
+            </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+<!--        <pre>{{ venta }}</pre>-->
+<!--        {-->
+<!--        "id": 357,-->
+<!--        "user_id": 1,-->
+<!--        "doctor_id": null,-->
+<!--        "cliente_id": 1,-->
+<!--        "paciente_id_ref": null,-->
+<!--        "fecha": "2025-10-18",-->
+<!--        "hora": "03:05:48",-->
+<!--        "tipo_venta": "Externo",-->
+<!--        "ci": "0",-->
+<!--        "nombre": "SN",-->
+<!--        "estado": "Activo",-->
+<!--        "tipo_comprobante": "Venta",-->
+<!--        "total": "641.00",-->
+<!--        "tipo_pago": "Efectivo",-->
+<!--        "pagado_interno": 0,-->
+<!--        "detailsText": "1 0 ES 3 COMPRIMIDO,1 4 DERM 10 GR,1 A-MINA FORTE,1 ABRILAR EA 575 FCO. X 100 ML JARABE,1 ABRILAR EA 575 FCO. X 100 ML JARABE,1 ABRILAR EA 575 MENTOLADO JARABE X 100 ML,1 ACD VIMIN GOTAS X 30 ML,1 ACTIFEM COMPRESA CALIENTE X 1,1 ACD VIMIN GOTAS X 30 ML,1 AFUNGIL 166.66MG/33.33MG X CAPSULA,1 ADRENALINA 1 MG AMPOLLA X 1 ML PHARMADINA",-->
+<!--        "user": {-->
+<!--        "id": 1,-->
+<!--        "name": "Administrador",-->
+<!--        "username": "admin",-->
+<!--        "email": "admin@test.com",-->
+<!--        "role": "Administrador",-->
+<!--        "color": "red"-->
+<!--        },-->
+<!--        "cliente": {-->
+<!--        "id": 1,-->
+<!--        "nombre": "SN",-->
+<!--        "ci": "0",-->
+<!--        "telefono": null,-->
+<!--        "direccion": null-->
+<!--        },-->
+<!--        "venta_detalles": [-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 8147,-->
+<!--        "compra_detalle_id": 501,-->
+<!--        "nombre": "0 ES 3 COMPRIMIDO",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "49205",-->
+<!--        "fecha_vencimiento": "2026-05-01",-->
+<!--        "precio": 4,-->
+<!--        "producto": {-->
+<!--        "id": 8147,-->
+<!--        "nombre": "0 ES 3 COMPRIMIDO",-->
+<!--        "imagen": "1760708360.jpeg",-->
+<!--        "descripcion": "RELAJANTE SEDANTE NATURAL",-->
+<!--        "unidad": null,-->
+<!--        "precio": "3.50",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "22"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 4452,-->
+<!--        "compra_detalle_id": 1607,-->
+<!--        "nombre": "4 DERM 10 GR",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "2e2434",-->
+<!--        "fecha_vencimiento": "2027-06-01",-->
+<!--        "precio": 47,-->
+<!--        "producto": {-->
+<!--        "id": 4452,-->
+<!--        "nombre": "4 DERM 10 GR",-->
+<!--        "imagen": "17063795654 DERM 10 GR.jpg",-->
+<!--        "descripcion": "Antimicótico y antiinflamatorio",-->
+<!--        "unidad": "CREMA DERMICA",-->
+<!--        "precio": "47.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "1"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 8084,-->
+<!--        "compra_detalle_id": 152,-->
+<!--        "nombre": "A-MINA FORTE",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "PA2301",-->
+<!--        "fecha_vencimiento": "2026-08-01",-->
+<!--        "precio": 1,-->
+<!--        "producto": {-->
+<!--        "id": 8084,-->
+<!--        "nombre": "A-MINA FORTE",-->
+<!--        "imagen": "1760708324.jpeg",-->
+<!--        "descripcion": "SUPLEMENTO DE VITAMINA A",-->
+<!--        "unidad": "CAPSULAS DE GELATINA BLANDA",-->
+<!--        "precio": "1.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "10"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 2627,-->
+<!--        "compra_detalle_id": 1647,-->
+<!--        "nombre": "ABRILAR EA 575 FCO. X 100 ML JARABE",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "23M135A",-->
+<!--        "fecha_vencimiento": "2026-10-30",-->
+<!--        "precio": 117,-->
+<!--        "producto": {-->
+<!--        "id": 2627,-->
+<!--        "nombre": "ABRILAR EA 575 FCO. X 100 ML JARABE",-->
+<!--        "imagen": "1727539433Jarabe-Abrilar.jpg",-->
+<!--        "descripcion": "Espectorante Natural Broncodilatador y Antitusivo",-->
+<!--        "unidad": "JARABES",-->
+<!--        "precio": "117.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "1"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 2627,-->
+<!--        "compra_detalle_id": 1647,-->
+<!--        "nombre": "ABRILAR EA 575 FCO. X 100 ML JARABE",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "23M135A",-->
+<!--        "fecha_vencimiento": "2026-10-30",-->
+<!--        "precio": 117,-->
+<!--        "producto": {-->
+<!--        "id": 2627,-->
+<!--        "nombre": "ABRILAR EA 575 FCO. X 100 ML JARABE",-->
+<!--        "imagen": "1727539433Jarabe-Abrilar.jpg",-->
+<!--        "descripcion": "Espectorante Natural Broncodilatador y Antitusivo",-->
+<!--        "unidad": "JARABES",-->
+<!--        "precio": "117.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "1"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 2625,-->
+<!--        "compra_detalle_id": 1648,-->
+<!--        "nombre": "ABRILAR EA 575 MENTOLADO JARABE X 100 ML",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "24A100B",-->
+<!--        "fecha_vencimiento": "2026-12-30",-->
+<!--        "precio": 117,-->
+<!--        "producto": {-->
+<!--        "id": 2625,-->
+<!--        "nombre": "ABRILAR EA 575 MENTOLADO JARABE X 100 ML",-->
+<!--        "imagen": "1727539375ABRILAR-MENTOLADO-JARABE-100ML-768x768.jpg",-->
+<!--        "descripcion": "Espectorante Natural Broncodilatador y Antitusivo",-->
+<!--        "unidad": "FRASCO",-->
+<!--        "precio": "117.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "2"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 2101,-->
+<!--        "compra_detalle_id": 969,-->
+<!--        "nombre": "ACD VIMIN GOTAS X 30 ML",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "32468",-->
+<!--        "fecha_vencimiento": "2027-03-01",-->
+<!--        "precio": 84,-->
+<!--        "producto": {-->
+<!--        "id": 2101,-->
+<!--        "nombre": "ACD VIMIN GOTAS X 30 ML",-->
+<!--        "imagen": "1712071180Captura de pantalla 2024-04-02 111927.png",-->
+<!--        "descripcion": "Avitaminosis A-C-D",-->
+<!--        "unidad": "FRASCOS",-->
+<!--        "precio": "84.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": 0-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 1129,-->
+<!--        "compra_detalle_id": 1545,-->
+<!--        "nombre": "ACTIFEM COMPRESA CALIENTE X 1",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "BW23065",-->
+<!--        "fecha_vencimiento": "2026-11-01",-->
+<!--        "precio": 42,-->
+<!--        "producto": {-->
+<!--        "id": 1129,-->
+<!--        "nombre": "ACTIFEM COMPRESA CALIENTE X 1",-->
+<!--        "imagen": "1705101651ACTIFEM COMPRESA CALIENTE X 1.jpg",-->
+<!--        "descripcion": "Alivio de los dolores menstruales, dispositivo de calor",-->
+<!--        "unidad": "UNIDAD",-->
+<!--        "precio": "42.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": 0-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 2101,-->
+<!--        "compra_detalle_id": 969,-->
+<!--        "nombre": "ACD VIMIN GOTAS X 30 ML",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "32468",-->
+<!--        "fecha_vencimiento": "2027-03-01",-->
+<!--        "precio": 84,-->
+<!--        "producto": {-->
+<!--        "id": 2101,-->
+<!--        "nombre": "ACD VIMIN GOTAS X 30 ML",-->
+<!--        "imagen": "1712071180Captura de pantalla 2024-04-02 111927.png",-->
+<!--        "descripcion": "Avitaminosis A-C-D",-->
+<!--        "unidad": "FRASCOS",-->
+<!--        "precio": "84.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": 0-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 1579,-->
+<!--        "compra_detalle_id": 171,-->
+<!--        "nombre": "AFUNGIL 166.66MG/33.33MG X CAPSULA",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "624101",-->
+<!--        "fecha_vencimiento": "2026-06-01",-->
+<!--        "precio": 13,-->
+<!--        "producto": {-->
+<!--        "id": 1579,-->
+<!--        "nombre": "AFUNGIL 166.66MG/33.33MG X CAPSULA",-->
+<!--        "imagen": "1705422438afungil.jpg",-->
+<!--        "descripcion": "Antiinfeccioso ginecológico.",-->
+<!--        "unidad": "CAPSULAS",-->
+<!--        "precio": "12.50",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "7"-->
+<!--        }-->
+<!--        },-->
+<!--        {-->
+<!--        "venta_id": 357,-->
+<!--        "producto_id": 4089,-->
+<!--        "compra_detalle_id": 1180,-->
+<!--        "nombre": "ADRENALINA 1 MG AMPOLLA X 1 ML PHARMADINA",-->
+<!--        "cantidad": 1,-->
+<!--        "unidad": null,-->
+<!--        "lote": "30788",-->
+<!--        "fecha_vencimiento": "2026-11-01",-->
+<!--        "precio": 16,-->
+<!--        "producto": {-->
+<!--        "id": 4089,-->
+<!--        "nombre": "ADRENALINA 1 MG AMPOLLA X 1 ML PHARMADINA",-->
+<!--        "imagen": "1707432183ADRENALINA (PHA) AMP.png",-->
+<!--        "descripcion": "Catecolamina simpaticomimética",-->
+<!--        "unidad": "AMPOLLAS",-->
+<!--        "precio": "16.00",-->
+<!--        "stock": null,-->
+<!--        "stock_minimo": null,-->
+<!--        "stock_maximo": null,-->
+<!--        "cantidad": "56"-->
+<!--        }-->
+<!--        }-->
+<!--        ]-->
+<!--        }-->
+      </q-card>
+    </q-dialog>
+    <div id="myElement" class="hidden"></div>
   </q-page>
-  <div id="myElement" class="hidden"></div>
 </template>
 <script>
 import moment from 'moment'
@@ -403,7 +738,10 @@ export default {
         { name: 'stock', label: 'Stock', align: 'left', field: 'stock' },
         { name: 'stock_minimo', label: 'Stock mínimo', align: 'left', field: 'stock_minimo' },
         { name: 'stock_maximo', label: 'Stock máximo', align: 'left', field: 'stock_maximo' },
-      ]
+      ],
+      devDialog: false,
+      devVentaId: null,
+      devItems: [],  // { id, producto_id, nombre, cantidad, _devolver }
     }
   },
   mounted() {
@@ -411,6 +749,50 @@ export default {
     this.usersGet()
   },
   methods: {
+    devolverProducto(ventaId, ventaDetalleId, cantidadVendido) {
+      // const cantidadDevolver = prompt(`Ingrese la cantidad a devolver (vendido: ${cantidadVendido}):`, '1');
+      // const cantidadNum = Number(cantidadDevolver);
+      this.$q.dialog({
+        title: 'Devolver producto',
+        message: `Ingrese la cantidad a devolver (vendido: ${cantidadVendido}):`,
+        prompt: {
+          model: cantidadVendido,
+          type: 'number',
+          isValid: val => {
+            const num = Number(val);
+            return !isNaN(num) && num > 0 && num <= cantidadVendido;
+          },
+          label: 'Cantidad a devolver',
+          hint: `Debe ser un número entre 1 y ${cantidadVendido}`,
+          mask: '##########'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(cantidadDevolver => {
+        const cantidadNum = Number(cantidadDevolver);
+
+        if (isNaN(cantidadNum) || cantidadNum <= 0 || cantidadNum > cantidadVendido) {
+          this.$alert.error('Cantidad inválida');
+          return;
+        }
+
+        this.$axios.post('ventasDevolverProducto', {
+          venta_id: ventaId,
+          venta_detalle_id: ventaDetalleId,
+          cantidad: cantidadNum
+        }).then(res => {
+          this.$alert.success('Producto devuelto correctamente');
+          this.devDialog = false;
+          this.ventasGet();
+        }).catch(error => {
+          this.$alert.error(error.response.data.message);
+        });
+      });
+    },
+    openDevolver(venta) {
+      this.venta = venta;
+      this.devDialog = true;
+    },
     exportExcel() {
       // 1) Filtrar solo ventas activas
       const ventasActivas = (this.ventas || []).filter(v => String(v.estado).toLowerCase() === 'activo');
@@ -445,7 +827,8 @@ export default {
       })
     },
     imprimir(venta) {
-      Imprimir.nota(venta)
+      // Imprimir.nota(venta)
+      Imprimir.reciboVentaSimple(venta);
     },
     tipoVentasChange(id) {
       this.$axios.put(`tipoVentasChange/${id}`).then(res => {

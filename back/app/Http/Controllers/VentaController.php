@@ -11,9 +11,59 @@ use App\Models\VentaDetalle;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 class VentaController extends Controller
 {
+    function ventasDevolverProducto(Request $request){
+//        venta_id: ventaId,
+//          venta_detalle_id: venta_detalle_id,
+//          cantidad: cantidadNum
+        DB::beginTransaction();
+        try {
+            $ventaId = (int)$request->input('venta_id', 0);
+            $ventaDetalleId = (int)$request->input('venta_detalle_id', 0);
+            $cantidad = (float)$request->input('cantidad', 0);
+
+            /** @var VentaDetalle $vd */
+            $vd = VentaDetalle::where('id', $ventaDetalleId)
+                ->where('venta_id', $ventaId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($cantidad <= 0 || $cantidad > (float)$vd->cantidad) {
+                abort(422, 'Cantidad inválida para la devolución.');
+            }
+
+            // Restaurar stock en el lote
+            if ($vd->compra_detalle_id) {
+                $cd = CompraDetalle::where('id', $vd->compra_detalle_id)
+                    ->lockForUpdate()
+                    ->first();
+                if ($cd) {
+                    $cd->cantidad_venta = (float)$cd->cantidad_venta + $cantidad;
+                    $cd->save();
+                }
+            }
+
+            // Actualizar detalle de venta
+            $vd->cantidad = (float)$vd->cantidad - $cantidad;
+            if ($vd->cantidad <= 1e-9) {
+                $vd->delete();
+            } else {
+                $vd->save();
+            }
+
+            // Actualizar total de venta
+            $venta = Venta::where('id', $ventaId)->lockForUpdate()->firstOrFail();
+            $venta->total = (float)$venta->total - ($cantidad * (float)$vd->precio);
+            $venta->save();
+
+            DB::commit();
+            return response()->json(['message' => 'Devolución procesada correctamente.'], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'No se pudo procesar la devolución: ' . $e->getMessage()], 500);
+        }
+    }
     public function proformaPacientePdf(\App\Models\Paciente $paciente)
     {
         // Trae las ventas vinculadas (paciente_ventas) con la venta y sus detalles
@@ -255,7 +305,7 @@ class VentaController extends Controller
         $fechaFin    = $request->input('fechaFin');
         $user        = $request->input('user');
 
-        $q = Venta::with('user', 'cliente')
+        $q = Venta::with('user', 'cliente','ventaDetalles')
             ->when($fechaInicio && $fechaFin, fn($qq)=>$qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
             ->orderBy('created_at', 'desc');
 
