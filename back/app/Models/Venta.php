@@ -37,7 +37,8 @@ class Venta extends Model{
     function getDetailsTextAttribute(){
         $detailsText = '';
         foreach ($this->ventaDetalles as $ventaDetalle) {
-            $detailsText .= $ventaDetalle->cantidad . ' ' . $ventaDetalle->producto->nombre . ',';
+            $detailsText .= $ventaDetalle->cantidad . ' ' . $ventaDetalle->nombre . ',';
+//            $detailsText .= $ventaDetalle->cantidad . ' ' . isset($ventaDetalle->producto) ? $ventaDetalle->producto->nombre : 'Producto Eliminado' . ',';
         }
         $detailsText = substr($detailsText, 0, -1);
         return $detailsText;
