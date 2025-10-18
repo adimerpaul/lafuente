@@ -161,6 +161,7 @@ export default {
       linksList: [
         { title: 'Principal', icon: 'dashboard', link: '/', can: 'Todos'},
         { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios'},
+        { title: 'Doctores', icon: 'medical_services', link: '/doctores', can: 'Doctores'},
         { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes'},
         { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos'},
         { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas'},

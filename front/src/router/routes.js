@@ -16,6 +16,8 @@ const routes = [
       { path: 'compras-create', name: 'compras-create', component: () => import('pages/compras/ComprasCreate.vue'), meta: { requiresAuth: true } },
       { path: 'productos-vencer', name: 'productos-vencer', component: () => import('pages/productos/ProductosVencer.vue'), meta: { requiresAuth: true } },
       { path: 'productos-vencidos', name: 'productos-vencidos', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true } },
+      // doctores
+      { path: 'doctores', name: 'doctores', component: () => import('pages/doctores/Doctores.vue'), meta: { requiresAuth: true } },
     ]
   },
   {
