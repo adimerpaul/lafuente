@@ -205,6 +205,10 @@
                   map-options
                 />
               </div>
+<!--              fecha-->
+              <div class="col-12 col-md-6 q-pa-xs">
+                <q-input v-model="venta.fecha" outlined dense label="Fecha de venta" type="date"/>
+              </div>
 
               <div class="col-12 q-pa-xs">
                 <q-markup-table dense wrap-cells flat bordered>
@@ -355,6 +359,7 @@
 
 <script>
 import {Imprimir} from "src/addons/Imprimir";
+import moment from "moment";
 
 export default {
   name: "VentasNew",
@@ -532,6 +537,7 @@ export default {
       this.efectivo = '';
       // defecto externo
       this.venta.tipo_venta = 'Externo';
+      this.venta.fecha = moment().format('YYYY-MM-DD');
     },
 
     productosGet() {
@@ -572,6 +578,7 @@ export default {
         tipo_pago: this.venta.tipo_pago,
         receta_id: this.receta_id,
         doctor_id: this.venta.doctor_id,
+        fecha: this.venta.fecha,
       }).then((res) => {
         this.ventaDialog = false;
         this.$alert?.success?.("Venta realizada con éxito");

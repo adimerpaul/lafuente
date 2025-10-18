@@ -412,33 +412,30 @@ export default {
   },
   methods: {
     exportExcel() {
-      // let data = [{
-      //   columns: [
-      //     {label: "Nombre", value: "nombre"},
-      //     {label: "Descripción", value: "descripcion"},
-      //     {label: "Unidad", value: "unidad"},
-      //     {label: "Precio", value: "precio"},
-      //     {label: "Stock", value: "stock"},
-      //     {label: "Stock mínimo", value: "stock_minimo"},
-      //     {label: "Stock máximo", value: "stock_maximo"},
-      //   ],
-      //   content: res.data
-      // }]
-      // Excel.export(data,'Productos')
-      let data = [{
+      // 1) Filtrar solo ventas activas
+      const ventasActivas = (this.ventas || []).filter(v => String(v.estado).toLowerCase() === 'activo');
+
+      if (ventasActivas.length === 0) {
+        this.$q.notify({ type: 'warning', message: 'No hay ventas ACTIVAS para exportar' });
+        return;
+      }
+
+      // 2) Exportar
+      const data = [{
         columns: [
-          {label: "ID", value: "id"},
-          {label: "Fecha", value: "fecha"},
-          {label: "Cliente", value: "cliente.nombre"},
-          {label: "Usuario", value: "user.name"},
-          {label: "Estado", value: "estado"},
-          {label: "Total", value: "total"},
-          {label: "Detalle", value: "detailsText"},
-          {label: "Tipo venta", value: "tipo_venta"},
+          { label: "ID",        value: "id" },
+          { label: "Fecha",     value: "fecha" },
+          { label: "Cliente",   value: "cliente.nombre" },
+          { label: "Usuario",   value: "user.name" },
+          { label: "Estado",    value: "estado" },          // seguirá apareciendo "Activo"
+          { label: "Total",     value: "total" },
+          { label: "Detalle",   value: "detailsText" },
+          { label: "Tipo venta",value: "tipo_venta" },
         ],
-        content: this.ventas
-      }]
-      Excel.export(data,'Ventas')
+        content: ventasActivas
+      }];
+
+      Excel.export(data, 'Ventas_Activas');
     },
     usersGet() {
       this.$axios.get('users').then(res => {
