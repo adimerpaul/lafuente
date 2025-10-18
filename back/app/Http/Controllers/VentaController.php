@@ -215,7 +215,7 @@ class VentaController extends Controller
                 return $venta;
             }
 
-            // Restaurar stock a cada lote
+            // Restaurar stock lote x lote
             foreach ($venta->ventaDetalles as $det) {
                 if ($det->compra_detalle_id) {
                     $cd = CompraDetalle::where('id', $det->compra_detalle_id)->lockForUpdate()->first();
@@ -226,6 +226,10 @@ class VentaController extends Controller
                 }
             }
 
+            // 3) Desligar de paciente para que NO aparezca en el historial del paciente
+            DB::table('paciente_ventas')->where('venta_id', $venta->id)->delete();
+
+            // 4) Marcar como anulada
             $venta->estado = 'Anulada';
             $venta->save();
 

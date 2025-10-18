@@ -31,6 +31,8 @@ class PacienteVentaController extends Controller{
         $hora = date('H:i');
         $pacienteVenta->hora = $hora;
         $pacienteVenta->save();
+        $venta->paciente_id_ref = $request->paciente_id;
+        $venta->save();
         return response()->json($pacienteVenta);
     }
     function destroy(PacienteVenta $paciente_venta){

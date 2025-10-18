@@ -20,7 +20,8 @@ class Venta extends Model{
         'tipo_venta',
         'tipo_pago',
         'pagado_interno',
-        'doctor_id'
+        'doctor_id',
+        'paciente_id_ref'
     ];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     function user(){
