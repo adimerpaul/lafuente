@@ -19,7 +19,8 @@ class Venta extends Model{
         'total',
         'tipo_venta',
         'tipo_pago',
-        'pagado_interno'
+        'pagado_interno',
+        'doctor_id'
     ];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     function user(){
@@ -39,5 +40,9 @@ class Venta extends Model{
         }
         $detailsText = substr($detailsText, 0, -1);
         return $detailsText;
+    }
+    public function doctor()
+    {
+        return $this->belongsTo(\App\Models\Doctor::class, 'doctor_id');
     }
 }

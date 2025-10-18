@@ -47,7 +47,7 @@ class VentaController extends Controller
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',
-                'tipo_comprobante','total','tipo_venta','tipo_pago','pagado_interno',
+                'tipo_comprobante','total','tipo_venta','tipo_pago','pagado_interno','doctor_id'
             ]));
 
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
@@ -153,7 +153,7 @@ class VentaController extends Controller
             DB::commit();
 
             // Respuesta con usuario, cliente y detalles + producto
-            return Venta::with('user', 'ventaDetalles.producto', 'cliente')->findOrFail($venta->id);
+            return Venta::with('user', 'ventaDetalles.producto', 'cliente','doctor')->findOrFail($venta->id);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error al guardar la venta: ' . $e->getMessage()], 500);

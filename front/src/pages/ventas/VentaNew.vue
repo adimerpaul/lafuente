@@ -1,11 +1,11 @@
 <template>
   <q-page class="q-pa-xs">
-    <q-card flat bordered >
+    <q-card flat bordered>
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Ventas</div>
-        <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
-        <q-btn flat round dense icon="refresh" @click="productosGet" :loading="loading" />
-        <q-space />
+        <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)"/>
+        <q-btn flat round dense icon="refresh" @click="productosGet" :loading="loading"/>
+        <q-space/>
       </q-card-section>
 
       <q-card-section class="q-pa-none">
@@ -24,7 +24,7 @@
                 @update:modelValue="productosGet"
               >
                 <template #append>
-                  <q-btn flat round dense icon="search" />
+                  <q-btn flat round dense icon="search"/>
                 </template>
               </q-input>
 
@@ -73,7 +73,7 @@
             <!-- CARRITO / DETALLE DE VENTA -->
             <div class="col-12 col-md-5 q-pa-xs">
               <div class="text-right flex items-center">
-                <q-space />
+                <q-space/>
                 <q-btn
                   icon="delete"
                   size="10px"
@@ -116,10 +116,10 @@
                   <td>{{ item.lote || '—' }}</td>
                   <td>{{ item.fecha_vencimiento || '—' }}</td>
                   <td style="padding:0;margin:0;">
-                    <input v-model.number="item.cantidad" type="number" style="width:60px;" min="1" />
+                    <input v-model.number="item.cantidad" type="number" style="width:60px;" min="1"/>
                   </td>
                   <td style="padding:0;margin:0;">
-                    <input v-model.number="item.precio" type="number" style="width:70px;" step="0.01" />
+                    <input v-model.number="item.precio" type="number" style="width:70px;" step="0.01"/>
                   </td>
                   <td class="text-right">
                     {{ (Number(item.cantidad) * Number(item.precio)).toFixed(2) }} Bs
@@ -156,28 +156,42 @@
       <q-card style="max-width: 750px; width: 90vw">
         <q-card-section class="q-pb-none row items-center">
           <div class="text-h6">Nueva venta</div>
-          <q-space />
-          <q-btn flat round dense icon="close" @click="ventaDialog = false" />
+          <q-space/>
+          <q-btn flat round dense icon="close" @click="ventaDialog = false"/>
         </q-card-section>
 
         <q-card-section>
           <q-form @submit="submitVenta">
             <div class="row">
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-input v-model="venta.nit" outlined dense label="CI/NIT" @update:modelValue="searchCliente" :debounce="500"/>
+                <q-input v-model="venta.nit" outlined dense label="CI/NIT" @update:modelValue="searchCliente"
+                         :debounce="500"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-input v-model="venta.nombre" outlined dense label="Nombre" />
+                <q-input v-model="venta.nombre" outlined dense label="Nombre"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-input v-model="venta.email" outlined dense label="Email" />
+                <q-input v-model="venta.email" outlined dense label="Email"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta" :options="['Internado', 'Externo']" />
+                <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta"
+                          :options="['Internado', 'Externo']"/>
+              </div>
+              <!-- 🔵 Doctor -->
+              <div class="col-12 col-md-6 q-pa-xs">
+                <q-select
+                  v-model="venta.doctor_id"
+                  :options="doctores.map(d => ({ label: `${d.nombre} — ${d.especialidad || 'SN'}`, value: d.id }))"
+                  outlined dense
+                  label="Doctor"
+                  clearable
+                  emit-value
+                  map-options
+                />
               </div>
               <!--              <div class="col-12 complemtno-->
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-input v-model="venta.complemento" outlined dense label="Complemento" />
+                <q-input v-model="venta.complemento" outlined dense label="Complemento"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-select v-model="venta.tipo_pago" outlined dense label="Tipo de pago" :options="['Efectivo', 'QR']"/>
@@ -230,7 +244,7 @@
                   <tr>
                     <td colspan="6" class="text-right text-bold">Efectivo</td>
                     <td class="text-right">
-                      <input v-model.number="efectivo" type="number" step="0.01" style="width: 100px" />
+                      <input v-model.number="efectivo" type="number" step="0.01" style="width: 100px"/>
                     </td>
                   </tr>
                   <tr>
@@ -242,7 +256,8 @@
               </div>
 
               <div class="col-12 q-pa-xs">
-                <q-btn label="Realizar venta" color="positive" class="full-width" no-caps :loading="loading" type="submit" />
+                <q-btn label="Realizar venta" color="positive" class="full-width" no-caps :loading="loading"
+                       type="submit"/>
               </div>
             </div>
           </q-form>
@@ -255,8 +270,8 @@
       <q-card style="max-width: 700px; width: 90vw">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Seleccionar lote</div>
-          <q-space />
-          <q-btn flat round dense icon="close" @click="loteDialog = false" />
+          <q-space/>
+          <q-btn flat round dense icon="close" @click="loteDialog = false"/>
         </q-card-section>
 
         <q-card-section>
@@ -271,7 +286,7 @@
               <th>Lote</th>
               <th>Vencimiento</th>
               <th>Disponible</th>
-<!--              <th>Precio venta</th>-->
+              <!--              <th>Precio venta</th>-->
               <th>Elegir</th>
             </tr>
             </thead>
@@ -280,13 +295,13 @@
               <td colspan="6" class="text-center">Cargando…</td>
             </tr>
             <tr v-for="(l, i) in lotes" :key="l.id">
-              <td>{{ i+1 }}</td>
+              <td>{{ i + 1 }}</td>
               <td>{{ l.lote || '—' }}</td>
               <td>{{ l.fecha_vencimiento || '—' }}</td>
               <td class="text-right">{{ l.disponible }}</td>
-<!--              <td class="text-right">{{ Number(l.precio_venta || 0).toFixed(2) }} Bs</td>-->
+              <!--              <td class="text-right">{{ Number(l.precio_venta || 0).toFixed(2) }} Bs</td>-->
               <td>
-                <q-btn size="xs" color="primary" flat no-caps label="Elegir" @click="onPickLote(l)" />
+                <q-btn size="xs" color="primary" flat no-caps label="Elegir" @click="onPickLote(l)"/>
               </td>
             </tr>
             <tr v-if="!lotesLoading && lotes.length === 0">
@@ -307,14 +322,14 @@
               />
             </div>
             <div class="col-12 col-md-4">
-<!--              <q-input-->
-<!--                v-model.number="lotePrecio"-->
-<!--                type="number"-->
-<!--                step="0.01"-->
-<!--                dense outlined-->
-<!--                label="Precio (editable)"-->
-<!--              />-->
-<!--              mostrar el lore y fecha de vencimiento selecionado-->
+              <!--              <q-input-->
+              <!--                v-model.number="lotePrecio"-->
+              <!--                type="number"-->
+              <!--                step="0.01"-->
+              <!--                dense outlined-->
+              <!--                label="Precio (editable)"-->
+              <!--              />-->
+              <!--              mostrar el lore y fecha de vencimiento selecionado-->
               <div>
                 <div><b>Lote:</b> {{ loteSelected.lote || '—' }}</div>
                 <div><b>Vence:</b> {{ loteSelected.fecha_vencimiento || '—' }}</div>
@@ -339,18 +354,19 @@
 </template>
 
 <script>
-import { Imprimir } from "src/addons/Imprimir";
+import {Imprimir} from "src/addons/Imprimir";
 
 export default {
   name: "VentasNew",
   data() {
     return {
-      codigoTipoDocumentoIdentidades : [
-        { value: 1, label: 'CI - CEDULA DE IDENTIDAD' },
-        { value: 2, label: 'CEX - CED ULA DE IDENTIDAD DE EXTRANJERO' },
-        { value: 5, label: 'NIT - NÚMERO DE IDENTIFICACIÓN TRIBUTARIA' },
-        { value: 3, label: 'PAS - PASAPORTE' },
-        { value: 4, label: 'OD - OTRO DOCUMENTO DE IDENTIDAD' },
+      doctores: [],
+      codigoTipoDocumentoIdentidades: [
+        {value: 1, label: 'CI - CEDULA DE IDENTIDAD'},
+        {value: 2, label: 'CEX - CED ULA DE IDENTIDAD DE EXTRANJERO'},
+        {value: 5, label: 'NIT - NÚMERO DE IDENTIFICACIÓN TRIBUTARIA'},
+        {value: 3, label: 'PAS - PASAPORTE'},
+        {value: 4, label: 'OD - OTRO DOCUMENTO DE IDENTIDAD'},
       ],
       loading: false,
       ventaDialog: false,
@@ -361,6 +377,7 @@ export default {
         codigoTipoDocumentoIdentidad: 1,
         tipo_venta: "Internado",
         tipo_pago: "Efectivo",
+        doctor_id: null,
       },
 
       pagination: {
@@ -393,6 +410,7 @@ export default {
       this.$refs.inputBuscarProducto?.focus();
     });
     this.productosGet();
+    this.doctoresGet();
 
     // (Opcional) Voz
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
@@ -412,6 +430,13 @@ export default {
   },
 
   methods: {
+    doctoresGet() {                // 🔵 obtiene doctores
+      this.$axios.get('doctores')
+        .then(res => {
+          this.doctores = res.data
+        })
+        .catch(() => this.$q.notify({type: 'negative', message: 'No se pudieron cargar los doctores'}));
+    },
     // ==== LOTES ====
     async openLoteDialog(producto) {
       this.loteProducto = producto;
@@ -427,7 +452,10 @@ export default {
         }
       } catch (e) {
         console.error(e);
-        this.$alert?.error?.('No se pudieron cargar los lotes') || this.$q.notify({ type:'negative', message:'No se pudieron cargar los lotes' });
+        this.$alert?.error?.('No se pudieron cargar los lotes') || this.$q.notify({
+          type: 'negative',
+          message: 'No se pudieron cargar los lotes'
+        });
         this.loteDialog = false;
       } finally {
         this.lotesLoading = false;
@@ -443,13 +471,16 @@ export default {
 
     confirmarLote() {
       if (!this.loteSelected) {
-        this.$alert?.error?.('Selecciona un lote') || this.$q.notify({ type:'negative', message:'Selecciona un lote' });
+        this.$alert?.error?.('Selecciona un lote') || this.$q.notify({type: 'negative', message: 'Selecciona un lote'});
         return;
       }
       const disp = Number(this.loteSelected.disponible || 0);
       const cant = Number(this.loteCantidad || 0);
       if (cant <= 0 || cant > disp) {
-        this.$alert?.error?.('Cantidad inválida para el lote') || this.$q.notify({ type:'negative', message:'Cantidad inválida para el lote' });
+        this.$alert?.error?.('Cantidad inválida para el lote') || this.$q.notify({
+          type: 'negative',
+          message: 'Cantidad inválida para el lote'
+        });
         return;
       }
       const precio = Number(this.lotePrecio || 0);
@@ -476,14 +507,14 @@ export default {
     // ==== CLIENTE & FLUJO VENTA ====
     searchCliente() {
       this.loading = true;
-      this.$axios.post("searchCliente", { nit: this.venta.nit })
+      this.$axios.post("searchCliente", {nit: this.venta.nit})
         .then((res) => {
           this.venta.nombre = "SN";
           this.venta.email = "";
           this.venta.codigoTipoDocumentoIdentidad = 1;
           if (res.data.nombre) this.venta.nombre = res.data.nombre;
           if (res.data.email) this.venta.email = res.data.email;
-          if (res.data.codigoTipoDocumentoIdentidad) this.venta.codigoTipoDocumentoIdentidad =  parseInt(res.data.codigoTipoDocumentoIdentidad);
+          if (res.data.codigoTipoDocumentoIdentidad) this.venta.codigoTipoDocumentoIdentidad = parseInt(res.data.codigoTipoDocumentoIdentidad);
           if (res.data.complemento) this.venta.complemento = res.data.complemento;
         })
         .catch((error) => console.error(error))
@@ -493,7 +524,7 @@ export default {
     clickDialogVenta() {
       if (this.productosVentas.length === 0) {
         this.$alert?.error?.("Debe agregar al menos un producto a la venta")
-        || this.$q.notify({ type: 'negative', message: 'Debe agregar al menos un producto a la venta' });
+        || this.$q.notify({type: 'negative', message: 'Debe agregar al menos un producto a la venta'});
         return;
       }
       this.ventaDialog = true;
@@ -540,6 +571,7 @@ export default {
         tipo_venta: this.venta.tipo_venta,
         tipo_pago: this.venta.tipo_pago,
         receta_id: this.receta_id,
+        doctor_id: this.venta.doctor_id,
       }).then((res) => {
         this.ventaDialog = false;
         this.$alert?.success?.("Venta realizada con éxito");
@@ -571,7 +603,7 @@ export default {
         this.activeField = field;
         this.recognition.start();
       } else {
-        this.$q.notify({ color: "negative", message: "El reconocimiento de voz no está soportado en este navegador" });
+        this.$q.notify({color: "negative", message: "El reconocimiento de voz no está soportado en este navegador"});
       }
     },
   },
