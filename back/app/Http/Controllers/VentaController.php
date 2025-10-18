@@ -77,11 +77,12 @@ class VentaController extends Controller
             // 1) Cliente
             $cliente = $this->clienteUpdateOrCreate($request);
 
+            $fecha = $request->input('fecha') ?? date('Y-m-d');
             // 2) Venta cabecera
             $request->merge([
                 'user_id'    => auth()->id(),
                 'cliente_id' => $cliente->id,
-                'fecha'      => date('Y-m-d'),
+                'fecha'      => $fecha,
                 'hora'       => date('H:i:s'),
                 'estado'     => 'Activo',
                 'tipo_comprobante' => 'Venta',
