@@ -145,7 +145,7 @@
             </div>
           </td>
           <td>
-            <q-chip :color="venta.tipo_venta === 'Interno' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
+            <q-chip :color="venta.tipo_venta === 'Internado' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
         </tr>
       </template>
@@ -871,7 +871,7 @@ export default {
       return [{label: 'Todos', value: ''}, ...this.users.map(user => ({label: user.name, value: user.id}))]
     },
     totalInternos() {
-      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Interno' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Internado' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     },
     totalExternos() {
       return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Externo' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)

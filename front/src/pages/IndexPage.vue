@@ -119,7 +119,7 @@
               <td>{{ v.id }}</td>
               <td>{{ v.fecha }}</td>
               <td>{{ v.nombre }}</td>
-              <td>{{ v.doctor ? v.doctor.nombre : '-' }}</td>
+              <td>{{ v.doctor ? v.doctor?.nombre : '-' }}</td>
               <td class="text-bold">{{ fmt(v.total) }} Bs</td>
               <td>
                 <q-chip :color="v.tipo_venta === 'Interno' ? 'indigo' : 'orange'" text-color="white" dense>

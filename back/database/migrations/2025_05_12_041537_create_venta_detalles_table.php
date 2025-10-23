@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('unidad')->nullable();
             $table->string('lote')->nullable();
             $table->date('fecha_vencimiento')->nullable();
-            $table->integer('precio')->nullable();
+            $table->float('precio', 10, 2)->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
