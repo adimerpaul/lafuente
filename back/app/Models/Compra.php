@@ -33,9 +33,12 @@ class Compra extends Model{
     function getDetailsTextAttribute(){
         $detailsText = '';
         foreach ($this->compraDetalles as $compraDetalle) {
-            $detailsText .= $compraDetalle->cantidad . ' ' . $compraDetalle->producto->nombre . ',';
+            $producto = $compraDetalle->producto;
+
+            $nombre = $producto ? $producto->nombre : 'Producto eliminado';
+
+            $detailsText .= $compraDetalle->cantidad . ' ' . $nombre . ',';
         }
-        $detailsText = substr($detailsText, 0, -1);
-        return $detailsText;
+        return rtrim($detailsText, ',');
     }
 }
