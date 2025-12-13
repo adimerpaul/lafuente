@@ -136,6 +136,7 @@ class VentaController extends Controller
                 'hora'       => date('H:i:s'),
                 'estado'     => 'Activo',
                 'tipo_comprobante' => 'Venta',
+                'tipo_venta' => ($request->input('tipo_venta')=='Interno' || $request->input('tipo_venta')=='Internado')?'Internado':'Externo',
             ]);
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
