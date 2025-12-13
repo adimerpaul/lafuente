@@ -29,6 +29,8 @@ class CompraController extends Controller{
             ->whereNotNull('fecha_vencimiento')
             ->whereBetween('fecha_vencimiento', [$hoy->format('Y-m-d'), $limite->format('Y-m-d')])
             ->orderBy('fecha_vencimiento')
+            ->where('cantidad_venta', '>', 0)
+            ->where('estado', 'Activo')
             ->get();
 
         return response()->json($productos);
@@ -42,6 +44,8 @@ class CompraController extends Controller{
             ->whereNotNull('fecha_vencimiento')
             ->where('fecha_vencimiento', '<', $hoy)
             ->orderBy('fecha_vencimiento', 'desc')
+            ->where('cantidad_venta', '>', 0)
+            ->where('estado', 'Activo')
             ->paginate($perPage);
 
         return response()->json($productos);

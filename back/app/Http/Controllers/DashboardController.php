@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Compra;
 use App\Models\Venta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -19,25 +20,38 @@ class DashboardController extends Controller
             $hasta = now()->toDateString();
         }
 
-        // Últimas ventas ACTIVAS en el rango
-        $ventas = Venta::with('doctor')
+        // ==========================
+        // ÚLTIMAS VENTAS (ACTIVAS)
+        // ==========================
+        $ventas = Venta::with(['doctor', 'user'])
             ->where('estado', 'Activo')
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderByDesc('fecha')
+            ->orderByDesc('hora')
             ->orderByDesc('id')
             ->take(10)
-            ->get();
+            ->get()
+            // normaliza el texto (si te quedó "Interno" antiguo)
+            ->map(function ($v) {
+                if (($v->tipo_venta ?? '') === 'Interno') $v->tipo_venta = 'Internado';
+                return $v;
+            });
 
-        // KPIs: solo ventas ACTIVAS
+        // ==========================
+        // KPIs (solo ACTIVAS)
+        // Internado = Internado o Interno (legacy)
+        // ==========================
         $totales = Venta::selectRaw("
-                SUM(CASE WHEN tipo_venta='Interno' THEN total ELSE 0 END) as interno,
+                SUM(CASE WHEN tipo_venta IN ('Internado','Interno') THEN total ELSE 0 END) as internado,
                 SUM(CASE WHEN tipo_venta='Externo' THEN total ELSE 0 END) as externo
             ")
             ->where('estado', 'Activo')
             ->whereBetween('fecha', [$desde, $hasta])
             ->first();
 
+        // ==========================
         // Ventas diarias (solo ACTIVAS)
+        // ==========================
         $ventasPorDia = Venta::where('estado', 'Activo')
             ->whereBetween('fecha', [$desde, $hasta])
             ->selectRaw('DATE(fecha) as dia, SUM(total) as total')
@@ -48,7 +62,9 @@ class DashboardController extends Controller
         $dias = $ventasPorDia->pluck('dia');
         $ventasDiarias = $ventasPorDia->pluck('total');
 
-        // Series mensuales del AÑO ACTUAL (solo ACTIVAS)
+        // ==========================
+        // Series mensuales del AÑO ACTUAL
+        // ==========================
         $anio = now()->year;
 
         $ventasMesRaw = Venta::where('estado', 'Activo')
@@ -57,7 +73,6 @@ class DashboardController extends Controller
             ->groupBy('m')
             ->pluck('total', 'm');
 
-        // Para compras, si también manejas anuladas, filtra por estado
         $comprasMesRaw = Compra::where('estado', 'Activo')
             ->whereYear('fecha', $anio)
             ->selectRaw('MONTH(fecha) as m, SUM(total) as total')
@@ -73,7 +88,9 @@ class DashboardController extends Controller
             $comprasMes[] = (float) ($comprasMesRaw[$m] ?? 0);
         }
 
-        // Utilidad en el rango (solo ACTIVAS)
+        // ==========================
+        // Utilidad en el rango
+        // ==========================
         $ventasTotalRango  = (float) Venta::where('estado', 'Activo')
             ->whereBetween('fecha', [$desde, $hasta])
             ->sum('total');
@@ -84,26 +101,46 @@ class DashboardController extends Controller
 
         $utilidad = $ventasTotalRango - $comprasTotalRango;
 
+        // ==========================
+        // Ventas por usuario (rango)
+        // ==========================
+        $ventasPorUsuario = Venta::where('estado', 'Activo')
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->join('users', 'users.id', '=', 'ventas.user_id')
+            ->selectRaw("users.name as usuario, SUM(ventas.total) as total")
+            ->groupBy('users.name')
+            ->orderByDesc('total')
+            ->limit(12)
+            ->get();
+
+        $usuarios = $ventasPorUsuario->pluck('usuario');
+        $ventasUsuarios = $ventasPorUsuario->pluck('total');
+
         return response()->json([
-            'ventas'         => $ventas,
-            'totales'        => [
-                'interno' => (float) ($totales->interno ?? 0),
-                'externo' => (float) ($totales->externo ?? 0)
+            'ventas' => $ventas,
+
+            'totales' => [
+                'internado' => (float) ($totales->internado ?? 0),
+                'externo'   => (float) ($totales->externo ?? 0),
             ],
-            'utilidad'       => $utilidad,
+
+            'utilidad' => (float) $utilidad,
 
             // bar: ventas diarias
-            'dias'           => $dias,
-            'ventasDiarias'  => $ventasDiarias,
+            'dias'          => $dias,
+            'ventasDiarias' => $ventasDiarias,
 
             // line: compras vs ventas (año)
-            'meses'          => $meses,
-            'ventasMes'      => $ventasMes,
-            'comprasMes'     => $comprasMes,
+            'meses'      => $meses,
+            'ventasMes'  => $ventasMes,
+            'comprasMes' => $comprasMes,
 
-            // eco del rango
-            'desde'          => $desde,
-            'hasta'          => $hasta,
+            // bar: ventas por usuario (rango)
+            'usuarios'       => $usuarios,
+            'ventasUsuarios' => $ventasUsuarios,
+
+            'desde' => $desde,
+            'hasta' => $hasta,
         ]);
     }
 }

@@ -38,7 +38,7 @@
           <tr v-for="(p, i) in productos" :key="p.id">
             <td>{{ (pagina - 1) * porPagina + i + 1 }}</td>
             <td>{{ p.producto?.nombre }}</td>
-            <td>{{ p.cantidad }}</td>
+            <td>{{ p.cantidad_venta }}</td>
             <td>{{ p.lote }}</td>
             <td>{{ p.fecha_vencimiento }}</td>
             <td>
