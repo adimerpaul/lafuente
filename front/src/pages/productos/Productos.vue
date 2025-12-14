@@ -1,49 +1,5 @@
 <template>
   <q-page class="q-pa-xs">
-<!--    <q-table :rows="productos" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"-->
-<!--              title="Productos" hide-bottom>-->
-<!--      <template v-slot:top-right>-->
-<!--&lt;!&ndash;        btn descargar excel&ndash;&gt;-->
-<!--        <q-btn color="primary" label="Descargar" no-caps  icon="fa-solid fa-file-excel" :loading="loading" @click="exportExcel" />-->
-<!--          <q-btn color="green" label="Nuevo" @click="productoNew" no-caps  icon="add_circle_outline" :loading="loading" />-->
-<!--          <q-input v-model="filter" label="Buscar" dense outlined debounce="300" @update:modelValue="productosGet">-->
-<!--            <template v-slot:append>-->
-<!--              <q-icon name="search" />-->
-<!--            </template>-->
-<!--          </q-input>-->
-<!--      </template>-->
-<!--      <template v-slot:body-cell-actions="props">-->
-<!--        <q-td :props="props">-->
-<!--          <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">-->
-<!--              <q-list>-->
-<!--                <q-item clickable @click="productoEdit(props.row)" v-close-popup>-->
-<!--                  <q-item-section avatar>-->
-<!--                    <q-icon name="edit" />-->
-<!--                  </q-item-section>-->
-<!--                  <q-item-section>-->
-<!--                    <q-item-label>Editar</q-item-label>-->
-<!--                  </q-item-section>-->
-<!--                </q-item>-->
-<!--                <q-item clickable @click="productoDelete(props.row.id)" v-close-popup>-->
-<!--                  <q-item-section avatar>-->
-<!--                    <q-icon name="delete" />-->
-<!--                  </q-item-section>-->
-<!--                  <q-item-section>-->
-<!--                    <q-item-label>Eliminar</q-item-label>-->
-<!--                  </q-item-section>-->
-<!--                </q-item>-->
-<!--              </q-list>-->
-<!--          </q-btn-dropdown>-->
-<!--        </q-td>-->
-<!--      </template>-->
-<!--      <template v-slot:body-cell-role="props">-->
-<!--        <q-td :props="props">-->
-<!--          <q-chip :label="props.row.role"-->
-<!--                  :color="props.row.color"-->
-<!--                  text-color="white" dense  size="14px"/>-->
-<!--        </q-td>-->
-<!--      </template>-->
-<!--    </q-table>-->
 <q-card flat bordered>
   <q-card-section class="q-pa-xs">
     <div class="text-right">
@@ -154,18 +110,6 @@
     </q-markup-table>
   </q-card-section>
 </q-card>
-<!--    <pre>{{ productos }}</pre>-->
-<!--    [-->
-<!--    {-->
-<!--    "id": 3284,-->
-<!--    "nombre": "3-A OFTENO 0,1 % 5 ML",-->
-<!--    "descripcion": "Antiinflamatorio no esteroideo",-->
-<!--    "unidad": "SOLUCION OFTALMICA",-->
-<!--    "precio": 1,-->
-<!--    "stock": null,-->
-<!--    "stock_minimo": null,-->
-<!--    "stock_maximo": null-->
-<!--    },-->
     <q-dialog v-model="productoDialog" persistent>
       <q-card style="width: 400px;margin: 0 auto">
         <q-card-section class="q-pb-none row items-center">

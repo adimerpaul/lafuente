@@ -18,6 +18,10 @@ const routes = [
       { path: 'productos-vencidos', name: 'productos-vencidos', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true } },
       // doctores
       { path: 'doctores', name: 'doctores', component: () => import('pages/doctores/Doctores.vue'), meta: { requiresAuth: true } },
+      {
+        path: '/productos-precios',
+        component: () => import('pages/productos/ProductosPreciosPage.vue')
+      }
     ]
   },
   {

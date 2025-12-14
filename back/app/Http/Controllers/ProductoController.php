@@ -8,6 +8,21 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductoController extends Controller{
+    public function precios(Request $request)
+    {
+        $search  = trim($request->input('search', ''));
+        $perPage = (int) $request->input('per_page', 24);
+
+        $productos = Producto::query()
+            ->select(['id','nombre','precio','imagen'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%");
+            })
+            ->orderBy('nombre')
+            ->paginate($perPage);
+
+        return response()->json($productos);
+    }
     public function historialComprasVentas($productoId)
     {
         $detalles = \App\Models\CompraDetalle::with('compra')

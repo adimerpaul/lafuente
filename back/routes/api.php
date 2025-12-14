@@ -94,6 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ventasDevolverProducto', [App\Http\Controllers\VentaController::class, 'ventasDevolverProducto']);
 
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index']);
+
+    Route::get('/productos-precios', [App\Http\Controllers\ProductoController::class, 'precios']);
+
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);

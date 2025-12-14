@@ -4,90 +4,145 @@
     <meta charset="utf-8">
     <title>Proforma de Farmacia</title>
     <style>
-        @page { size: letter; margin: 10px 10px; }
-        *{ box-sizing:border-box; font-family: DejaVu Sans, Arial, Helvetica, sans-serif; }
-        body{ margin:0; color:#111827; font-size:9.5px; line-height:1.05; }
+        @page {
+            size: letter;
+            margin: 25px 25px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            color: #111827;
+            font-size: 12px;
+            line-height: 1.05;
+        }
 
         /* ===== HEADER GENERAL (UNA SOLA VEZ) ===== */
-        .header{
-            display:flex;
-            justify-content:space-between;
-            align-items:flex-end;
-            border-bottom:2px solid #0ea5e9;
-            padding-bottom:6px;
-            margin-bottom:6px;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #0ea5e9;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
         }
-        .brand{ font-weight:800; color:#0ea5e9; display:flex; align-items:center; gap:8px; }
-        .logo{
-            width:22px; height:22px;
-            border:2px solid #0ea5e9;
-            border-radius:5px;
-            display:flex; align-items:center; justify-content:center;
-            font-size:12px; font-weight:900;
-            line-height:1;
-        }
-        .title{ font-size:13px; font-weight:900; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.6px; }
-        .meta{ font-size:9px; color:#111827; text-align:right; }
 
-        .patient{
-            display:flex;
-            justify-content:space-between;
-            align-items:flex-end;
-            background:#f0f9ff;
-            border:1px solid #cce7f6;
-            padding:6px 6px;
-            margin-bottom:6px;
-            border-radius:6px;
+        .brand {
+            font-weight: 800;
+            color: #0ea5e9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .patient .left b{ font-weight:800; }
-        .muted{ color:#6b7280; font-size:9px; }
+
+        .logo {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #0ea5e9;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: 900;
+            color: #0ea5e9;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .meta {
+            font-size: 9px;
+            color: #111827;
+            text-align: right;
+        }
+
+        .patient {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: #f0f9ff;
+            border: 1px solid #cce7f6;
+            padding: 6px 6px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+        }
+
+        .patient .left b {
+            font-weight: 800;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 9px;
+        }
 
         /* ===== BLOQUES DE VENTA ===== */
-        .venta{
-            width:100%;
-            border-collapse:collapse;
-            margin-bottom:6px;
-        }
-        .venta .vhead td{
-            background:#f8fafc;
-            border:1px solid #e5e7eb;
-            padding:4px 5px;
-            font-size:9px;
-        }
-        .venta th{
-            background:#e2e8f0;
-            border:1px solid #cbd5e1;
-            padding:3px 4px;
-            font-size:9px;
-            text-align:center;
-            font-weight:800;
-        }
-        .venta td{
-            border:1px solid #e5e7eb;
-            padding:3px 4px;
-            font-size:9px;
-            vertical-align:top;
-        }
-        .right{ text-align:right; }
-        .center{ text-align:center; }
-
-        .total td{
-            background:#f8fafc;
-            font-weight:900;
+        .venta {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
         }
 
-        .grand{
-            margin-top:6px;
-            display:flex;
-            justify-content:flex-end;
-            font-size:10px;
-            font-weight:900;
-            padding-top:6px;
-            border-top:2px solid #0ea5e9;
+        .venta .vhead td {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            padding: 4px 5px;
+            font-size: 9px;
+        }
+
+        .venta th {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            padding: 3px 4px;
+            font-size: 9px;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .venta td {
+            border: 1px solid #e5e7eb;
+            padding: 3px 4px;
+            font-size: 9px;
+            vertical-align: top;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .total td {
+            background: #f8fafc;
+            font-weight: 900;
+        }
+
+        .grand {
+            margin-top: 6px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 10px;
+            font-weight: 900;
+            padding-top: 6px;
+            border-top: 2px solid #0ea5e9;
         }
 
         /* Para que sea más compacto */
-        .nowrap{ white-space:nowrap; }
+        .nowrap {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +164,7 @@
     <!-- ===== HEADER (UNA VEZ) ===== -->
 <div class="header">
     <div class="brand">
-{{--        <div class="logo">LF</div>--}}
+        {{--        <div class="logo">LF</div>--}}
         <img src="{{ public_path('logo.jpg') }}" alt="CLÍNICA LA FUENTE" style="height:28px;">
         <div>CLÍNICA LA FUENTE</div>
     </div>
@@ -159,7 +214,9 @@
         <tr class="vhead">
             <td colspan="6">
                 <b>FECHA:</b> <span class="nowrap">{{ $fechaVenta }}</span>
-                @if($horaVenta) &nbsp;<span class="muted">({{ $horaVenta }})</span> @endif
+                @if($horaVenta)
+                    &nbsp;<span class="muted">({{ $horaVenta }})</span>
+                @endif
                 &nbsp; | &nbsp;
                 <b>TIPO:</b> {{ $tipoVenta ?: '—' }}
                 &nbsp; | &nbsp;
@@ -198,7 +255,9 @@
                 <td class="right">{{ number_format($imp, 2) }}</td>
             </tr>
         @empty
-            <tr><td colspan="6" class="center muted">Sin productos</td></tr>
+            <tr>
+                <td colspan="6" class="center muted">Sin productos</td>
+            </tr>
         @endforelse
 
         <tr class="total">

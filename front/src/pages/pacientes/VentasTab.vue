@@ -55,8 +55,9 @@
     <q-list bordered>
       <q-item v-for="(pv, index) in paciente.paciente_ventas" :key="index">
         <q-item-section avatar>
+<!--          <pre>{{pv}}</pre>-->
           <q-avatar>
-            <q-btn :label="pv.id" color="primary" flat />
+            <q-btn :label="pv.venta_id" color="primary" flat />
           </q-avatar>
         </q-item-section>
         <q-item-section>
@@ -472,7 +473,7 @@ export default {
         nombre: "SN",
         email: "",
         codigoTipoDocumentoIdentidad: 1,
-        tipo_venta: "Externo",
+        tipo_venta: "Internado",
         tipo_pago: "Efectivo",
         complemento: "",
         doctor_id: null

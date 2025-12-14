@@ -171,6 +171,7 @@ export default {
         { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas'},
         { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer'},
         { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
+        { title: 'Productos y precios', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos'},
       ],
       notificaciones: [],
     }
