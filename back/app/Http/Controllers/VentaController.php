@@ -295,7 +295,7 @@ class VentaController extends Controller
     public function tipoVentasChange(Request $request, $id)
     {
         $venta = Venta::findOrFail($id);
-        $venta->tipo_venta = $venta->tipo_venta === 'Interno' ? 'Externo' : 'Interno';
+        $venta->tipo_venta = $venta->tipo_venta === 'Internado' ? 'Externo' : 'Internado';
         $venta->save();
         return $venta;
     }
