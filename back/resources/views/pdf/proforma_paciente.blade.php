@@ -6,7 +6,7 @@
     <style>
         @page {
             size: letter;
-            margin: 25px 25px;
+            margin: 30px 30px;
         }
 
         * {

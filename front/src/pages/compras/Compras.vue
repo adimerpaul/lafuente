@@ -102,6 +102,11 @@
               <q-item-section avatar><q-icon name="delete" /></q-item-section>
               <q-item-section>Anular</q-item-section>
             </q-item>
+<!--            ca,biar lote y fecha de vencimiento-->
+            <q-item clickable @click="cambiarLoteFecha(compra)" v-close-popup>
+              <q-item-section avatar><q-icon name="edit" /></q-item-section>
+              <q-item-section>Cambiar Lote/Fecha Venc.</q-item-section>
+            </q-item>
           </q-btn-dropdown>
         </td>
         <td>{{ compra.id }}</td>
@@ -120,6 +125,102 @@
       </tbody>
     </q-markup-table>
   </q-page>
+  <q-dialog v-model="dialogLoteFecha" persistent>
+    <q-card style="min-width: 650px;">
+      <q-card-section>
+        <div class="text-h6">Cambiar Lote y Fecha de Vencimiento</div>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="q-pa-sm">
+          <div class="q-gutter-md">
+<!--            <pre>{{compraSeleccionada}}</pre>-->
+<!--            {-->
+<!--            "id": 1808,-->
+<!--            "user_id": 23,-->
+<!--            "proveedor_id": 22,-->
+<!--            "fecha": "2026-01-15",-->
+<!--            "hora": "17:09:44",-->
+<!--            "ci": null,-->
+<!--            "nombre": "SIGMA",-->
+<!--            "estado": "Activo",-->
+<!--            "total": "287.04",-->
+<!--            "tipo_pago": "Efectivo",-->
+<!--            "nro_factura": "10558",-->
+<!--            "detailsText": "6 NOOPIRAM AMPOLLA",-->
+<!--            "user": {-->
+<!--            "id": 23,-->
+<!--            "name": "KAREN SOLIZ",-->
+<!--            "username": "KAREN",-->
+<!--            "email": null,-->
+<!--            "role": "Farmacia",-->
+<!--            "color": "green"-->
+<!--            },-->
+<!--            "proveedor": {-->
+<!--            "id": 22,-->
+<!--            "nombre": "SIGMA",-->
+<!--            "ci": null,-->
+<!--            "telefono": null,-->
+<!--            "direccion": null,-->
+<!--            "email": null-->
+<!--            },-->
+<!--            "compra_detalles": [-->
+<!--            {-->
+<!--            "id": 2688,-->
+<!--            "compra_id": 1808,-->
+<!--            "user_id": 23,-->
+<!--            "proveedor_id": 22,-->
+<!--            "producto_id": 1636,-->
+<!--            "nombre": "NOOPIRAM AMPOLLA",-->
+<!--            "precio": "47.84",-->
+<!--            "cantidad": 6,-->
+<!--            "cantidad_venta": 6,-->
+<!--            "total": "287.04",-->
+<!--            "factor": "1.30",-->
+<!--            "precio13": "62.19",-->
+<!--            "total13": "373.15",-->
+<!--            "precio_venta": "63.00",-->
+<!--            "estado": "Activo",-->
+<!--            "lote": "610925",-->
+<!--            "fecha_vencimiento": "2027-09-30",-->
+<!--            "nro_factura": "10558",-->
+<!--            "producto": {-->
+<!--            "id": 1636,-->
+<!--            "nombre": "NOOPIRAM AMPOLLA",-->
+<!--            "imagen": "1705431317NOOPIRAM AMP.jpg",-->
+<!--            "descripcion": "Nootrópico",-->
+<!--            "unidad": "AMPOLLAS",-->
+<!--            "precio": "63.00",-->
+<!--            "stock": null,-->
+<!--            "stock_minimo": null,-->
+<!--            "stock_maximo": null,-->
+<!--            "cantidad": "6"-->
+<!--            }-->
+<!--            }-->
+<!--            ]-->
+<!--            }-->
+            <div v-for="detalle in compraSeleccionada.compra_detalles" :key="detalle.id" class="row q-col-gutter-md q-pa-sm items-center">
+              <div class="col-12 col-md-4">
+                <div><strong>Producto:</strong> {{ detalle.nombre }}</div>
+                <div><strong>Cantidad:</strong> {{ detalle.cantidad }}</div>
+              </div>
+              <div class="col-12 col-md-4">
+                <q-input v-model="detalle.lote" label="Lote" dense outlined />
+              </div>
+              <div class="col-12 col-md-4">
+                <q-input v-model="detalle.fecha_vencimiento" label="Fecha de Vencimiento" dense outlined type="date" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" color="primary" v-close-popup />
+        <q-btn flat label="Guardar" color="primary" @click="guardarLoteFecha" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
   <div id="myElement" class="hidden"></div>
 </template>
 
@@ -131,9 +232,11 @@ export default {
   data() {
     return {
       compras: [],
+      compraSeleccionada: null,
       fechaInicio: moment().format('YYYY-MM-DD'),
       fechaFin: moment().format('YYYY-MM-DD'),
       user: '',
+      dialogLoteFecha: false,
       users: [],
       loading: false
     }
@@ -154,6 +257,24 @@ export default {
     }
   },
   methods: {
+    guardarLoteFecha() {
+      this.loading = true
+      this.$axios.put(`comprasCambiarLoteFecha/${this.compraSeleccionada.id}`, {
+        compra_detalles: this.compraSeleccionada.compra_detalles.map(d => ({
+          id: d.id,
+          lote: d.lote,
+          fecha_vencimiento: d.fecha_vencimiento
+        }))
+      }).then(() => {
+        this.$alert.success('Lotes y fechas de vencimiento actualizados')
+        this.dialogLoteFecha = false
+        this.comprasGet()
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'Error al actualizar')
+      }).finally(() => {
+        this.loading = false
+      })
+    },
     excel() {
       const data = [{
         columns: [
@@ -195,6 +316,10 @@ export default {
     },
     imprimir(compra) {
       Imprimir.reciboCompra(compra)
+    },
+    cambiarLoteFecha(compra){
+      this.dialogLoteFecha = true
+      this.compraSeleccionada = compra
     },
     anular(id) {
       this.$alert.dialog('¿Anular esta compra?').onOk(() => {

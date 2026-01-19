@@ -13,6 +13,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class VentaController extends Controller
 {
+    //    this.$axios.put(`ventasCambiarTipoPago/${venta.id}`, { tipo_pago: tipoPago }).then(res => {
+//Route::put('/ventasCambiarTipoPago/{venta}', [App\Http\Controllers\VentaController::class, 'cambiarTipoPago']);
+    function cambiarTipoPago(Request $request, $id)
+    {
+        $venta = Venta::findOrFail($id);
+        $tipoPago = $venta->tipo_pago;
+        if ($tipoPago == 'Efectivo'){
+            $tipoPago = 'QR';
+        } else{
+            $tipoPago = 'Efectivo';
+        }
+        $venta->tipo_pago = $tipoPago;
+        $venta->save();
+        return $venta;
+    }
     function ventasDevolverProducto(Request $request){
 //        venta_id: ventaId,
 //          venta_detalle_id: venta_detalle_id,

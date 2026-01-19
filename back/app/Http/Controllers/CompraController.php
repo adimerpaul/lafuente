@@ -11,6 +11,36 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller{
+    public function cambiarLoteFecha(Request $request, Compra $compra)
+    {
+        DB::beginTransaction();
+        try {
+
+            foreach ($request->compra_detalles as $detalle) {
+
+                CompraDetalle::where('id', $detalle['id'])
+                    ->where('compra_id', $compra->id) // seguridad mínima
+                    ->update([
+                        'lote' => $detalle['lote'],
+                        'fecha_vencimiento' => $detalle['fecha_vencimiento'],
+                    ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Lote y fecha de vencimiento actualizados correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar lote y fecha',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     function historialCompras($id){
         $historial = \App\Models\CompraDetalle::with('compra')
             ->where('producto_id', $id)

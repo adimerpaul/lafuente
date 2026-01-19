@@ -5,6 +5,15 @@
     <div class="text-right">
       <q-btn color="primary" label="Descargar" no-caps  icon="fa-solid fa-file-excel" :loading="loading" @click="exportExcel" />
       <q-btn color="green" label="Nuevo" @click="productoNew" no-caps  icon="add_circle_outline" :loading="loading" />
+      <q-btn
+        color="secondary"
+        label="Inventario inicial"
+        no-caps
+        icon="inventory_2"
+        :loading="loading"
+        @click="inventarioInicialPdf"
+      />
+
       <q-input v-model="filter" label="Buscar" dense outlined debounce="300" @update:modelValue="productosGet">
         <template v-slot:append>
           <q-icon name="search" />
@@ -336,6 +345,21 @@ export default {
       this.actionPeriodo = 'Nuevo'
       this.productoDialog = true
     },
+    inventarioInicialPdf () {
+      this.loading = true
+      this.$axios.get('inventario-inicial-medicamentos/pdf', {
+        responseType: 'blob'
+      }).then(res => {
+        const file = new Blob([res.data], { type: 'application/pdf' })
+        const fileURL = URL.createObjectURL(file)
+        window.open(fileURL, '_blank')
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'No se pudo generar el inventario')
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+
     productosGet() {
       this.loading = true
       this.$axios.get('productos', {

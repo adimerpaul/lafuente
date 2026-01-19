@@ -118,6 +118,12 @@
                 </q-item-section>
                 <q-item-section>Cambiar a {{ venta.tipo_venta === 'Interno' ? 'Externo' : 'Interno' }}</q-item-section>
               </q-item>
+              <q-item clickable v-ripple @click="cambiarTipoPago(venta)" v-close-popup>
+                <q-item-section avatar>
+                  <q-icon name="payment" />
+                </q-item-section>
+                <q-item-section>Cambiar tipo pago {{ venta.tipo_pago === 'Efectivo' ? 'QR' : 'Efectivo' }}</q-item-section>
+              </q-item>
               <q-item clickable v-ripple v-if="venta.estado==='Activo'" @click="openDevolver(venta)" v-close-popup>
                 <q-item-section avatar><q-icon name="undo" /></q-item-section>
                 <q-item-section>Devolver productos</q-item-section>
@@ -829,6 +835,14 @@ export default {
     imprimir(venta) {
       // Imprimir.nota(venta)
       Imprimir.reciboVentaSimple(venta);
+    },
+    cambiarTipoPago(venta, tipoPago) {
+      this.$axios.put(`ventasCambiarTipoPago/${venta.id}`, { tipo_pago: tipoPago }).then(res => {
+        this.$alert.success('Tipo de pago cambiado')
+        this.ventasGet()
+      }).catch(error => {
+        this.$alert.error(error.response.data.message)
+      })
     },
     tipoVentasChange(id) {
       this.$axios.put(`tipoVentasChange/${id}`).then(res => {
