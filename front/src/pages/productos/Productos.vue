@@ -1,143 +1,210 @@
 <template>
   <q-page class="q-pa-xs">
-<q-card flat bordered>
-  <q-card-section class="q-pa-xs">
-    <div class="text-right">
-      <q-btn color="primary" label="Descargar" no-caps  icon="fa-solid fa-file-excel" :loading="loading" @click="exportExcel" />
-      <q-btn color="green" label="Nuevo" @click="productoNew" no-caps  icon="add_circle_outline" :loading="loading" />
-      <q-btn
-        color="secondary"
-        label="Inventario inicial"
-        no-caps
-        icon="inventory_2"
-        :loading="loading"
-        @click="inventarioInicialPdf"
-      />
+    <q-card flat bordered>
+      <q-card-section class="q-pa-xs">
+        <div class="text-right actions-bar">
+          <q-btn-dropdown
+            color="primary"
+            label="Excel"
+            no-caps
+            icon="fa-solid fa-file-excel"
+            :loading="loading"
+          >
+            <q-list>
+              <q-item clickable v-close-popup @click="exportExcel('all')">
+                <q-item-section avatar>
+                  <q-icon name="download" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Descargar todo</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportExcel('existing')">
+                <q-item-section avatar>
+                  <q-icon name="inventory_2" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Descargar solo existentes</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
 
-      <q-input v-model="filter" label="Buscar" dense outlined debounce="300" @update:modelValue="productosGet">
-        <template v-slot:append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-    </div>
-    <div class="flex flex-center">
-      <q-pagination
-        v-model="pagination.page"
-        :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
-        :rows-per-page-options="[10, 25, 50, 100]"
-        :rows-per-page="pagination.rowsPerPage"
-        :rows-number="pagination.rowsNumber"
-        color="primary"
-        @update:modelValue="productosGet"
-        boundary-numbers
-        max-pages="5"
-        />
-    </div>
-    <q-markup-table dense wrap-cells>
-      <thead>
-        <tr>
-          <th>Opciones</th>
-          <th>Imagen</th>
-          <th v-for="column in columns" :key="column.name" :class="column.align">
-            {{ column.label }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="producto in productos" :key="producto.id">
-          <td>
-            <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">
+          <q-btn
+            color="secondary"
+            label="PDF"
+            no-caps
+            icon="picture_as_pdf"
+            :loading="loading"
+            icon-right="fa-solid fa-caret-down"
+          >
+            <q-menu>
               <q-list>
-                <q-item clickable @click="productoEdit(producto)" v-close-popup>
+                <q-item clickable v-close-popup @click="exportPdf('all')">
                   <q-item-section avatar>
-                    <q-icon name="edit" />
+                    <q-icon name="download" />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label>Editar</q-item-label>
+                    <q-item-label>Descargar todo en PDF</q-item-label>
                   </q-item-section>
                 </q-item>
-                <q-item clickable @click="productoDelete(producto.id)" v-close-popup>
+                <q-item clickable v-close-popup @click="exportPdf('existing')">
                   <q-item-section avatar>
-                    <q-icon name="delete" />
+                    <q-icon name="inventory_2" />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label>Eliminar</q-item-label>
+                    <q-item-label>Descargar solo existentes</q-item-label>
                   </q-item-section>
-                </q-item>
-                <q-item clickable @click="verHistorial(producto)" v-close-popup>
-                  <q-item-section avatar><q-icon name="history" /></q-item-section>
-                  <q-item-section><q-item-label>Historial de compras</q-item-label></q-item-section>
-                </q-item>
-<!--                opcion de cambiar foto-->
-                <q-item clickable v-close-popup @click="productoEditFoto(producto)">
-                  <q-item-section avatar><q-icon name="photo" /></q-item-section>
-                  <q-item-section><q-item-label>Ver foto</q-item-label></q-item-section>
                 </q-item>
               </q-list>
-            </q-btn-dropdown>
-          </td>
-          <td>
-<!--            {{`${$url}../images/${producto.imagen}`}}<br>-->
-            <q-img
-              :src="`${$url}../images/${producto.imagen}`"
-              style="width: 50px; height: 50px"
-              class="q-mr-sm" ></q-img>
-          </td>
-          <td>
-            <div style="max-width: 150px; wrap-option: wrap;line-height: 0.9;">
-              {{ producto.nombre }}
-            </div>
-          </td>
-          <td>
-            <div style="max-width: 200px; wrap-option: wrap;line-height: 0.9;">
-            {{ producto.descripcion }}
-            </div>
-          </td>
-          <td>
-            <div style="max-width: 80px; wrap-option: wrap;line-height: 0.9;">
-              {{ producto.unidad }}
-            </div>
-          </td>
-          <td>
-<!--            {{ producto.precio }}-->
-            <input
-              v-model.number="producto.precio"
-              type="number"
-              step="0.01"
-              min="0"
-              style="width: 60px; text-align: right"
-              @keyup="debouncedCambioPrecio(producto)"
-            />
-          </td>
-          <td>
-            {{ producto.cantidad }}
-          </td>
-          <td>{{ producto.stock_minimo }}</td>
-          <td>{{ producto.stock_maximo }}</td>
-        </tr>
-      </tbody>
-    </q-markup-table>
-  </q-card-section>
-</q-card>
+            </q-menu>
+          </q-btn>
+
+          <q-btn
+            color="green"
+            label="Nuevo"
+            @click="productoNew"
+            no-caps
+            icon="add_circle_outline"
+            :loading="loading"
+          />
+
+          <q-input
+            v-model="filter"
+            label="Buscar"
+            dense
+            outlined
+            debounce="300"
+            @update:modelValue="productosGet"
+          >
+            <template #append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
+
+        <div class="flex flex-center">
+          <q-pagination
+            v-model="pagination.page"
+            :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
+            :rows-per-page-options="[10, 25, 50, 100]"
+            :rows-per-page="pagination.rowsPerPage"
+            :rows-number="pagination.rowsNumber"
+            color="primary"
+            @update:modelValue="productosGet"
+            boundary-numbers
+            max-pages="5"
+          />
+        </div>
+
+        <q-markup-table dense wrap-cells>
+          <thead>
+            <tr>
+              <th>Opciones</th>
+              <th>Imagen</th>
+              <th v-for="column in columns" :key="column.name" :class="column.align">
+                {{ column.label }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="producto in productos" :key="producto.id">
+              <td>
+                <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">
+                  <q-list>
+                    <q-item clickable @click="productoEdit(producto)" v-close-popup>
+                      <q-item-section avatar>
+                        <q-icon name="edit" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Editar</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item clickable @click="productoDelete(producto.id)" v-close-popup>
+                      <q-item-section avatar>
+                        <q-icon name="delete" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Eliminar</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item clickable @click="verHistorial(producto)" v-close-popup>
+                      <q-item-section avatar>
+                        <q-icon name="history" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Historial de compras</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item clickable v-close-popup @click="productoEditFoto(producto)">
+                      <q-item-section avatar>
+                        <q-icon name="photo" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Ver foto</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-btn-dropdown>
+              </td>
+              <td>
+                <q-img
+                  :src="`${$url}../images/${producto.imagen}`"
+                  style="width: 50px; height: 50px"
+                  class="q-mr-sm"
+                />
+              </td>
+              <td>
+                <div style="max-width: 150px; wrap-option: wrap; line-height: 0.9;">
+                  {{ producto.nombre }}
+                </div>
+              </td>
+              <td>
+                <div style="max-width: 200px; wrap-option: wrap; line-height: 0.9;">
+                  {{ producto.descripcion }}
+                </div>
+              </td>
+              <td>
+                <div style="max-width: 80px; wrap-option: wrap; line-height: 0.9;">
+                  {{ producto.unidad }}
+                </div>
+              </td>
+              <td>
+                <input
+                  v-model.number="producto.precio"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  style="width: 60px; text-align: right"
+                  @keyup="debouncedCambioPrecio(producto)"
+                />
+              </td>
+              <td>{{ producto.cantidad }}</td>
+              <td>{{ producto.stock_minimo }}</td>
+              <td>{{ producto.stock_maximo }}</td>
+            </tr>
+          </tbody>
+        </q-markup-table>
+      </q-card-section>
+    </q-card>
+
     <q-dialog v-model="productoDialog" persistent>
-      <q-card style="width: 400px;margin: 0 auto">
+      <q-card style="width: 400px; margin: 0 auto">
         <q-card-section class="q-pb-none row items-center">
-          <div>
-            {{ actionPeriodo }} producto
-          </div>
+          <div>{{ actionPeriodo }} producto</div>
           <q-space />
           <q-btn icon="close" flat round dense @click="productoDialog = false" />
         </q-card-section>
         <q-card-section class="q-pt-none">
           <q-form @submit="producto.id ? productoPut() : productoPost()">
             <q-input v-model="producto.nombre" label="Nombre" dense outlined :rules="[val => !!val || 'Campo requerido']" />
-            <q-input v-model="producto.descripcion" label="Descripción" dense outlined hint="" />
+            <q-input v-model="producto.descripcion" label="Descripcion" dense outlined hint="" />
             <q-input v-model="producto.unidad" label="Unidad" dense outlined hint="" />
             <q-input v-model="producto.precio" label="Precio" dense outlined hint="" type="number" step="0.01" />
             <q-input v-model="producto.stock" label="Stock" dense outlined hint="" />
-            <q-input v-model="producto.stock_minimo" label="Stock mínimo" dense outlined hint="" />
-            <q-input v-model="producto.stock_maximo" label="Stock máximo" dense outlined hint="" />
-            <div class="text-right" >
+            <q-input v-model="producto.stock_minimo" label="Stock minimo" dense outlined hint="" />
+            <q-input v-model="producto.stock_maximo" label="Stock maximo" dense outlined hint="" />
+            <div class="text-right">
               <q-btn color="negative" label="Cancelar" @click="productoDialog = false" no-caps :loading="loading" />
               <q-btn color="primary" label="Guardar" type="submit" no-caps :loading="loading" class="q-ml-sm" />
             </div>
@@ -145,6 +212,7 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
     <q-dialog v-model="historialDialog" persistent>
       <q-card style="width: 800px;">
         <q-card-section class="row items-center q-pb-none">
@@ -155,31 +223,32 @@
         <q-card-section class="q-pt-none">
           <q-markup-table dense wrap-cells flat bordered>
             <thead>
-            <tr>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Lote</th>
-              <th>Vencimiento</th>
-              <th>Cantidad</th>
-              <th>Precio</th>
-              <th>Total</th>
-            </tr>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Lote</th>
+                <th>Vencimiento</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Total</th>
+              </tr>
             </thead>
             <tbody>
-            <tr v-for="(item, i) in historialCompras" :key="item.id">
-              <td>{{ i + 1 }}</td>
-              <td>{{ item.compra?.fecha }}</td>
-              <td>{{ item.lote }}</td>
-              <td>{{ item.fecha_vencimiento }}</td>
-              <td>{{ item.cantidad }}</td>
-              <td>{{ item.precio }}</td>
-              <td>{{ item.total }}</td>
-            </tr>
+              <tr v-for="(item, i) in historialCompras" :key="item.id">
+                <td>{{ i + 1 }}</td>
+                <td>{{ item.compra?.fecha }}</td>
+                <td>{{ item.lote }}</td>
+                <td>{{ item.fecha_vencimiento }}</td>
+                <td>{{ item.cantidad }}</td>
+                <td>{{ item.precio }}</td>
+                <td>{{ item.total }}</td>
+              </tr>
             </tbody>
           </q-markup-table>
         </q-card-section>
       </q-card>
     </q-dialog>
+
     <q-dialog v-model="dialogFoto">
       <q-card style="width: 400px">
         <q-card-section class="q-pb-none text-bold row items-center">
@@ -194,7 +263,8 @@
             color="primary"
             @click="$refs.fileInput.click()"
             class="q-mr-sm"
-            no-caps dense
+            no-caps
+            dense
             icon="cloud_upload"
             :loading="loading"
           />
@@ -203,20 +273,22 @@
             ref="fileInput"
             accept="image/*"
             @change="onFileChange"
-            style="display: none">
+            style="display: none"
+          >
           <img :src="`${$url}../images/${producto.imagen}`" style="width: 350px; height: 350px" class="q-mr-sm" />
         </q-card-section>
       </q-card>
     </q-dialog>
   </q-page>
 </template>
+
 <script>
-import moment from 'moment'
-import {Excel} from "src/addons/Excel";
-import {debounce} from "quasar";
+import { Excel } from 'src/addons/Excel'
+import { debounce } from 'quasar'
+
 export default {
   name: 'ProductosPage',
-  data() {
+  data () {
     return {
       productos: [],
       producto: {},
@@ -231,12 +303,12 @@ export default {
       },
       columns: [
         { name: 'nombre', label: 'Nombre', align: 'left', field: 'nombre' },
-        { name: 'descripcion', label: 'Descripción', align: 'left', field: 'descripcion' },
+        { name: 'descripcion', label: 'Descripcion', align: 'left', field: 'descripcion' },
         { name: 'unidad', label: 'Unidad', align: 'left', field: 'unidad' },
         { name: 'precio', label: 'Precio', align: 'left', field: 'precio' },
         { name: 'stock', label: 'Stock', align: 'left', field: 'stock' },
-        { name: 'stock_minimo', label: 'Stock mínimo', align: 'left', field: 'stock_minimo' },
-        { name: 'stock_maximo', label: 'Stock máximo', align: 'left', field: 'stock_maximo' },
+        { name: 'stock_minimo', label: 'Stock minimo', align: 'left', field: 'stock_minimo' },
+        { name: 'stock_maximo', label: 'Stock maximo', align: 'left', field: 'stock_maximo' },
       ],
       historialDialog: false,
       historialCompras: [],
@@ -244,13 +316,203 @@ export default {
       dialogFoto: false,
     }
   },
-  mounted() {
+  mounted () {
     this.productosGet()
     this.debouncedCambioPrecio = debounce(this.cambioPrecio, 500)
-    this.debouncedCambioStock = debounce(this.cambioStock, 500)
   },
   methods: {
-    onFileChange(event) {
+    getExportMeta (mode) {
+      const existing = mode === 'existing'
+
+      return {
+        existing,
+        title: existing ? 'Inventario de productos existentes' : 'Inventario completo de productos',
+        fileName: existing ? 'inventario_productos_existentes' : 'inventario_productos_todo',
+      }
+    },
+    formatDecimal (value, digits = 2) {
+      return Number(value || 0).toLocaleString('es-BO', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      })
+    },
+    escapeHtml (value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;')
+    },
+    async streamProductosExport (existingOnly, onChunk) {
+      let page = 1
+      let lastPage = 1
+      const perPage = 4000
+
+      while (page <= lastPage) {
+        const { data } = await this.$axios.get('productos-export', {
+          params: {
+            page,
+            per_page: perPage,
+            existentes: existingOnly,
+          }
+        })
+
+        const items = data.data || []
+        lastPage = data.last_page || 1
+
+        if (items.length) {
+          await onChunk(items, {
+            page,
+            total: data.total || 0,
+            lastPage,
+          })
+        }
+
+        page += 1
+      }
+    },
+    async exportExcel (mode) {
+      const meta = this.getExportMeta(mode)
+      const rows = []
+
+      this.loading = true
+      try {
+        await this.streamProductosExport(meta.existing, async (items) => {
+          items.forEach((item) => {
+            rows.push({
+              nombre: item.nombre,
+              descripcion: item.descripcion,
+              unidad: item.unidad,
+              precio: Number(item.precio || 0),
+              cantidad: Number(item.cantidad || 0),
+              stock_minimo: item.stock_minimo,
+              stock_maximo: item.stock_maximo,
+            })
+          })
+        })
+
+        Excel.export([{
+          sheet: 'Inventario',
+          columns: [
+            { label: 'Nombre', value: 'nombre' },
+            { label: 'Descripcion', value: 'descripcion' },
+            { label: 'Unidad', value: 'unidad' },
+            { label: 'Precio', value: 'precio' },
+            { label: 'Existencia', value: 'cantidad' },
+            { label: 'Stock minimo', value: 'stock_minimo' },
+            { label: 'Stock maximo', value: 'stock_maximo' },
+          ],
+          content: rows
+        }], meta.fileName)
+      } catch (error) {
+        this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
+      } finally {
+        this.loading = false
+      }
+    },
+    renderPdfRows (items, startIndex) {
+      return items.map((item, index) => `
+        <tr>
+          <td>${startIndex + index + 1}</td>
+          <td>${this.escapeHtml(item.nombre)}</td>
+          <td>${this.escapeHtml(item.descripcion)}</td>
+          <td>${this.escapeHtml(item.unidad)}</td>
+          <td class="text-right">${this.formatDecimal(item.precio)}</td>
+          <td class="text-right">${this.formatDecimal(item.cantidad)}</td>
+          <td class="text-right">${this.escapeHtml(item.stock_minimo)}</td>
+          <td class="text-right">${this.escapeHtml(item.stock_maximo)}</td>
+        </tr>
+      `).join('')
+    },
+    buildPdfHtml (title, rowsHtml, totalRows) {
+      const generatedAt = new Date().toLocaleString('es-BO')
+
+      return `
+        <!doctype html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8" />
+          <title>${this.escapeHtml(title)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; color: #1f2937; margin: 20px; }
+            h1 { margin: 0 0 6px; font-size: 20px; }
+            .meta { margin-bottom: 16px; font-size: 12px; color: #4b5563; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+            th, td { border: 1px solid #d1d5db; padding: 6px 8px; font-size: 11px; word-break: break-word; }
+            th { background: #1d4ed8; color: #fff; text-align: left; }
+            .text-right { text-align: right; }
+            .col-num { width: 44px; }
+            .col-name { width: 24%; }
+            .col-desc { width: 28%; }
+            .col-unit { width: 12%; }
+            .col-price, .col-qty, .col-min, .col-max { width: 9%; }
+            @page { size: landscape; margin: 12mm; }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+          </style>
+        </head>
+        <body>
+          <h1>${this.escapeHtml(title)}</h1>
+          <div class="meta">Generado: ${this.escapeHtml(generatedAt)} | Total de productos: ${totalRows}</div>
+          <table>
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-name">Nombre</th>
+                <th class="col-desc">Descripcion</th>
+                <th class="col-unit">Unidad</th>
+                <th class="col-price text-right">Precio</th>
+                <th class="col-qty text-right">Existencia</th>
+                <th class="col-min text-right">Min.</th>
+                <th class="col-max text-right">Max.</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+        </html>
+      `
+    },
+    async exportPdf (mode) {
+      const meta = this.getExportMeta(mode)
+      const printWindow = window.open('', '_blank')
+
+      if (!printWindow) {
+        this.$alert.error('El navegador bloqueo la ventana emergente del PDF')
+        return
+      }
+
+      this.loading = true
+      printWindow.document.write('<html><body><p>Generando PDF...</p></body></html>')
+      printWindow.document.close()
+
+      try {
+        let rowsHtml = ''
+        let totalRows = 0
+
+        await this.streamProductosExport(meta.existing, async (items) => {
+          rowsHtml += this.renderPdfRows(items, totalRows)
+          totalRows += items.length
+        })
+
+        printWindow.document.open()
+        printWindow.document.write(this.buildPdfHtml(meta.title, rowsHtml, totalRows))
+        printWindow.document.close()
+
+        setTimeout(() => {
+          printWindow.focus()
+          printWindow.print()
+        }, 250)
+      } catch (error) {
+        printWindow.close()
+        this.$alert.error(error.response?.data?.message || 'No se pudo generar el PDF')
+      } finally {
+        this.loading = false
+      }
+    },
+    onFileChange (event) {
       const file = event.target.files[0]
       if (file) {
         const formData = new FormData()
@@ -260,79 +522,57 @@ export default {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
-        }).then(res => {
+        }).then(() => {
           this.productosGet()
           this.$alert.success('Foto actualizada')
           this.dialogFoto = false
-        }).catch(error => {
+        }).catch((error) => {
           this.$alert.error(error.response.data.message)
         }).finally(() => {
           this.loading = false
         })
       }
     },
-    productoEditFoto(producto) {
+    productoEditFoto (producto) {
       this.dialogFoto = true
       this.producto = { ...producto }
     },
-    verHistorial(producto) {
-      this.loading = true;
-      this.productoHistorialNombre = producto.nombre;
-      this.$axios.get(`productos/${producto.id}/historial-compras`)
-        .then(res => {
-          this.historialCompras = res.data;
-          this.historialDialog = true;
-        }).catch(err => {
-        this.$alert.error("Error al obtener historial");
-      }).finally(() => {
-        this.loading = false;
-      });
-    },
-    cambioStock(producto) {
+    verHistorial (producto) {
       this.loading = true
-      this.$axios.put('productos/' + producto.id, { stock: producto.stock }).then(res => {
+      this.productoHistorialNombre = producto.nombre
+      this.$axios.get(`productos/${producto.id}/historial-compras`)
+        .then((res) => {
+          this.historialCompras = res.data
+          this.historialDialog = true
+        }).catch(() => {
+          this.$alert.error('Error al obtener historial')
+        }).finally(() => {
+          this.loading = false
+        })
+    },
+    cambioStock (producto) {
+      this.loading = true
+      this.$axios.put(`productos/${producto.id}`, { stock: producto.stock }).then(() => {
         this.productosGet()
         this.$alert.success('Stock actualizado')
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {
         this.loading = false
       })
     },
-    cambioPrecio(producto) {
+    cambioPrecio (producto) {
       this.loading = true
-      this.$axios.put('productos/' + producto.id, { precio: producto.precio }).then(res => {
+      this.$axios.put(`productos/${producto.id}`, { precio: producto.precio }).then(() => {
         this.productosGet()
         this.$alert.success('Precio actualizado')
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {
         this.loading = false
       })
     },
-    exportExcel() {
-      this.loading = true
-      this.$axios.get('productosAll').then(res => {
-        let data = [{
-          columns: [
-            {label: "Nombre", value: "nombre"},
-            {label: "Descripción", value: "descripcion"},
-            {label: "Unidad", value: "unidad"},
-            {label: "Precio", value: "precio"},
-            {label: "Stock", value: "stock"},
-            {label: "Stock mínimo", value: "stock_minimo"},
-            {label: "Stock máximo", value: "stock_maximo"},
-          ],
-          content: res.data
-        }]
-        Excel.export(data,'Productos')
-      }).catch(error => {
-        this.$alert.error(error.response.data.message)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    productoNew() {
+    productoNew () {
       this.producto = {
         name: '',
         email: '',
@@ -345,22 +585,7 @@ export default {
       this.actionPeriodo = 'Nuevo'
       this.productoDialog = true
     },
-    inventarioInicialPdf () {
-      this.loading = true
-      this.$axios.get('inventario-inicial-medicamentos/pdf', {
-        responseType: 'blob'
-      }).then(res => {
-        const file = new Blob([res.data], { type: 'application/pdf' })
-        const fileURL = URL.createObjectURL(file)
-        window.open(fileURL, '_blank')
-      }).catch(err => {
-        this.$alert.error(err.response?.data?.message || 'No se pudo generar el inventario')
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-
-    productosGet() {
+    productosGet () {
       this.loading = true
       this.$axios.get('productos', {
         params: {
@@ -368,62 +593,62 @@ export default {
           page: this.pagination.page,
           per_page: this.pagination.rowsPerPage
         }
-      }).then(res => {
+      }).then((res) => {
         this.productos = res.data.data
         this.pagination.rowsNumber = res.data.total
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response?.data?.message || 'Error al cargar productos')
       }).finally(() => {
         this.loading = false
       })
     },
-    gestionGet() {
+    gestionGet () {
       this.loading = true
-      this.$axios.get('gestiones').then(res => {
+      this.$axios.get('gestiones').then((res) => {
         this.gestiones = res.data
         this.loading = false
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response.data.message)
         this.loading = false
       })
     },
-    productoPost() {
+    productoPost () {
       this.loading = true
-      this.$axios.post('productos', this.producto).then(res => {
+      this.$axios.post('productos', this.producto).then(() => {
         this.productosGet()
         this.productoDialog = false
         this.$alert.success('Periodo creado')
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {
         this.loading = false
       })
     },
-    productoPut() {
+    productoPut () {
       this.loading = true
-      this.$axios.put('productos/' + this.producto.id, this.producto).then(res => {
+      this.$axios.put(`productos/${this.producto.id}`, this.producto).then(() => {
         this.productosGet()
         this.productoDialog = false
         this.$alert.success('Periodo actualizado')
-      }).catch(error => {
+      }).catch((error) => {
         this.$alert.error(error.response.data.message)
       }).finally(() => {
         this.loading = false
       })
     },
-    productoEdit(producto) {
+    productoEdit (producto) {
       this.producto = { ...producto }
       this.actionPeriodo = 'Editar'
       this.productoDialog = true
     },
-    productoDelete(id) {
-      this.$alert.dialog('¿Desea eliminar el producto?')
+    productoDelete (id) {
+      this.$alert.dialog('Desea eliminar el producto?')
         .onOk(() => {
           this.loading = true
-          this.$axios.delete('productos/' + id).then(res => {
+          this.$axios.delete(`productos/${id}`).then(() => {
             this.productosGet()
             this.$alert.success('Periodo eliminado')
-          }).catch(error => {
+          }).catch((error) => {
             this.$alert.error(error.response.data.message)
           }).finally(() => {
             this.loading = false
@@ -433,3 +658,18 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.actions-bar {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .actions-bar {
+    grid-template-columns: auto auto auto minmax(240px, 320px);
+    justify-content: end;
+  }
+}
+</style>
