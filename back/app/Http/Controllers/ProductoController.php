@@ -8,16 +8,44 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductoController extends Controller{
+    private function baseProductosQuery(?string $search = null)
+    {
+        $search = trim((string) $search);
+
+        return Producto::query()
+            ->select([
+                'productos.id',
+                'productos.nombre',
+                'productos.descripcion',
+                'productos.unidad',
+                'productos.precio',
+                'productos.stock',
+                'productos.stock_minimo',
+                'productos.stock_maximo',
+                'productos.imagen',
+            ])
+            ->withSum(
+                ['comprasDetalles as cantidad' => function ($q) {
+                    $q->where('estado', 'Activo')
+                        ->where('cantidad_venta', '>', 0);
+                }],
+                'cantidad_venta'
+            )
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('productos.nombre', 'like', "%{$search}%")
+                        ->orWhere('productos.descripcion', 'like', "%{$search}%");
+                });
+            });
+    }
+
     public function precios(Request $request)
     {
         $search  = trim($request->input('search', ''));
         $perPage = (int) $request->input('per_page', 24);
 
-        $productos = Producto::query()
+        $productos = $this->baseProductosQuery($search)
             ->select(['id','nombre','precio','imagen'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%");
-            })
             ->orderBy('nombre')
             ->paginate($perPage);
 
@@ -84,16 +112,33 @@ class ProductoController extends Controller{
         return response()->json($productos);
     }
     function productosAll(){
-        return Producto::orderBy('nombre')->get();
+        return $this->baseProductosQuery()
+            ->orderBy('nombre')
+            ->get();
+    }
+    public function exportIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 5000), 10000);
+        $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+
+        $query = $this->baseProductosQuery($search);
+
+        if ($soloExistentes) {
+            $query->having('cantidad', '>', 0)
+                ->orderByDesc('cantidad')
+                ->orderBy('productos.nombre');
+        } else {
+            $query->orderBy('productos.nombre');
+        }
+
+        return response()->json($query->paginate($perPage));
     }
     public function index(Request $request) {
         $search = $request->search;
         $perPage = $request->per_page ?? 10;
 
-        $productos = Producto::where(function ($query) use ($search) {
-            $query->where('nombre', 'like', "%$search%")
-                ->orWhere('descripcion', 'like', "%$search%");
-        })
+        $productos = $this->baseProductosQuery($search)
             ->orderBy('nombre')
             ->paginate($perPage);
 

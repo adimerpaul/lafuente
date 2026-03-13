@@ -25,12 +25,15 @@ class Producto extends Model{
 //    appende sotkc tien que de delas compras detalles
     protected $appends = ['cantidad'];
     public function getCantidadAttribute(){
+        if (array_key_exists('cantidad', $this->attributes)) {
+            return (float) $this->attributes['cantidad'];
+        }
+
         $cantidad = $this->hasMany(CompraDetalle::class, 'producto_id')
             ->where('estado', 'Activo')
             ->where('cantidad_venta', '>', 0)
             ->sum('cantidad_venta');
-        error_log("Cantidad for Producto ID {$this->id}: {$cantidad}");
-        return $cantidad;
+        return (float) $cantidad;
     }
 //comprasDetalles
     function comprasDetalles(){

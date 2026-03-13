@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/productos/{id}/foto', [App\Http\Controllers\ProductoController::class, 'uploadFoto']);
     Route::get('/productosAll', [App\Http\Controllers\ProductoController::class, 'productosAll']);
     Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
+    Route::get('/productos-export', [App\Http\Controllers\ProductoController::class, 'exportIndex']);
     Route::put('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'update']);
     Route::delete('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'destroy']);
 
@@ -108,4 +109,3 @@ Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'ge
 Route::get('pacientes/{paciente}/proforma-pdf', [\App\Http\Controllers\VentaController::class, 'proformaPacientePdf']);
 
 Route::get('/inventario-inicial-medicamentos/pdf', [\App\Http\Controllers\ReporteInventarioController::class, 'inventarioInicialMedicamentosPdf']);
-
