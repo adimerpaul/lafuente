@@ -92,6 +92,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/doctores', [App\Http\Controllers\DoctorController::class, 'store']);
     Route::put('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'update']);
     Route::delete('/doctores/{doctor}', [App\Http\Controllers\DoctorController::class, 'destroy']);
+    Route::get('/aranceles', [App\Http\Controllers\ArancelController::class, 'index']);
+    Route::post('/aranceles', [App\Http\Controllers\ArancelController::class, 'store']);
+    Route::put('/aranceles/{arancel}', [App\Http\Controllers\ArancelController::class, 'update']);
+    Route::delete('/aranceles/{arancel}', [App\Http\Controllers\ArancelController::class, 'destroy']);
     Route::post('/ventasDevolverProducto', [App\Http\Controllers\VentaController::class, 'ventasDevolverProducto']);
 
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index']);

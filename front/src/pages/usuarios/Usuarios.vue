@@ -59,11 +59,18 @@
       </template>
       <template v-slot:body-cell-permisos="props">
         <q-td :props="props">
-          <ul style="padding: 0;margin: 0;width: 150px;">
-            <li v-for="(permiso, index) in props.row.permissions" :key="index" style="list-style: none;padding: 0;margin: 0;">
+          <div class="permission-chips">
+            <q-chip
+              v-for="(permiso, index) in props.row.permissions"
+              :key="index"
+              dense
+              size="11px"
+              color="blue-1"
+              text-color="primary"
+            >
               {{ permiso.name }}
-            </li>
-          </ul>
+            </q-chip>
+          </div>
         </q-td>
       </template>
     </q-table>
@@ -154,13 +161,18 @@
 <!--            color="green"-->
 <!--            type="checkbox"-->
 <!--          />-->
-          <q-option-group
-            v-model="user.permissionsSelected"
-            :options="permisos.map(p => ({ label: p.name, value: p.name }))"
-            type="checkbox"
-            color="green"
-            dense
-          />
+          <div class="permission-grid">
+            <q-checkbox
+              v-for="permiso in permisos"
+              :key="permiso.id"
+              :model-value="user.permissionsSelected.includes(permiso.name)"
+              :label="permiso.name"
+              dense
+              color="green"
+              class="permission-item"
+              @update:model-value="togglePermission(permiso.name, $event)"
+            />
+          </div>
           <div class="text-right q-mt-md">
             <q-btn label="Guardar permisos" color="primary" @click="guardarPermisos" :loading="loading" no-caps />
           </div>
@@ -182,7 +194,7 @@ export default {
       actionPeriodo: '',
       gestiones: [],
       filter: '',
-      roles: ['Farmacia', 'Secretaria', 'Administrador'],
+      roles: ['Farmacia', 'Secretaria', 'Administrador', 'Recepcion', 'Enfermer'],
       columns: [
         { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'name', label: 'Nombre', align: 'left', field: 'name' },
@@ -213,6 +225,19 @@ export default {
         this.loading = false
       })
     },
+    togglePermission(permissionName, checked) {
+      const selected = [...(this.user.permissionsSelected || [])]
+
+      if (checked) {
+        if (!selected.includes(permissionName)) {
+          selected.push(permissionName)
+        }
+        this.user.permissionsSelected = selected
+        return
+      }
+
+      this.user.permissionsSelected = selected.filter(permission => permission !== permissionName)
+    },
     permisosGet() {
       this.loading = true
       this.$axios.get('permisos').then(res => {
@@ -239,7 +264,8 @@ export default {
         area_id: 1,
         username: '',
         cargo: '',
-        role: 'Area',
+        role: 'Recepcion',
+        permissionsSelected: []
       }
       this.actionPeriodo = 'Nuevo'
       this.userDialog = true
@@ -329,3 +355,24 @@ export default {
   }
 }
 </script>
+<style scoped>
+.permission-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 320px;
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 4px 12px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+
+.permission-item {
+  margin: 0;
+}
+</style>

@@ -55,7 +55,7 @@ class User extends Authenticatable
     }
     protected $appends = ['color'];
     public function getColorAttribute(){
-//        roles: ['Farmacia', 'Secretaria', 'Administrador'],
+//        roles: ['Farmacia', 'Secretaria', 'Administrador', 'Recepcion', 'Enfermer'],
         $rol = $this->role;
         if($rol == 'Farmacia'){
             return 'green';
@@ -63,6 +63,10 @@ class User extends Authenticatable
             return 'blue';
         }elseif($rol == 'Administrador'){
             return 'red';
+        }elseif($rol == 'Recepcion'){
+            return 'deep-orange';
+        }elseif($rol == 'Enfermer'){
+            return 'teal';
         }else{
             return 'gray';
         }
