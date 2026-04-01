@@ -19,6 +19,9 @@ const routes = [
       // doctores
       { path: 'doctores', name: 'doctores', component: () => import('pages/doctores/Doctores.vue'), meta: { requiresAuth: true } },
       { path: 'aranceles', name: 'aranceles', component: () => import('pages/aranceles/Aranceles.vue'), meta: { requiresAuth: true } },
+      { path: 'caja-recepciones', name: 'caja-recepciones', component: () => import('pages/caja-recepcion/CajaRecepcionList.vue'), meta: { requiresAuth: true } },
+      { path: 'caja-recepciones/nuevo', name: 'caja-recepciones-nuevo', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
+      { path: 'caja-recepciones/:id', name: 'caja-recepciones-editar', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
       {
         path: '/productos-precios',
         component: () => import('pages/productos/ProductosPreciosPage.vue')

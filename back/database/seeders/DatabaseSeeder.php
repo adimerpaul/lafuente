@@ -48,19 +48,7 @@ class DatabaseSeeder extends Seeder
         $sqlContent = file_get_contents($sqlFIle);
         DB::unprepared($sqlContent);
 
-        $permisos = [
-            'Usuarios', 'Doctores', 'Pacientes', 'Productos', 'Ventas', 'Nueva venta',
-            'Proveedores', 'Compras', 'Compras nuevas', 'Productos por vencer',
-            'Productos vencidos', 'Precio de ventas productos', 'Aranceles'
-        ];
-        foreach ($permisos as $permiso) {
-            Permission::firstOrCreate(['name' => $permiso]);
-        }
-        $admin = User::find(1);
-        if ($admin) {
-            $admin->givePermissionTo($permisos);
-        }
-
+        $this->call(PermissionSeeder::class);
         $this->call(ArancelSeeder::class);
     }
 }

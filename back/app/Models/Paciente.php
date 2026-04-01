@@ -70,4 +70,10 @@ class Paciente extends Model{
     function pagos(){
         return $this->hasMany(Pago::class);
     }
+    function cajaRecepciones(){
+        return $this->hasMany(CajaRecepcion::class);
+    }
+    function formulariosControl(){
+        return $this->hasMany(FormularioControl::class);
+    }
 }

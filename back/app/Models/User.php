@@ -71,4 +71,14 @@ class User extends Authenticatable
             return 'gray';
         }
     }
+
+    public function cajaRecepciones()
+    {
+        return $this->hasMany(CajaRecepcion::class);
+    }
+
+    public function formulariosControl()
+    {
+        return $this->hasMany(FormularioControl::class);
+    }
 }

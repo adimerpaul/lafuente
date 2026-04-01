@@ -1,9 +1,22 @@
 <template>
   <q-page class="q-pa-md">
-    <q-table :rows="users" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-              title="Usuarios" :filter="filter">
+    <q-table :rows="filteredRows" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
+              title="Usuarios">
       <template v-slot:top-right>
           <q-btn color="primary" label="Nuevo" @click="userNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
+          <q-select
+            v-model="roleFilter"
+            :options="roleFilterOptions"
+            label="Rol"
+            dense
+            outlined
+            emit-value
+            map-options
+            clearable
+            style="min-width: 180px"
+          />
+          <q-btn color="secondary" label="PDF" @click="exportPdf" outline no-caps icon="picture_as_pdf" :disable="filteredRows.length === 0" />
+          <q-btn color="positive" label="Excel" @click="exportExcel" outline no-caps icon="file_download" :disable="filteredRows.length === 0" />
           <q-input v-model="filter" label="Buscar" dense outlined >
             <template v-slot:append>
               <q-icon name="search" />
@@ -183,6 +196,7 @@
 </template>
 <script>
 import moment from 'moment'
+import { Excel } from 'src/addons/Excel'
 export default {
   name: 'UsuariosPage',
   data() {
@@ -194,6 +208,7 @@ export default {
       actionPeriodo: '',
       gestiones: [],
       filter: '',
+      roleFilter: null,
       roles: ['Farmacia', 'Secretaria', 'Administrador', 'Recepcion', 'Enfermer'],
       columns: [
         { name: 'actions', label: 'Acciones', align: 'center' },
@@ -237,6 +252,75 @@ export default {
       }
 
       this.user.permissionsSelected = selected.filter(permission => permission !== permissionName)
+    },
+    exportExcel() {
+      Excel.export([{
+        sheet: 'Usuarios',
+        columns: [
+          { label: 'ID', value: 'id' },
+          { label: 'Nombre', value: 'name' },
+          { label: 'Usuario', value: 'username' },
+          { label: 'Email', value: row => row.email || '' },
+          { label: 'Rol', value: 'role' },
+          { label: 'Permisos', value: row => (row.permissions || []).map(permission => permission.name).join(', ') }
+        ],
+        content: this.filteredRows
+      }], 'Usuarios_Clinica_La_Fuente')
+    },
+    exportPdf() {
+      const printWindow = window.open('', '_blank')
+
+      if (!printWindow) {
+        this.$alert.error('El navegador bloqueo la ventana emergente del PDF')
+        return
+      }
+
+      const rows = this.filteredRows.map(user => `
+        <tr>
+          <td>${user.id}</td>
+          <td>${user.name || ''}</td>
+          <td>${user.username || ''}</td>
+          <td>${user.email || ''}</td>
+          <td>${user.role || ''}</td>
+          <td>${(user.permissions || []).map(permission => permission.name).join(', ')}</td>
+        </tr>
+      `).join('')
+
+      printWindow.document.write(`
+        <html lang="es">
+          <head>
+            <title>Usuarios Clinica La Fuente</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
+              h1 { margin: 0 0 6px; font-size: 22px; }
+              p { margin: 0 0 16px; color: #4b5563; }
+              table { width: 100%; border-collapse: collapse; font-size: 12px; }
+              th, td { border: 1px solid #d1d5db; padding: 8px; vertical-align: top; text-align: left; }
+              th { background: #f3f4f6; }
+            </style>
+          </head>
+          <body>
+            <h1>Usuarios</h1>
+            <p>Filtro de rol: ${this.roleFilter || 'Todos'}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Permisos</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
     },
     permisosGet() {
       this.loading = true
@@ -351,6 +435,40 @@ export default {
             this.loading = false
           })
         })
+    }
+  },
+  computed: {
+    roleFilterOptions() {
+      return [
+        { label: 'Todos', value: null },
+        ...this.roles.map(role => ({ label: role, value: role }))
+      ]
+    },
+    filteredRows() {
+      const text = (this.filter || '').trim().toLowerCase()
+
+      return this.users.filter(user => {
+        const matchesRole = !this.roleFilter || user.role === this.roleFilter
+
+        if (!matchesRole) {
+          return false
+        }
+
+        if (!text) {
+          return true
+        }
+
+        const permissions = (user.permissions || []).map(permission => permission.name).join(' ').toLowerCase()
+        const haystack = [
+          user.name,
+          user.username,
+          user.email,
+          user.role,
+          permissions
+        ].join(' ').toLowerCase()
+
+        return haystack.includes(text)
+      })
     }
   }
 }

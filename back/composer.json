@@ -15,6 +15,7 @@
         "laravel/scout": "^10.12",
         "laravel/tinker": "^2.9",
         "meilisearch/meilisearch-php": "^1.12",
+        "owen-it/laravel-auditing": "^14.0",
         "spatie/laravel-permission": "^6.17"
     },
     "require-dev": {

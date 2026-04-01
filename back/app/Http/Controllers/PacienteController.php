@@ -48,6 +48,7 @@ class PacienteController extends Controller{
             'cobros.user',
             'facturas.user',
             'pagos.user',
+            'formulariosControl.user',
         )->find($paciente->id);
     }
     function update(Request $request, Paciente $paciente){

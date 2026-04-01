@@ -24,4 +24,9 @@ class Doctor extends Model{
         'updated_at',
         'deleted_at',
     ];
+
+    public function cajaRecepciones()
+    {
+        return $this->hasMany(CajaRecepcion::class);
+    }
 }
