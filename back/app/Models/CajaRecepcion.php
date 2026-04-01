@@ -75,7 +75,7 @@ class CajaRecepcion extends Model implements Auditable
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+//        'fecha' => 'date',
         'tipo_documento' => 'integer',
         'punto' => 'integer',
         'qr' => 'float',

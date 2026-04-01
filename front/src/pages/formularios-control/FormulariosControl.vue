@@ -20,6 +20,12 @@
             <div class="col-12 col-md-2">
               <q-btn color="primary" icon="refresh" label="Actualizar" no-caps outline class="full-width" :loading="loading" @click="loadRows" />
             </div>
+            <div class="col-6 col-md-1">
+              <q-btn color="secondary" icon="picture_as_pdf" label="PDF" no-caps outline class="full-width" :disable="rows.length === 0" @click="exportPdf" />
+            </div>
+            <div class="col-6 col-md-1">
+              <q-btn color="positive" icon="file_download" label="Excel" no-caps outline class="full-width" :disable="rows.length === 0" @click="exportExcel" />
+            </div>
             <div class="col-12 col-md-3">
               <q-select
                 v-model="filters.user_id"
@@ -67,6 +73,14 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>Editar</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="reprintItem(props.row.id)">
+                <q-item-section avatar>
+                  <q-icon name="print" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Reimprimir</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item clickable v-close-popup @click="deleteItem(props.row.id)">
@@ -125,6 +139,7 @@
 
 <script>
 import moment from 'moment'
+import { Excel } from 'src/addons/Excel'
 import { getControlTotal, getSelectedControlItems } from './controlCatalog'
 
 export default {
@@ -138,7 +153,7 @@ export default {
       filters: {
         search: '',
         user_id: null,
-        fechaInicio: '',
+        fechaInicio: moment().format('YYYY-MM-DD'),
         fechaFin: moment().format('YYYY-MM-DD')
       },
       columns: [
@@ -192,6 +207,81 @@ export default {
         this.users = []
       })
     },
+    exportExcel () {
+      Excel.export([{
+        sheet: 'Formularios control',
+        columns: [
+          { label: 'Fecha', value: row => this.formatDate(row.fecha) },
+          { label: 'Paciente', value: row => row.paciente?.nombre_completo || '' },
+          { label: 'Diagnostico', value: row => row.diagnostico || '' },
+          { label: 'Usuario', value: row => row.user?.name || '' },
+          { label: 'Control marcado', value: row => this.selectedLabels(row.detalle).map(item => `${item.label} ${item.value}`).join(', ') },
+          { label: 'Total referencial', value: row => Number(this.getTotal(row.detalle)).toFixed(2) }
+        ],
+        content: this.rows
+      }], 'Formularios_Control_Clinica_La_Fuente')
+    },
+    exportPdf () {
+      const printWindow = window.open('', '_blank')
+
+      if (!printWindow) {
+        this.$alert.error('El navegador bloqueo la ventana emergente del PDF')
+        return
+      }
+
+      const rowsHtml = this.rows.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${this.formatDate(row.fecha)}</td>
+          <td>${row.paciente?.nombre_completo || ''}</td>
+          <td>${row.user?.name || ''}</td>
+          <td>${row.diagnostico || ''}</td>
+          <td>${this.selectedLabels(row.detalle).map(item => `${item.label} ${item.value}`).join(', ')}</td>
+          <td style="text-align:right">${Number(this.getTotal(row.detalle)).toFixed(2)}</td>
+        </tr>
+      `).join('')
+
+      const usuario = this.userOptions.find(item => item.value === this.filters.user_id)?.label || 'Todos'
+      printWindow.document.write(`
+        <html lang="es">
+          <head>
+            <title>Formularios de control</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
+              h1 { margin: 0 0 6px; font-size: 22px; color: #0369a1; }
+              p { margin: 0 0 8px; color: #4b5563; font-size: 12px; }
+              table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 16px; }
+              th, td { border: 1px solid #d1d5db; padding: 6px; vertical-align: top; text-align: left; }
+              th { background: #f3f4f6; }
+              .total { margin-top: 12px; text-align: right; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <h1>Formularios de control - Clinica La Fuente</h1>
+            <p><b>Desde:</b> ${this.filters.fechaInicio || 'Todos'} <b>Hasta:</b> ${this.filters.fechaFin || 'Todos'}</p>
+            <p><b>Usuario:</b> ${usuario}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Fecha</th>
+                  <th>Paciente</th>
+                  <th>Usuario</th>
+                  <th>Diagnostico</th>
+                  <th>Control marcado</th>
+                  <th>Total ref.</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+            <div class="total">Total referencial listado: ${Number(this.totalListado).toFixed(2)} Bs</div>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    },
     loadRows () {
       this.loading = true
       this.$axios.get('formularios-control', {
@@ -211,6 +301,9 @@ export default {
     },
     editItem (row) {
       this.$router.push({ name: 'formularios-control-editar', params: { id: row.id } })
+    },
+    reprintItem (id) {
+      window.open(`${this.$url}/../formularios-control/${id}/pdf`, '_blank')
     },
     deleteItem (id) {
       this.$alert.dialog('Desea eliminar el formulario de control?').onOk(() => {

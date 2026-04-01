@@ -289,16 +289,26 @@ export default {
       }
     },
     save () {
+      const printWindow = window.open('', '_blank')
       this.saving = true
       const payload = this.buildPayload()
       const request = this.isEdit
         ? this.$axios.put(`formularios-control/${this.$route.params.id}`, payload)
         : this.$axios.post('formularios-control', payload)
 
-      request.then(() => {
+      request.then((res) => {
+        const id = res.data?.id || this.$route.params.id
+        if (printWindow && id) {
+          printWindow.location.href = `${this.$url}/../formularios-control/${id}/pdf`
+        } else if (printWindow) {
+          printWindow.close()
+        }
         this.$alert.success(this.isEdit ? 'Formulario de control actualizado' : 'Formulario de control creado')
         this.$router.push({ name: 'formularios-control' })
       }).catch(err => {
+        if (printWindow) {
+          printWindow.close()
+        }
         this.$alert.error(err.response?.data?.message || 'No se pudo guardar el formulario de control')
       }).finally(() => {
         this.saving = false
