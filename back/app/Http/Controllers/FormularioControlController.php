@@ -13,9 +13,11 @@ class FormularioControlController extends Controller
         $fechaInicio = $request->get('fechaInicio');
         $fechaFin = $request->get('fechaFin');
         $pacienteId = $request->get('paciente_id');
+        $userId = $request->get('user_id');
 
         $items = FormularioControl::with(['paciente', 'user'])
             ->when($pacienteId, fn ($query) => $query->where('paciente_id', $pacienteId))
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
             ->when($fechaInicio, fn ($query) => $query->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($query) => $query->whereDate('fecha', '<=', $fechaFin))
             ->when($search !== '', function ($query) use ($search) {

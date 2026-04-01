@@ -120,7 +120,7 @@
             exact
             class="text-grey"
             active-class="menu"
-            v-if="link && $store.permissions.some(p => p.name === link.can || link.can === 'Todos')"
+            v-if="link && canAccess(link)"
           >
             <q-item-section avatar>
               <q-icon
@@ -173,6 +173,8 @@ export default {
         { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
         { title: 'Productos y precios', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos'},
         { title: 'Aranceles', icon: 'medical_information', link: '/aranceles', can: 'Aranceles'},
+        { title: 'Formularios control', icon: 'assignment_turned_in', link: '/formularios-control', can: 'Formularios control'},
+        { title: 'Formulario control nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control']},
         { title: 'Caja recepcion', icon: 'point_of_sale', link: '/caja-recepciones', can: 'Caja recepcion'},
         { title: 'Caja recepcion crear', icon: 'post_add', link: '/caja-recepciones/nuevo', can: 'Caja recepcion crear'},
       ],
@@ -183,14 +185,20 @@ export default {
     this.getNotificaciones()
   },
   methods: {
-    getNotificaciones() {
-      this.$axios.get('/productos-por-vencer-campana').then(res => {
-        this.notificaciones = res.data;
-      }).catch(() => {
-        this.notificaciones = [];
-      });
-    },
-    logout () {
+      getNotificaciones() {
+        this.$axios.get('/productos-por-vencer-campana').then(res => {
+          this.notificaciones = res.data;
+        }).catch(() => {
+          this.notificaciones = [];
+        });
+      },
+      canAccess (link) {
+        if (!link || !link.can) return false
+        if (link.can === 'Todos') return true
+        const required = Array.isArray(link.can) ? link.can : [link.can]
+        return this.$store.permissions.some(p => required.includes(p.name))
+      },
+      logout () {
       this.$alert.dialog('¿Desea salir del sistema?')
         .onOk(() => {
           this.$store.isLogged = false

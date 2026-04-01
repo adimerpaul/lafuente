@@ -1,0 +1,85 @@
+export const controlCatalog = [
+  { key: 'caja_vaselina', label: 'Caja vaselinada', type: 'size', prices: { P: 10, M: 15, G: 20 } },
+  { key: 'caja_curacion', label: 'Caja de curacion', type: 'size', prices: { P: 8, M: 12, G: 16 } },
+  { key: 'caja_sutura', label: 'Caja de sutura', type: 'size', prices: { P: 18, M: 24, G: 30 } },
+  { key: 'caja_retiro_uterino', label: 'Caja de retiro de uterino', type: 'size', prices: { P: 10, M: 14, G: 18 } },
+  { key: 'caja_retiro_puntos', label: 'Caja de retiro de puntos', type: 'size', prices: { P: 10, M: 14, G: 18 } },
+  { key: 'sutura', label: 'Sutura', type: 'size', prices: { P: 15, M: 20, G: 25 } },
+  { key: 'uso_tela_adhesiva', label: 'Uso de tela adhesiva', type: 'size', prices: { P: 5, M: 7, G: 10 } },
+  { key: 'uso_micropor', label: 'Uso de micropor', type: 'yesno', prices: { SI: 6 } },
+  { key: 'nebulizacion', label: 'Nebulizacion', type: 'yesno', prices: { SI: 20 } },
+  { key: 'glicemia', label: 'Glicemia', type: 'yesno', prices: { SI: 15 } },
+  { key: 'inyectable', label: 'Inyectable', type: 'injectable', prices: { IM: 10, EV: 15, SC: 8 } },
+  { key: 'guantes_dediles', label: 'Guantes (dediles)', type: 'yesno', prices: { SI: 5 } },
+  { key: 'campo_fenestrado', label: 'Campo fenestrado', type: 'yesno', prices: { SI: 10 } },
+  { key: 'colocado_stopper', label: 'Colocado de stopper', type: 'yesno', prices: { SI: 8 } },
+  { key: 'monitor_desfibrilador', label: 'Monitor - desfibrilador', type: 'yesno', prices: { SI: 25 } },
+  { key: 'antisepticos', label: 'Antisepticos', type: 'yesno', prices: { SI: 8 } },
+  { key: 'apositos_extras', label: 'Apositos extras', type: 'yesno', prices: { SI: 7 } },
+  { key: 'torundas_gasa_extras', label: 'Torundas de gasa extras', type: 'yesno', prices: { SI: 7 } },
+  { key: 'gases_extra', label: 'Gases extra', type: 'yesno', prices: { SI: 7 } },
+  { key: 'venda_quemado', label: 'Venda de quemado', type: 'yesno', prices: { SI: 15 } },
+  { key: 'curacion', label: 'Curacion', type: 'size', prices: { P: 15, M: 20, G: 30 } },
+  { key: 'suero', label: 'Suero', type: 'yesno', prices: { SI: 25 } },
+  { key: 'aspiracion', label: 'Aspiracion', type: 'yesno', prices: { SI: 20 } },
+  { key: 'sonda', label: 'Sonda', type: 'sonda', prices: { SNG: 18, SOG: 18, SV: 15 } },
+  { key: 'compresas', label: 'Compresas', type: 'size', prices: { P: 10, M: 15, G: 20 } },
+  { key: 'yeso', label: 'Yeso', type: 'yesno', prices: { SI: 35 } },
+  { key: 'oxigeno', label: 'Oxigeno', type: 'yesno', prices: { SI: 20 } },
+  { key: 'enema', label: 'Enema', type: 'yesno', prices: { SI: 18 } },
+  { key: 'corbatas', label: 'Corbatas', type: 'yesno', prices: { SI: 10 } },
+  { key: 'algodon', label: 'Algodon', type: 'yesno', prices: { SI: 5 } }
+]
+
+export const controlOptions = {
+  size: [
+    { label: 'P', value: 'P' },
+    { label: 'M', value: 'M' },
+    { label: 'G', value: 'G' }
+  ],
+  yesno: [
+    { label: 'Si', value: 'SI' },
+    { label: 'No', value: 'NO' }
+  ],
+  injectable: [
+    { label: 'I.M.', value: 'IM' },
+    { label: 'E.V.', value: 'EV' },
+    { label: 'S.C.', value: 'SC' }
+  ],
+  sonda: [
+    { label: 'SNG', value: 'SNG' },
+    { label: 'SOG', value: 'SOG' },
+    { label: 'SV', value: 'SV' }
+  ]
+}
+
+export function createEmptyDetail () {
+  return controlCatalog.reduce((acc, item) => {
+    acc[item.key] = null
+    return acc
+  }, {})
+}
+
+export function getControlAmount (key, value) {
+  const item = controlCatalog.find(entry => entry.key === key)
+  if (!item || !value || value === 'NO') {
+    return 0
+  }
+  return Number(item.prices?.[value] || 0)
+}
+
+export function getSelectedControlItems (detalle = {}) {
+  return controlCatalog
+    .map(item => {
+      const value = detalle[item.key]
+      const amount = getControlAmount(item.key, value)
+      return value && value !== 'NO'
+        ? { key: item.key, label: item.label, value, amount }
+        : null
+    })
+    .filter(Boolean)
+}
+
+export function getControlTotal (detalle = {}) {
+  return getSelectedControlItems(detalle).reduce((sum, item) => sum + item.amount, 0)
+}

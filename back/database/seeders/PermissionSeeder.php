@@ -28,6 +28,7 @@ class PermissionSeeder extends Seeder
             'Precio de ventas productos',
             'Aranceles',
             'Formularios control',
+            'Formulario control nuevo',
             'Caja recepcion',
             'Caja recepcion crear',
         ];
