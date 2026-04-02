@@ -13,7 +13,7 @@
       <q-card-section class="q-pa-sm">
         <q-form @submit="save">
           <div class="row q-col-gutter-sm q-mb-sm">
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-2">
               <q-card flat bordered>
                 <q-card-section class="q-pa-sm">
                   <div class="text-caption">Recaudado total</div>
@@ -21,7 +21,15 @@
                 </q-card-section>
               </q-card>
             </div>
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-2">
+              <q-card flat bordered>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption">QR</div>
+                  <div class="text-h6 text-cyan">{{ money(form.qr) }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+            <div class="col-12 col-md-2">
               <q-card flat bordered>
                 <q-card-section class="q-pa-sm">
                   <div class="text-caption">Farmacia</div>
@@ -29,18 +37,26 @@
                 </q-card-section>
               </q-card>
             </div>
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-2">
               <q-card flat bordered>
                 <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Pagado ahora</div>
-                  <div class="text-h6 text-positive">{{ money(pagadoAhora) }}</div>
+                  <div class="text-caption">Egreso doctor</div>
+                  <div class="text-h6 text-negative">{{ money(form.egreso) }}</div>
                 </q-card-section>
               </q-card>
             </div>
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-2">
               <q-card flat bordered>
                 <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Saldo final</div>
+                  <div class="text-caption">Efectivo</div>
+                  <div class="text-h6 text-positive">{{ money(form.efectivo) }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+            <div class="col-12 col-md-2">
+              <q-card flat bordered>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption">Saldo final caja</div>
                   <div class="text-h6 text-indigo">{{ money(saldoFinal) }}</div>
                 </q-card-section>
               </q-card>
@@ -189,6 +205,18 @@
                 <div v-if="showEfectivo" class="col-12 col-md-4">
                   <q-input v-model.number="form.efectivo" dense outlined type="number" min="0" step="0.01" label="Monto efectivo" />
                 </div>
+                <div class="col-12 col-md-4">
+                  <q-input
+                    v-model.number="form.egreso"
+                    dense
+                    outlined
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    label="Egreso doctor"
+                    hint="Monto descontado o pagado al doctor"
+                  />
+                </div>
                 <div class="col-12">
                   <q-input v-model="form.observaciones" dense outlined type="textarea" autogrow label="Observaciones" />
                 </div>
@@ -269,6 +297,7 @@ const emptyForm = () => ({
   observaciones: '',
   qr: 0,
   efectivo: 0,
+  egreso: 0,
   costo_atencion_medica: 0,
   costo_curacion: 0,
   costo_inyectable: 0,
@@ -358,7 +387,7 @@ export default {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
     },
     saldoFinal () {
-      return this.recaudadoTotal - Number(this.form.costo_farmacia || 0)
+      return this.recaudadoTotal - Number(this.form.costo_farmacia || 0) - Number(this.form.egreso || 0)
     },
     pagoAhoraToggle: {
       get () {

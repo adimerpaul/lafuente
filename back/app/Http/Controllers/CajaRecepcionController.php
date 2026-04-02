@@ -35,13 +35,13 @@ class CajaRecepcionController extends Controller
 
         $resumen = [
             'total_recaudado' => (float) $items->sum('recaudado_total'),
-            'total_ingresos' => (float) $items->where('tipo_movimiento', 'Ingreso')->sum('recaudado_total'),
-            'total_egresos' => (float) $items->where('tipo_movimiento', 'Egreso')->sum('recaudado_total'),
+            'total_ingresos' => (float) $items->sum('recaudado_total'),
+            'total_egresos' => (float) $items->sum('egreso'),
             'total_qr' => (float) $items->sum('qr'),
             'total_efectivo' => (float) $items->sum('efectivo'),
             'total_farmacia' => (float) $items->sum('costo_farmacia'),
-            'total_final' => (float) $items->where('tipo_movimiento', 'Ingreso')->sum('recaudado_total')
-                - (float) $items->where('tipo_movimiento', 'Egreso')->sum('recaudado_total')
+            'total_final' => (float) $items->sum('recaudado_total')
+                - (float) $items->sum('egreso')
                 - (float) $items->sum('costo_farmacia'),
         ];
 
@@ -105,6 +105,7 @@ class CajaRecepcionController extends Controller
             'observaciones' => 'nullable|string',
             'qr' => 'nullable|numeric|min:0',
             'efectivo' => 'nullable|numeric|min:0',
+            'egreso' => 'nullable|numeric|min:0',
             'costo_atencion_medica' => 'nullable|numeric|min:0',
             'costo_curacion' => 'nullable|numeric|min:0',
             'costo_inyectable' => 'nullable|numeric|min:0',

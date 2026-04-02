@@ -1,7 +1,15 @@
 <template>
   <q-page class="q-pa-xs">
     <div class="row q-col-gutter-xs q-mb-xs">
-      <div class="col-12 col-md-3">
+      <div class="col-12 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="q-pa-sm bg-cyan text-white">
+            <div class="text-caption">QR</div>
+            <div class="text-h6">{{ money(summary.total_qr) }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-12 col-md-2">
         <q-card flat bordered>
           <q-card-section class="q-pa-sm bg-primary text-white">
             <div class="text-caption">Recaudado</div>
@@ -9,7 +17,7 @@
           </q-card-section>
         </q-card>
       </div>
-      <div class="col-12 col-md-3">
+      <div class="col-12 col-md-2">
         <q-card flat bordered>
           <q-card-section class="q-pa-sm bg-positive text-white">
             <div class="text-caption">Ingresos</div>
@@ -74,9 +82,6 @@
         </div>
         <div class="row q-col-gutter-sm q-mt-sm">
           <div class="col-12 col-md-3">
-            <q-chip dense color="blue-1" text-color="primary">QR: {{ money(summary.total_qr) }}</q-chip>
-          </div>
-          <div class="col-12 col-md-3">
             <q-chip dense color="green-1" text-color="positive">Efectivo: {{ money(summary.total_efectivo) }}</q-chip>
           </div>
         </div>
@@ -96,6 +101,7 @@
         <th>Atencion</th>
         <th>QR</th>
         <th>Efectivo</th>
+        <th>Egreso</th>
         <th>Recaudado</th>
         <th>Farmacia</th>
         <th>Final</th>
@@ -131,12 +137,13 @@
         <td>{{ item.tipo_atencion || '-' }}</td>
         <td class="text-right">{{ money(item.qr) }}</td>
         <td class="text-right">{{ money(item.efectivo) }}</td>
+        <td class="text-right">{{ money(item.egreso) }}</td>
         <td class="text-right text-weight-bold">{{ money(item.recaudado_total) }}</td>
         <td class="text-right">{{ money(item.costo_farmacia) }}</td>
         <td class="text-right text-weight-bold">{{ money(item.saldo_final) }}</td>
       </tr>
       <tr v-if="!items.length">
-        <td colspan="13" class="text-center text-grey">No hay registros para el rango seleccionado</td>
+        <td colspan="14" class="text-center text-grey">No hay registros para el rango seleccionado</td>
       </tr>
       </tbody>
     </q-markup-table>
@@ -228,6 +235,7 @@ export default {
           { label: 'Atencion', value: 'tipo_atencion' },
           { label: 'QR', value: row => Number(row.qr || 0).toFixed(2) },
           { label: 'Efectivo', value: row => Number(row.efectivo || 0).toFixed(2) },
+          { label: 'Egreso', value: row => Number(row.egreso || 0).toFixed(2) },
           { label: 'Recaudado', value: row => Number(row.recaudado_total || 0).toFixed(2) },
           { label: 'Farmacia', value: row => Number(row.costo_farmacia || 0).toFixed(2) },
           { label: 'Final', value: row => Number(row.saldo_final || 0).toFixed(2) }

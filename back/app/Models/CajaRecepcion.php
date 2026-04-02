@@ -52,6 +52,7 @@ class CajaRecepcion extends Model implements Auditable
         'observaciones',
         'qr',
         'efectivo',
+        'egreso',
         'recaudado_total',
         'costo_atencion_medica',
         'costo_curacion',
@@ -80,6 +81,7 @@ class CajaRecepcion extends Model implements Auditable
         'punto' => 'integer',
         'qr' => 'float',
         'efectivo' => 'float',
+        'egreso' => 'float',
         'recaudado_total' => 'float',
         'costo_atencion_medica' => 'float',
         'costo_curacion' => 'float',
@@ -140,6 +142,6 @@ class CajaRecepcion extends Model implements Auditable
 
     public function getSaldoFinalAttribute(): float
     {
-        return (float) $this->recaudado_total - (float) $this->costo_farmacia;
+        return (float) $this->recaudado_total - (float) $this->costo_farmacia - (float) $this->egreso;
     }
 }
