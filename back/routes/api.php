@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/formularios-control', [App\Http\Controllers\FormularioControlController::class, 'store']);
     Route::put('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'update']);
     Route::delete('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'destroy']);
-
+    Route::get('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'index']);
     Route::get('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'show']);
     Route::post('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'store']);
     Route::put('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'update']);
@@ -124,4 +124,3 @@ Route::get('pacientes/{paciente}/proforma-pdf', [\App\Http\Controllers\VentaCont
 Route::get('formularios-control/{formularioControl}/pdf', [\App\Http\Controllers\FormularioControlController::class, 'generatePdf']);
 
 Route::get('/inventario-inicial-medicamentos/pdf', [\App\Http\Controllers\ReporteInventarioController::class, 'inventarioInicialMedicamentosPdf']);
-Route::get('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'index']);
