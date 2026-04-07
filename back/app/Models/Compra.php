@@ -17,6 +17,7 @@ class Compra extends Model{
         'estado',
         'tipo_pago',
         'total',
+        'comentario',
         'nro_factura'
     ];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];

@@ -146,6 +146,7 @@ class CompraController extends Controller{
                 'estado' => 'Activo',
                 'tipo_pago' => $request->tipo_pago,
                 'total' => collect($request->productos)->sum(fn($p) => $p['precio'] * $p['cantidad']),
+                'comentario' => $request->comentario,
                 'nro_factura' => $request->nro_factura ?? null,
             ]);
 

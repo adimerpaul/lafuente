@@ -255,6 +255,16 @@
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="compra.nro_factura" outlined dense label="Nro. factura" />
               </div>
+              <div class="col-12 q-pa-xs">
+                <q-input
+                  v-model="compra.comentario"
+                  outlined
+                  dense
+                  autogrow
+                  type="textarea"
+                  label="Comentario"
+                />
+              </div>
               <!--              <div class="col-12 col-md-6 q-pa-xs">-->
               <!--&lt;!&ndash;                agencias&ndash;&gt;-->
               <!--                <q-select v-model="compra.agencia" :options="$agencias" label="Agencia" dense outlined :rules="[-->
@@ -403,7 +413,8 @@ export default {
       compra: {
         nit: "",
         nombre: "",
-        tipo_pago: "Efectivo"
+        tipo_pago: "Efectivo",
+        comentario: ""
       },
       pagination: {
         page: 1,
@@ -639,6 +650,7 @@ export default {
         tipo_pago: this.compra.tipo_pago,
         proveedor_id: this.proveedor.id,
         nro_factura: this.compra.nro_factura,
+        comentario: this.compra.comentario,
         productos: this.productosCompras,
         agencia: this.compra.agencia,
       };
@@ -652,7 +664,8 @@ export default {
         this.compra = {
           nit: "",
           nombre: "",
-          tipo_pago: "Efectivo"
+          tipo_pago: "Efectivo",
+          comentario: ""
         };
         this.proveedor = null;
       }).catch((err) => {

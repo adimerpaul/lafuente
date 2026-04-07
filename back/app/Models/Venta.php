@@ -17,6 +17,7 @@ class Venta extends Model{
         'estado',
         'tipo_comprobante',
         'total',
+        'comentario',
         'tipo_venta',
         'tipo_pago',
         'pagado_interno',

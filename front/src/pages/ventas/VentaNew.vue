@@ -210,6 +210,16 @@
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="venta.fecha" outlined dense label="Fecha de venta" type="date"/>
               </div>
+              <div class="col-12 q-pa-xs">
+                <q-input
+                  v-model="venta.comentario"
+                  outlined
+                  dense
+                  autogrow
+                  type="textarea"
+                  label="Comentario"
+                />
+              </div>
 
               <div class="col-12 q-pa-xs">
                 <q-markup-table dense wrap-cells flat bordered>
@@ -384,6 +394,7 @@ export default {
         tipo_venta: "Internado",
         tipo_pago: "Efectivo",
         doctor_id: null,
+        comentario: "",
       },
 
       pagination: {
@@ -580,6 +591,7 @@ export default {
         receta_id: this.receta_id,
         doctor_id: this.venta.doctor_id,
         fecha: this.venta.fecha,
+        comentario: this.venta.comentario,
       }).then((res) => {
         this.ventaDialog = false;
         this.$alert?.success?.("Venta realizada con éxito");
@@ -591,6 +603,7 @@ export default {
           codigoTipoDocumentoIdentidad: 1,
           tipo_venta: "Internado",
           tipo_pago: "Efectivo",
+          comentario: "",
         };
         Imprimir.reciboVentaSimple(res.data);
         this.receta_id = null;

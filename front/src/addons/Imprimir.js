@@ -539,6 +539,7 @@ Oruro</div>
       const ClaseConversor = conversor.conversorNumerosALetras
       const miConversor = new ClaseConversor()
       const a = miConversor.convertToText(parseInt(buy.total))
+      const comentario = (buy.comentario ?? '').toString().trim()
       const opts = {
         errorCorrectionLevel: 'M',
         type: 'png',
@@ -571,6 +572,7 @@ Oruro</div>
           <span style='float:right'>${parseFloat(r.total).toFixed(2)}</span></div>`
         })
         cadena += `<hr>
+      <div>${comentario ? 'Comentario: ' + comentario : ''}</div>
       <table style='font-size: 8px;'>
       <tr><td class='titder' style='width: 60%'>SUBTOTAL Bs</td><td class='conte2'>${parseFloat(buy.total).toFixed(2)}</td></tr>
       </table>
@@ -848,6 +850,7 @@ Oruro</div>
       const enteros  = Math.floor(total);
       const centavos = Math.round((total - enteros) * 100).toString().padStart(2, '0');
       const literal  = `Son ${miConversor.convertToText(enteros)} ${centavos}/100 Bolivianos`;
+      const comentario = (venta.comentario ?? '').toString().trim();
 
       const detalles = Array.isArray(venta.venta_detalles) ? venta.venta_detalles : [];
 
@@ -917,6 +920,8 @@ Oruro</div>
           <table>
             <tr><td class="bold">TOTAL (Bs)</td><td class="right bold">${F2(total)}</td></tr>
           </table>
+
+          ${comentario ? `<div class="mt6"><span class="bold">Comentario:</span> ${comentario}</div>` : ''}
 
           <div class="mt6">${literal}</div>
 

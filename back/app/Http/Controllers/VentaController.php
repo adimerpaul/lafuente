@@ -156,7 +156,7 @@ class VentaController extends Controller
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',
-                'tipo_comprobante','total','tipo_venta','tipo_pago','pagado_interno','doctor_id'
+                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','pagado_interno','doctor_id'
             ]));
 
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
