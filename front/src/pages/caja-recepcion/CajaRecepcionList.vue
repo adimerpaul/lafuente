@@ -77,12 +77,22 @@
           <div class="col-12 col-md-4 text-right">
             <q-btn color="primary" label="Buscar" no-caps icon="search" class="q-mr-sm" :loading="loading" @click="fetchItems" />
             <q-btn color="positive" label="Nueva caja" no-caps icon="add_circle_outline" class="q-mr-sm" :to="{ name: 'caja-recepciones-nuevo' }" />
-            <q-btn color="secondary" label="Excel" no-caps icon="file_download" @click="exportExcel" />
+            <q-btn-dropdown color="secondary" label="Reportes" no-caps icon="assessment">
+              <q-list dense>
+                <q-item clickable v-close-popup @click="exportExcel">
+                  <q-item-section avatar><q-icon name="table_view" /></q-item-section>
+                  <q-item-section>Excel</q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
           </div>
         </div>
         <div class="row q-col-gutter-sm q-mt-sm">
           <div class="col-12 col-md-3">
-            <q-chip dense color="green-1" text-color="positive">Efectivo: {{ money(summary.total_efectivo) }}</q-chip>
+            <q-chip dense color="green-1" text-color="positive">Efectivo cobrado: {{ money(summary.total_efectivo) }}</q-chip>
+          </div>
+          <div class="col-12 col-md-3">
+            <q-chip dense color="indigo-1" text-color="indigo-9">Efectivo en caja: {{ money(summary.total_efectivo_caja) }}</q-chip>
           </div>
         </div>
       </q-card-section>
@@ -180,6 +190,7 @@ export default {
         total_egresos: 0,
         total_qr: 0,
         total_efectivo: 0,
+        total_efectivo_caja: 0,
         total_farmacia: 0,
         total_final: 0
       },
@@ -250,12 +261,12 @@ export default {
           { label: 'Movimiento', value: 'tipo_movimiento' },
           { label: 'Documento', value: 'documento_label' },
           { label: 'Atencion', value: 'tipo_atencion' },
-          { label: 'QR', value: row => Number(row.qr || 0).toFixed(2) },
-          { label: 'Efectivo', value: row => Number(row.efectivo || 0).toFixed(2) },
-          { label: 'Egreso', value: row => Number(row.egreso || 0).toFixed(2) },
-          { label: 'Recaudado', value: row => Number(row.recaudado_total || 0).toFixed(2) },
-          { label: 'Farmacia', value: row => Number(row.costo_farmacia || 0).toFixed(2) },
-          { label: 'Final', value: row => Number(row.saldo_final || 0).toFixed(2) }
+          { label: 'QR', value: row => Number(row.qr || 0) },
+          { label: 'Efectivo', value: row => Number(row.efectivo || 0) },
+          { label: 'Egreso', value: row => Number(row.egreso || 0) },
+          { label: 'Recaudado', value: row => Number(row.recaudado_total || 0) },
+          { label: 'Farmacia', value: row => Number(row.costo_farmacia || 0) },
+          { label: 'Final', value: row => Number(row.saldo_final || 0) }
         ],
         content: this.activeItems
       }]

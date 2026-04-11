@@ -42,6 +42,8 @@ class CajaRecepcionController extends Controller
             'total_egresos' => (float) $activeItems->sum('egreso'),
             'total_qr' => (float) $activeItems->sum('qr'),
             'total_efectivo' => (float) $activeItems->sum('efectivo'),
+            'total_efectivo_caja' => (float) $activeItems->sum('efectivo')
+                - (float) $activeItems->sum('egreso'),
             'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
             'total_final' => (float) $activeItems->sum('efectivo')
                 - (float) $activeItems->sum('egreso'),
