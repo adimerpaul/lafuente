@@ -47,6 +47,7 @@ class CajaRecepcion extends Model implements Auditable
         'punto',
         'nombre_factura',
         'numero_ficha',
+        'estado',
         'formulario_diagnostico',
         'formulario_detalle',
         'formulario_observaciones',
@@ -154,11 +155,11 @@ class CajaRecepcion extends Model implements Auditable
 
     public function getEstadoLabelAttribute(): string
     {
-        return $this->trashed() ? 'Anulado' : 'Activo';
+        return $this->estado ?: 'Activo';
     }
 
     public function getIsAnuladoAttribute(): bool
     {
-        return $this->trashed();
+        return $this->estado === 'Anulado';
     }
 }

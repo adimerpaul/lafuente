@@ -14,7 +14,7 @@ class CajaRecepcionController extends Controller
         $userId = $request->get('user_id');
         $search = trim((string) $request->get('search', ''));
 
-        $query = CajaRecepcion::withTrashed()->with(['user', 'paciente', 'doctor'])
+        $query = CajaRecepcion::with(['user', 'paciente', 'doctor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
@@ -34,7 +34,7 @@ class CajaRecepcionController extends Controller
             });
 
         $items = $query->orderByDesc('fecha')->orderByDesc('id')->get();
-        $activeItems = $items->filter(fn ($item) => !$item->trashed());
+        $activeItems = $items->where('estado', '!=', 'Anulado');
 
         $resumen = [
             'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
@@ -64,6 +64,7 @@ class CajaRecepcionController extends Controller
         $data['user_id'] = $request->user()->id;
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
+        $data['estado'] = 'Activo';
         $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
 
         $cajaRecepcion = CajaRecepcion::create($data);
@@ -86,7 +87,9 @@ class CajaRecepcionController extends Controller
 
     public function destroy(CajaRecepcion $cajaRecepcion)
     {
-        $cajaRecepcion->delete();
+        $cajaRecepcion->update([
+            'estado' => 'Anulado',
+        ]);
 
         return response()->json(null, 204);
     }
@@ -106,6 +109,7 @@ class CajaRecepcionController extends Controller
             'punto' => 'nullable|integer|in:0,1',
             'nombre_factura' => 'nullable|string|max:255',
             'numero_ficha' => 'nullable|string|max:255',
+            'estado' => 'nullable|in:Activo,Anulado',
             'formulario_diagnostico' => 'nullable|string',
             'formulario_observaciones' => 'nullable|string',
             'formulario_detalle' => 'nullable|array',

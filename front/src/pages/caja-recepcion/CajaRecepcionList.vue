@@ -194,6 +194,9 @@ export default {
   computed: {
     usersOptions () {
       return [{ label: 'Todos', value: '' }, ...this.users.map(user => ({ label: user.name, value: user.id }))]
+    },
+    activeItems () {
+      return this.items.filter(item => !item.is_anulado)
     }
   },
   mounted () {
@@ -239,6 +242,7 @@ export default {
       const data = [{
         sheet: 'Caja recepcion',
         columns: [
+          { label: 'Estado', value: row => row.estado_label || '' },
           { label: 'Fecha y hora', value: row => `${row.fecha || ''} ${row.hora || ''}`.trim() },
           { label: 'Paciente', value: row => row.paciente?.nombre_completo || '' },
           { label: 'Ficha', value: 'numero_ficha' },
@@ -253,9 +257,9 @@ export default {
           { label: 'Farmacia', value: row => Number(row.costo_farmacia || 0).toFixed(2) },
           { label: 'Final', value: row => Number(row.saldo_final || 0).toFixed(2) }
         ],
-        content: this.items
+        content: this.activeItems
       }]
-      Excel.export(data, 'Caja_Recepcion')
+      Excel.export(data, 'Caja_Recepcion_Activos')
     }
   }
 }
