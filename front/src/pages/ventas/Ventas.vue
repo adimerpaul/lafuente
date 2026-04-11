@@ -9,7 +9,7 @@
                 <q-icon name="monetization_on" size="50px" color="white" />
               </q-item-section>
               <q-item-section>
-                <q-item-label caption class="text-white">Ventas Interno</q-item-label>
+                <q-item-label caption class="text-white">Ventas Internaciones</q-item-label>
                 <q-item-label  class="text-white text-h4">{{totalInternos}} Bs</q-item-label>
               </q-item-section>
             </q-item>
@@ -64,11 +64,41 @@
               </div>
               <div class="col-12 col-md-2 text-right">
                 <q-btn-dropdown color="primary" label="Exportar" no-caps  >
-                  <q-item clickable v-ripple @click="exportExcel" v-close-popup>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo('Externo')" v-close-popup>
                     <q-item-section avatar>
                       <q-icon name="file_download" />
                     </q-item-section>
-                    <q-item-section>Excel</q-item-section>
+                    <q-item-section>Excel externo</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo('Internado')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel interno</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo()" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel todos</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo('Internado')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF interno</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo('Externo')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF externo</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo()" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF todos</q-item-section>
                   </q-item>
                 </q-btn-dropdown>
               </div>
@@ -799,17 +829,24 @@ export default {
       this.venta = venta;
       this.devDialog = true;
     },
-    exportExcel() {
-      // 1) Filtrar solo ventas activas
-      const ventasActivas = (this.ventas || []).filter(v => String(v.estado).toLowerCase() === 'activo');
+    getVentasExportables(tipoVenta = null) {
+      return (this.ventas || []).filter(v => {
+        const esActiva = String(v.estado).toLowerCase() === 'activo';
+        const coincideTipo = tipoVenta ? v.tipo_venta === tipoVenta : true;
+        return esActiva && coincideTipo;
+      });
+    },
+    exportExcelPorTipo(tipoVenta = null) {
+      const ventasActivas = this.getVentasExportables(tipoVenta);
+      const sufijoTipo = tipoVenta || 'Todos';
 
       if (ventasActivas.length === 0) {
-        this.$q.notify({ type: 'warning', message: 'No hay ventas ACTIVAS para exportar' });
+        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''} para exportar` });
         return;
       }
 
-      // 2) Exportar
       const data = [{
+        sheet: `Ventas ${sufijoTipo}`,
         columns: [
           { label: "ID",        value: "id" },
           { label: "Fecha",     value: "fecha" },
@@ -823,7 +860,31 @@ export default {
         content: ventasActivas
       }];
 
-      Excel.export(data, 'Ventas_Activas');
+      Excel.export(data, `Ventas_Activas_${sufijoTipo}`);
+    },
+    exportPdfPorTipo(tipoVenta = null) {
+      const ventas = this.getVentasExportables(tipoVenta);
+      if (ventas.length === 0) {
+        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''} para exportar en PDF` });
+        return;
+      }
+      const params = new URLSearchParams({
+        fechaInicio: this.fechaInicio || '',
+        fechaFin: this.fechaFin || '',
+        user: this.user || '',
+      });
+      if (tipoVenta) params.append('tipoVenta', tipoVenta);
+
+      const url = `${this.$url}/../ventas/pdf?${params.toString()}`;
+      window.open(url, '_blank');
+    },
+    escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
     },
     usersGet() {
       this.$axios.get('users').then(res => {

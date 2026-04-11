@@ -5,18 +5,34 @@
         <div class="text-right actions-bar">
           <q-btn-dropdown
             color="primary"
-            label="Excel"
+            label="Reportes"
             no-caps
-            icon="fa-solid fa-file-excel"
+            icon="assessment"
             :loading="loading"
           >
             <q-list>
-              <q-item clickable v-close-popup @click="exportExcel('all')">
+              <q-item clickable v-close-popup @click="exportPdf('all')">
                 <q-item-section avatar>
-                  <q-icon name="download" />
+                  <q-icon name="picture_as_pdf" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Descargar todo</q-item-label>
+                  <q-item-label>Exportar PDF</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportPdf('existing')">
+                <q-item-section avatar>
+                  <q-icon name="inventory_2" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Exportar PDF existencia</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportExcel('all')">
+                <q-item-section avatar>
+                  <q-icon name="fa-solid fa-file-excel" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Exportar Excel todo</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item clickable v-close-popup @click="exportExcel('existing')">
@@ -24,41 +40,19 @@
                   <q-icon name="inventory_2" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Descargar solo existentes</q-item-label>
+                  <q-item-label>Exportar Excel existencia</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="openExistenciaFechaDialog">
+                <q-item-section avatar>
+                  <q-icon name="event" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Existencia en una fecha</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
           </q-btn-dropdown>
-
-          <q-btn
-            color="secondary"
-            label="PDF"
-            no-caps
-            icon="picture_as_pdf"
-            :loading="loading"
-            icon-right="fa-solid fa-caret-down"
-          >
-            <q-menu>
-              <q-list>
-                <q-item clickable v-close-popup @click="exportPdf('all')">
-                  <q-item-section avatar>
-                    <q-icon name="download" />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>Descargar todo en PDF</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item clickable v-close-popup @click="exportPdf('existing')">
-                  <q-item-section avatar>
-                    <q-icon name="inventory_2" />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>Descargar solo existentes</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
 
           <q-btn
             color="green"
@@ -279,6 +273,78 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="existenciaFechaDialog" persistent>
+      <q-card style="width: 520px; max-width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Existencia en una fecha</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="existenciaFechaDialog = false" />
+        </q-card-section>
+        <q-card-section class="q-gutter-md">
+          <q-input
+            v-model="existenciaFecha"
+            type="date"
+            label="Fecha"
+            outlined
+            dense
+            :min="fechaInicioExistencias"
+            :max="fechaHoy"
+          />
+          <div class="text-caption text-grey-7">
+            El cálculo histórico se reconstruye desde el 2025-10-01 usando compras activas menos ventas activas registradas hasta la fecha seleccionada.
+          </div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-sm-6">
+              <q-btn
+                class="full-width"
+                color="secondary"
+                label="Exportar PDF"
+                no-caps
+                icon="picture_as_pdf"
+                :loading="loading"
+                @click="exportExistenciaFechaPdf('all')"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-btn
+                class="full-width"
+                color="secondary"
+                outline
+                label="Exportar PDF existencia"
+                no-caps
+                icon="inventory_2"
+                :loading="loading"
+                @click="exportExistenciaFechaPdf('existing')"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-btn
+                class="full-width"
+                color="positive"
+                label="Exportar Excel todo"
+                no-caps
+                icon="fa-solid fa-file-excel"
+                :loading="loading"
+                @click="exportExistenciaFechaExcel('all')"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-btn
+                class="full-width"
+                color="positive"
+                outline
+                label="Exportar Excel existencia"
+                no-caps
+                icon="inventory_2"
+                :loading="loading"
+                @click="exportExistenciaFechaExcel('existing')"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -314,11 +380,16 @@ export default {
       historialCompras: [],
       productoHistorialNombre: '',
       dialogFoto: false,
+      existenciaFechaDialog: false,
+      existenciaFecha: '',
+      fechaInicioExistencias: '2025-10-01',
+      fechaHoy: new Date().toISOString().slice(0, 10),
     }
   },
   mounted () {
     this.productosGet()
     this.debouncedCambioPrecio = debounce(this.cambioPrecio, 500)
+    this.existenciaFecha = this.fechaHoy
   },
   methods: {
     getExportMeta (mode) {
@@ -372,6 +443,72 @@ export default {
         page += 1
       }
     },
+    async streamProductosExistenciaFechaExport (fecha, existingOnly, onChunk) {
+      let page = 1
+      let lastPage = 1
+      const perPage = 4000
+
+      while (page <= lastPage) {
+        const { data } = await this.$axios.get('productos-existencia-fecha-export', {
+          params: {
+            fecha,
+            page,
+            per_page: perPage,
+            existentes: existingOnly,
+          }
+        })
+
+        const items = data.data || []
+        lastPage = data.last_page || 1
+
+        if (items.length) {
+          await onChunk(items, {
+            page,
+            total: data.total || 0,
+            lastPage,
+          })
+        }
+
+        page += 1
+      }
+    },
+    getExistenciaFechaMeta (mode, fecha) {
+      const existing = mode === 'existing'
+
+      return {
+        existing,
+        title: existing
+          ? `Inventario de productos existentes al ${fecha}`
+          : `Inventario completo de productos al ${fecha}`,
+        fileName: existing
+          ? `inventario_productos_existencia_${fecha}_existentes`
+          : `inventario_productos_existencia_${fecha}_todo`,
+      }
+    },
+    getExistenciaFechaSeleccionada () {
+      if (!this.existenciaFecha) {
+        this.$alert.error('Debe seleccionar una fecha')
+        return null
+      }
+
+      if (this.existenciaFecha < this.fechaInicioExistencias) {
+        this.$alert.error(`Solo se puede consultar existencia desde ${this.fechaInicioExistencias}`)
+        return null
+      }
+
+      if (this.existenciaFecha > this.fechaHoy) {
+        this.$alert.error(`La fecha no puede ser mayor a ${this.fechaHoy}`)
+        return null
+      }
+
+      return this.existenciaFecha
+    },
+    openExistenciaFechaDialog () {
+      this.existenciaFechaDialog = true
+      if (!this.existenciaFecha) {
+        this.existenciaFecha = this.fechaHoy
+      }
+    },
     async exportExcel (mode) {
       const meta = this.getExportMeta(mode)
       const rows = []
@@ -379,6 +516,48 @@ export default {
       this.loading = true
       try {
         await this.streamProductosExport(meta.existing, async (items) => {
+          items.forEach((item) => {
+            rows.push({
+              nombre: item.nombre,
+              descripcion: item.descripcion,
+              unidad: item.unidad,
+              precio: Number(item.precio || 0),
+              cantidad: Number(item.cantidad || 0),
+              stock_minimo: item.stock_minimo,
+              stock_maximo: item.stock_maximo,
+            })
+          })
+        })
+
+        Excel.export([{
+          sheet: 'Inventario',
+          columns: [
+            { label: 'Nombre', value: 'nombre' },
+            { label: 'Descripcion', value: 'descripcion' },
+            { label: 'Unidad', value: 'unidad' },
+            { label: 'Precio', value: 'precio' },
+            { label: 'Existencia', value: 'cantidad' },
+            { label: 'Stock minimo', value: 'stock_minimo' },
+            { label: 'Stock maximo', value: 'stock_maximo' },
+          ],
+          content: rows
+        }], meta.fileName)
+      } catch (error) {
+        this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
+      } finally {
+        this.loading = false
+      }
+    },
+    async exportExistenciaFechaExcel (mode) {
+      const fecha = this.getExistenciaFechaSeleccionada()
+      if (!fecha) return
+
+      const meta = this.getExistenciaFechaMeta(mode, fecha)
+      const rows = []
+
+      this.loading = true
+      try {
+        await this.streamProductosExistenciaFechaExport(fecha, meta.existing, async (items) => {
           items.forEach((item) => {
             rows.push({
               nombre: item.nombre,
@@ -493,6 +672,46 @@ export default {
         let totalRows = 0
 
         await this.streamProductosExport(meta.existing, async (items) => {
+          rowsHtml += this.renderPdfRows(items, totalRows)
+          totalRows += items.length
+        })
+
+        printWindow.document.open()
+        printWindow.document.write(this.buildPdfHtml(meta.title, rowsHtml, totalRows))
+        printWindow.document.close()
+
+        setTimeout(() => {
+          printWindow.focus()
+          printWindow.print()
+        }, 250)
+      } catch (error) {
+        printWindow.close()
+        this.$alert.error(error.response?.data?.message || 'No se pudo generar el PDF')
+      } finally {
+        this.loading = false
+      }
+    },
+    async exportExistenciaFechaPdf (mode) {
+      const fecha = this.getExistenciaFechaSeleccionada()
+      if (!fecha) return
+
+      const meta = this.getExistenciaFechaMeta(mode, fecha)
+      const printWindow = window.open('', '_blank')
+
+      if (!printWindow) {
+        this.$alert.error('El navegador bloqueo la ventana emergente del PDF')
+        return
+      }
+
+      this.loading = true
+      printWindow.document.write('<html><body><p>Generando PDF...</p></body></html>')
+      printWindow.document.close()
+
+      try {
+        let rowsHtml = ''
+        let totalRows = 0
+
+        await this.streamProductosExistenciaFechaExport(fecha, meta.existing, async (items) => {
           rowsHtml += this.renderPdfRows(items, totalRows)
           totalRows += items.length
         })

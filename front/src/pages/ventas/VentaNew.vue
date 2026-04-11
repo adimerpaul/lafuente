@@ -210,6 +210,18 @@
               <div class="col-12 col-md-6 q-pa-xs">
                 <q-input v-model="venta.fecha" outlined dense label="Fecha de venta" type="date"/>
               </div>
+              <div class="col-12 col-md-3 q-pa-xs">
+                <q-checkbox v-model="venta.facturado" label="Facturado" />
+              </div>
+              <div class="col-12 col-md-3 q-pa-xs">
+                <q-input
+                  v-model="venta.numero_factura"
+                  outlined
+                  dense
+                  label="Número de factura"
+                  :disable="!venta.facturado"
+                />
+              </div>
               <div class="col-12 q-pa-xs">
                 <q-input
                   v-model="venta.comentario"
@@ -393,6 +405,8 @@ export default {
         codigoTipoDocumentoIdentidad: 1,
         tipo_venta: "Internado",
         tipo_pago: "Efectivo",
+        facturado: false,
+        numero_factura: "",
         doctor_id: null,
         comentario: "",
       },
@@ -550,6 +564,7 @@ export default {
       // defecto externo
       this.venta.tipo_venta = 'Externo';
       this.venta.fecha = moment().format('YYYY-MM-DD');
+      if (!this.venta.facturado) this.venta.numero_factura = '';
     },
 
     productosGet() {
@@ -578,6 +593,10 @@ export default {
     },
 
     submitVenta() {
+      if (this.venta.facturado && !String(this.venta.numero_factura || '').trim()) {
+        this.$alert?.error?.("Debe ingresar el número de factura");
+        return;
+      }
       this.loading = true;
       this.$axios.post("ventas", {
         ci: this.venta.nit,
@@ -591,6 +610,8 @@ export default {
         receta_id: this.receta_id,
         doctor_id: this.venta.doctor_id,
         fecha: this.venta.fecha,
+        facturado: this.venta.facturado,
+        numero_factura: this.venta.facturado ? this.venta.numero_factura : null,
         comentario: this.venta.comentario,
       }).then((res) => {
         this.ventaDialog = false;
@@ -603,6 +624,8 @@ export default {
           codigoTipoDocumentoIdentidad: 1,
           tipo_venta: "Internado",
           tipo_pago: "Efectivo",
+          facturado: false,
+          numero_factura: "",
           comentario: "",
         };
         Imprimir.reciboVentaSimple(res.data);

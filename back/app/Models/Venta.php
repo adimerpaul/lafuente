@@ -20,9 +20,14 @@ class Venta extends Model{
         'comentario',
         'tipo_venta',
         'tipo_pago',
+        'facturado',
+        'numero_factura',
         'pagado_interno',
         'doctor_id',
         'paciente_id_ref'
+    ];
+    protected $casts = [
+        'facturado' => 'boolean',
     ];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     function user(){

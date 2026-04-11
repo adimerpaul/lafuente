@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productosAll', [App\Http\Controllers\ProductoController::class, 'productosAll']);
     Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
     Route::get('/productos-export', [App\Http\Controllers\ProductoController::class, 'exportIndex']);
+    Route::get('/productos-existencia-fecha-export', [App\Http\Controllers\ProductoController::class, 'exportExistenciaFecha']);
     Route::put('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'update']);
     Route::delete('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'destroy']);
 
@@ -57,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ventas', [App\Http\Controllers\VentaController::class, 'index']);
     Route::put('/ventasAnular/{venta}', [App\Http\Controllers\VentaController::class, 'anular']);
     Route::put('/tipoVentasChange/{venta}', [App\Http\Controllers\VentaController::class, 'tipoVentasChange']);
+    Route::put('/ventasFacturacion/{venta}', [App\Http\Controllers\VentaController::class, 'actualizarFacturacion']);
 
     Route::post('/paciente_ventas', [App\Http\Controllers\PacienteVentaController::class, 'store']);
     Route::put('/paciente_ventas/{paciente_venta}', [App\Http\Controllers\PacienteVentaController::class, 'update']);
@@ -121,6 +123,7 @@ Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoCo
 Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'generatePdf']);
 
 Route::get('pacientes/{paciente}/proforma-pdf', [\App\Http\Controllers\VentaController::class, 'proformaPacientePdf']);
+Route::get('ventas/pdf', [\App\Http\Controllers\VentaController::class, 'ventasPdf']);
 Route::get('formularios-control/{formularioControl}/pdf', [\App\Http\Controllers\FormularioControlController::class, 'generatePdf']);
 
 Route::get('/inventario-inicial-medicamentos/pdf', [\App\Http\Controllers\ReporteInventarioController::class, 'inventarioInicialMedicamentosPdf']);

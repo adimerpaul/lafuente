@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\CompraDetalle;
 use App\Models\Producto;
 use App\Models\Receta;
+use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -13,6 +14,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class VentaController extends Controller
 {
+    private function ventasIndexQuery(Request $request)
+    {
+        $fechaInicio = $request->input('fechaInicio');
+        $fechaFin    = $request->input('fechaFin');
+        $user        = $request->input('user');
+        $tipoVenta   = $request->input('tipoVenta');
+
+        $q = Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')
+            ->when($fechaInicio && $fechaFin, fn($qq) => $qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
+            ->when($user, fn($qq) => $qq->where('user_id', $user))
+            ->when($tipoVenta, fn($qq) => $qq->where('tipo_venta', $tipoVenta))
+            ->orderBy('created_at', 'desc');
+
+        return $q;
+    }
+
     //    this.$axios.put(`ventasCambiarTipoPago/${venta.id}`, { tipo_pago: tipoPago }).then(res => {
 //Route::put('/ventasCambiarTipoPago/{venta}', [App\Http\Controllers\VentaController::class, 'cambiarTipoPago']);
     function cambiarTipoPago(Request $request, $id)
@@ -27,6 +44,22 @@ class VentaController extends Controller
         $venta->tipo_pago = $tipoPago;
         $venta->save();
         return $venta;
+    }
+    public function actualizarFacturacion(Request $request, $id)
+    {
+        $venta = Venta::findOrFail($id);
+        $facturado = filter_var($request->input('facturado', false), FILTER_VALIDATE_BOOLEAN);
+        $numeroFactura = trim((string)$request->input('numero_factura', ''));
+
+        if ($facturado && $numeroFactura === '') {
+            return response()->json(['message' => 'Debe ingresar el número de factura cuando la venta está facturada.'], 422);
+        }
+
+        $venta->facturado = $facturado;
+        $venta->numero_factura = $facturado ? $numeroFactura : null;
+        $venta->save();
+
+        return Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')->findOrFail($venta->id);
     }
     function ventasDevolverProducto(Request $request){
 //        venta_id: ventaId,
@@ -120,6 +153,46 @@ class VentaController extends Controller
         return $pdf->stream('proforma_paciente_'.$paciente->id.'.pdf');
         // ->download('proforma_paciente_'.$paciente->id.'.pdf');
     }
+    public function ventasPdf(Request $request)
+    {
+        $ventas = $this->ventasIndexQuery($request)
+            ->where('estado', 'Activo')
+            ->get();
+
+        $totalGeneral = $ventas->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalInternado = $ventas
+            ->where('tipo_venta', 'Internado')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalExterno = $ventas
+            ->where('tipo_venta', 'Externo')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+
+        $hoy = now();
+        $tipoVenta = $request->input('tipoVenta');
+        $userId = $request->input('user');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+        $titulo = match ($tipoVenta) {
+            'Internado' => 'REPORTE DE VENTAS INTERNAS',
+            'Externo' => 'REPORTE DE VENTAS EXTERNAS',
+            default => 'REPORTE GENERAL DE VENTAS',
+        };
+
+        $pdf = Pdf::loadView('pdf.ventas_reporte', [
+            'ventas' => $ventas,
+            'totalGeneral' => $totalGeneral,
+            'totalInternado' => $totalInternado,
+            'totalExterno' => $totalExterno,
+            'fechaInicio' => $request->input('fechaInicio'),
+            'fechaFin' => $request->input('fechaFin'),
+            'userId' => $userId,
+            'userLabel' => $userLabel,
+            'tipoVenta' => $tipoVenta,
+            'titulo' => $titulo,
+            'hoy' => $hoy,
+        ])->setPaper('letter');
+
+        return $pdf->stream('ventas_reporte.pdf');
+    }
     public function searchCliente(Request $request)
     {
         $nit = trim((string)$request->input('nit', ''));
@@ -152,11 +225,15 @@ class VentaController extends Controller
                 'estado'     => 'Activo',
                 'tipo_comprobante' => 'Venta',
                 'tipo_venta' => ($request->input('tipo_venta')=='Interno' || $request->input('tipo_venta')=='Internado')?'Internado':'Externo',
+                'facturado' => filter_var($request->input('facturado', false), FILTER_VALIDATE_BOOLEAN),
             ]);
+            if ($request->boolean('facturado') && trim((string)$request->input('numero_factura', '')) === '') {
+                return response()->json(['message' => 'Debe ingresar el número de factura cuando la venta está facturada.'], 422);
+            }
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',
-                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','pagado_interno','doctor_id'
+                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','facturado','numero_factura','pagado_interno','doctor_id'
             ]));
 
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
@@ -317,17 +394,7 @@ class VentaController extends Controller
 
     public function index(Request $request)
     {
-        $fechaInicio = $request->input('fechaInicio');
-        $fechaFin    = $request->input('fechaFin');
-        $user        = $request->input('user');
-
-        $q = Venta::with('user', 'cliente','ventaDetalles')
-            ->when($fechaInicio && $fechaFin, fn($qq)=>$qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
-            ->orderBy('created_at', 'desc');
-
-        if ($user) $q->where('user_id', $user);
-
-        return $q->get();
+        return $this->ventasIndexQuery($request)->get();
     }
 
     public function show($id)

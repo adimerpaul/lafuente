@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductoController extends Controller{
+    private const FECHA_INICIO_EXISTENCIAS = '2025-10-01';
+
     private function baseProductosQuery(?string $search = null)
     {
         $search = trim((string) $search);
@@ -31,6 +35,77 @@ class ProductoController extends Controller{
                 }],
                 'cantidad_venta'
             )
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('productos.nombre', 'like', "%{$search}%")
+                        ->orWhere('productos.descripcion', 'like', "%{$search}%");
+                });
+            });
+    }
+
+    private function resolveFechaExistencia(Request $request): string
+    {
+        $fecha = $request->input('fecha');
+
+        if (!$fecha) {
+            abort(422, 'Debe seleccionar una fecha para consultar la existencia.');
+        }
+
+        try {
+            $fechaNormalizada = Carbon::parse($fecha)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            abort(422, 'La fecha enviada no es válida.');
+        }
+
+        if ($fechaNormalizada < self::FECHA_INICIO_EXISTENCIAS) {
+            abort(422, 'Solo se puede consultar existencia desde 2025-10-01.');
+        }
+
+        return $fechaNormalizada;
+    }
+
+    private function baseProductosExistenciaFechaQuery(string $fecha, ?string $search = null)
+    {
+        $search = trim((string) $search);
+
+        $ingresosSubquery = DB::table('compra_detalles as cd')
+            ->join('compras as c', 'c.id', '=', 'cd.compra_id')
+            ->selectRaw('cd.producto_id, SUM(COALESCE(cd.cantidad, 0)) as ingresos')
+            ->where('c.estado', 'Activo')
+            ->where('cd.estado', 'Activo')
+            ->whereNull('c.deleted_at')
+            ->whereNull('cd.deleted_at')
+            ->whereDate('c.fecha', '<=', $fecha)
+            ->groupBy('cd.producto_id');
+
+        $salidasSubquery = DB::table('venta_detalles as vd')
+            ->join('ventas as v', 'v.id', '=', 'vd.venta_id')
+            ->selectRaw('vd.producto_id, SUM(COALESCE(vd.cantidad, 0)) as salidas')
+            ->where('v.estado', 'Activo')
+            ->whereNull('v.deleted_at')
+            ->whereNull('vd.deleted_at')
+            ->whereDate('v.fecha', '<=', $fecha)
+            ->groupBy('vd.producto_id');
+
+        return Producto::query()
+            ->leftJoinSub($ingresosSubquery, 'ingresos_hasta_fecha', function ($join) {
+                $join->on('productos.id', '=', 'ingresos_hasta_fecha.producto_id');
+            })
+            ->leftJoinSub($salidasSubquery, 'salidas_hasta_fecha', function ($join) {
+                $join->on('productos.id', '=', 'salidas_hasta_fecha.producto_id');
+            })
+            ->select([
+                'productos.id',
+                'productos.nombre',
+                'productos.descripcion',
+                'productos.unidad',
+                'productos.precio',
+                'productos.stock',
+                'productos.stock_minimo',
+                'productos.stock_maximo',
+                'productos.imagen',
+            ])
+            ->selectRaw('COALESCE(ingresos_hasta_fecha.ingresos, 0) - COALESCE(salidas_hasta_fecha.salidas, 0) as cantidad')
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($query) use ($search) {
                     $query->where('productos.nombre', 'like', "%{$search}%")
@@ -133,6 +208,32 @@ class ProductoController extends Controller{
         }
 
         return response()->json($query->paginate($perPage));
+    }
+    public function exportExistenciaFecha(Request $request)
+    {
+        $fecha = $this->resolveFechaExistencia($request);
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 5000), 10000);
+        $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+
+        $query = $this->baseProductosExistenciaFechaQuery($fecha, $search);
+
+        if ($soloExistentes) {
+            $query->having('cantidad', '>', 0)
+                ->orderByDesc('cantidad')
+                ->orderBy('productos.nombre');
+        } else {
+            $query->orderBy('productos.nombre');
+        }
+
+        $result = $query->paginate($perPage);
+        $result->appends([
+            'fecha' => $fecha,
+            'existentes' => $soloExistentes,
+            'search' => $search,
+        ]);
+
+        return response()->json($result);
     }
     public function index(Request $request) {
         $search = $request->search;
