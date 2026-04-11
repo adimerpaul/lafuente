@@ -83,6 +83,10 @@
                   <q-item-section avatar><q-icon name="table_view" /></q-item-section>
                   <q-item-section>Excel</q-item-section>
                 </q-item>
+                <q-item clickable v-close-popup @click="exportPdf">
+                  <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
+                  <q-item-section>PDF</q-item-section>
+                </q-item>
               </q-list>
             </q-btn-dropdown>
           </div>
@@ -271,6 +275,22 @@ export default {
         content: this.activeItems
       }]
       Excel.export(data, 'Caja_Recepcion_Activos')
+    },
+    exportPdf () {
+      if (!this.items.length) {
+        this.$q.notify({ type: 'warning', message: 'No hay registros para exportar en PDF' })
+        return
+      }
+
+      const params = new URLSearchParams({
+        fechaInicio: this.filters.fechaInicio || '',
+        fechaFin: this.filters.fechaFin || '',
+        user_id: this.filters.user_id || '',
+        search: this.filters.search || ''
+      })
+
+      const url = `${this.$url}/../caja-recepciones/pdf?${params.toString()}`
+      window.open(url, '_blank')
     }
   }
 }

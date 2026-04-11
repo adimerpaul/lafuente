@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'update']);
     Route::delete('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'destroy']);
     Route::get('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'index']);
+    Route::get('/caja-recepciones/pdf', [App\Http\Controllers\CajaRecepcionController::class, 'pdf']);
     Route::get('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'show']);
     Route::post('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'store']);
     Route::put('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'update']);

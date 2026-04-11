@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CajaRecepcion;
 use Illuminate\Http\Request;
 
 class CajaRecepcionController extends Controller
 {
-    public function index(Request $request)
+    private function queryIndex(Request $request)
     {
         $fechaInicio = $request->get('fechaInicio');
         $fechaFin = $request->get('fechaFin');
         $userId = $request->get('user_id');
         $search = trim((string) $request->get('search', ''));
 
-        $query = CajaRecepcion::with(['user', 'paciente', 'doctor'])
+        return CajaRecepcion::with(['user', 'paciente', 'doctor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
@@ -32,8 +34,11 @@ class CajaRecepcionController extends Controller
                         });
                 });
             });
+    }
 
-        $items = $query->orderByDesc('fecha')->orderByDesc('id')->get();
+    public function index(Request $request)
+    {
+        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
         $activeItems = $items->where('estado', '!=', 'Anulado');
 
         $resumen = [
@@ -53,6 +58,43 @@ class CajaRecepcionController extends Controller
             'data' => $items,
             'summary' => $resumen,
         ]);
+    }
+
+    public function pdf(Request $request)
+    {
+//        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
+//        $activeItems = $items->where('estado', '!=', 'Anulado');
+//
+//        $summary = [
+//            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
+//            'total_egresos' => (float) $activeItems->sum('egreso'),
+//            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
+//            'saldo' => (float) $activeItems->sum('recaudado_total')
+//                - (float) $activeItems->sum('egreso')
+//                - (float) $activeItems->sum('costo_farmacia'),
+//            'total_qr' => (float) $activeItems->sum('qr'),
+//            'total_efectivo' => (float) $activeItems->sum('efectivo'),
+//            'saldo_final_efectivo' => ((float) $activeItems->sum('recaudado_total')
+//                    - (float) $activeItems->sum('egreso')
+//                    - (float) $activeItems->sum('costo_farmacia'))
+//                - (float) $activeItems->sum('qr'),
+//        ];
+//
+//        $hoy = now();
+//        $userId = $request->get('user_id');
+//        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+//
+//        $pdf = Pdf::loadView('pdf.caja_recepciones_reporte', [
+//            'items' => $items,
+//            'summary' => $summary,
+//            'fechaInicio' => $request->get('fechaInicio'),
+//            'fechaFin' => $request->get('fechaFin'),
+//            'search' => $request->get('search'),
+//            'userLabel' => $userLabel,
+//            'hoy' => $hoy,
+//        ])->setPaper('letter', 'landscape');
+//
+//        return $pdf->stream('caja_recepciones_reporte.pdf');
     }
 
     public function show(CajaRecepcion $cajaRecepcion)
