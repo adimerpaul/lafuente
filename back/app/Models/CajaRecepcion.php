@@ -37,6 +37,7 @@ class CajaRecepcion extends Model implements Auditable
 
     protected $fillable = [
         'fecha',
+        'hora',
         'user_id',
         'paciente_id',
         'doctor_id',
@@ -117,6 +118,8 @@ class CajaRecepcion extends Model implements Auditable
         'documento_label',
         'recaudado_calculado',
         'saldo_final',
+        'estado_label',
+        'is_anulado',
     ];
 
     public function user()
@@ -146,6 +149,16 @@ class CajaRecepcion extends Model implements Auditable
 
     public function getSaldoFinalAttribute(): float
     {
-        return (float) $this->recaudado_total - (float) $this->egreso;
+        return (float) $this->efectivo - (float) $this->egreso;
+    }
+
+    public function getEstadoLabelAttribute(): string
+    {
+        return $this->trashed() ? 'Anulado' : 'Activo';
+    }
+
+    public function getIsAnuladoAttribute(): bool
+    {
+        return $this->trashed();
     }
 }

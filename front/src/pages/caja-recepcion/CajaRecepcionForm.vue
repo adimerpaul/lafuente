@@ -103,6 +103,9 @@
                   <q-input v-model="form.fecha" dense outlined type="date" label="Fecha" :rules="[required]" />
                 </div>
                 <div class="col-12 col-md-3">
+                  <q-input v-model="form.hora" dense outlined type="time" label="Hora" :rules="[required]" />
+                </div>
+                <div class="col-12 col-md-3">
                   <q-select
                     v-model="form.tipo_atencion"
                     :options="['Externo', 'Especialidad']"
@@ -448,6 +451,7 @@ import {
 
 const emptyForm = () => ({
   fecha: moment().format('YYYY-MM-DD'),
+  hora: moment().format('HH:mm'),
   paciente_id: null,
   doctor_id: null,
   tipo_atencion: 'Externo',
@@ -569,7 +573,7 @@ export default {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
     },
     saldoFinal () {
-      return this.recaudadoTotal - Number(this.form.egreso || 0)
+      return Number(this.form.efectivo || 0) - Number(this.form.egreso || 0)
     },
     pagoAhoraToggle: {
       get () {
@@ -748,6 +752,7 @@ export default {
             ...emptyForm(),
             ...itemRes.data,
             fecha: itemRes.data.fecha ? itemRes.data.fecha.substring(0, 10) : moment().format('YYYY-MM-DD'),
+            hora: itemRes.data.hora ? itemRes.data.hora.substring(0, 5) : moment().format('HH:mm'),
             formulario_detalle: {
               ...createEmptyDetail(),
               ...(itemRes.data.formulario_detalle || {})

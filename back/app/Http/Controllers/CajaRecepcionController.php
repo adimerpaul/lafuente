@@ -14,7 +14,7 @@ class CajaRecepcionController extends Controller
         $userId = $request->get('user_id');
         $search = trim((string) $request->get('search', ''));
 
-        $query = CajaRecepcion::with(['user', 'paciente', 'doctor'])
+        $query = CajaRecepcion::withTrashed()->with(['user', 'paciente', 'doctor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
@@ -34,16 +34,17 @@ class CajaRecepcionController extends Controller
             });
 
         $items = $query->orderByDesc('fecha')->orderByDesc('id')->get();
+        $activeItems = $items->filter(fn ($item) => !$item->trashed());
 
         $resumen = [
-            'total_recaudado' => (float) $items->sum('recaudado_total'),
-            'total_ingresos' => (float) $items->sum('recaudado_total'),
-            'total_egresos' => (float) $items->sum('egreso'),
-            'total_qr' => (float) $items->sum('qr'),
-            'total_efectivo' => (float) $items->sum('efectivo'),
-            'total_farmacia' => (float) $items->sum('costo_farmacia'),
-            'total_final' => (float) $items->sum('recaudado_total')
-                - (float) $items->sum('egreso'),
+            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
+            'total_ingresos' => (float) $activeItems->sum('recaudado_total'),
+            'total_egresos' => (float) $activeItems->sum('egreso'),
+            'total_qr' => (float) $activeItems->sum('qr'),
+            'total_efectivo' => (float) $activeItems->sum('efectivo'),
+            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
+            'total_final' => (float) $activeItems->sum('efectivo')
+                - (float) $activeItems->sum('egreso'),
         ];
 
         return response()->json([
@@ -98,6 +99,7 @@ class CajaRecepcionController extends Controller
 
         return $request->validate([
             'fecha' => 'required|date',
+            'hora' => 'nullable|date_format:H:i',
             'paciente_id' => 'required|exists:pacientes,id',
             'doctor_id' => 'nullable|exists:doctores,id',
             'tipo_atencion' => 'nullable|in:Externo,Especialidad',

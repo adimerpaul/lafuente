@@ -92,7 +92,8 @@
       <thead>
       <tr class="bg-primary text-white">
         <th>Acciones</th>
-        <th>Fecha</th>
+        <th>Estado</th>
+        <th>Fecha y hora</th>
         <th>Paciente</th>
         <th>Ficha</th>
         <th>Encargado</th>
@@ -108,20 +109,32 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="item in items" :key="item.id">
+      <tr v-for="item in items" :key="item.id" :class="{ 'row-anulado bg-red-1 text-grey-8': item.is_anulado }">
         <td>
           <q-btn-dropdown dense color="primary" label="Opciones" no-caps size="10px">
-            <q-item clickable v-close-popup :to="{ name: 'caja-recepciones-editar', params: { id: item.id } }">
+            <q-item v-if="!item.is_anulado" clickable v-close-popup :to="{ name: 'caja-recepciones-editar', params: { id: item.id } }">
               <q-item-section avatar><q-icon name="edit" /></q-item-section>
               <q-item-section>Editar</q-item-section>
             </q-item>
-            <q-item clickable v-close-popup @click="deleteItem(item.id)">
-              <q-item-section avatar><q-icon name="delete" /></q-item-section>
-              <q-item-section>Eliminar</q-item-section>
+            <q-item v-if="!item.is_anulado" clickable v-close-popup @click="anularItem(item.id)">
+              <q-item-section avatar><q-icon name="block" /></q-item-section>
+              <q-item-section>Anular</q-item-section>
+            </q-item>
+            <q-item v-if="item.is_anulado" dense>
+              <q-item-section avatar><q-icon name="info" /></q-item-section>
+              <q-item-section>Registro anulado</q-item-section>
             </q-item>
           </q-btn-dropdown>
         </td>
-        <td>{{ item.fecha }}</td>
+        <td>
+          <q-chip dense :color="item.is_anulado ? 'negative' : 'positive'" text-color="white">
+            {{ item.estado_label }}
+          </q-chip>
+        </td>
+        <td>
+          <div>{{ item.fecha }}</div>
+          <div class="text-caption">{{ item.hora || '-' }}</div>
+        </td>
         <td>
           <div class="text-weight-medium">{{ item.paciente?.nombre_completo || '-' }}</div>
           <div class="text-caption">{{ item.nombre_factura || '-' }}</div>
@@ -143,7 +156,7 @@
         <td class="text-right text-weight-bold">{{ money(item.saldo_final) }}</td>
       </tr>
       <tr v-if="!items.length">
-        <td colspan="14" class="text-center text-grey">No hay registros para el rango seleccionado</td>
+        <td colspan="15" class="text-center text-grey">No hay registros para el rango seleccionado</td>
       </tr>
       </tbody>
     </q-markup-table>
@@ -209,14 +222,14 @@ export default {
         this.loading = false
       })
     },
-    deleteItem (id) {
-      this.$alert.dialog('Desea eliminar el registro de caja de recepcion?').onOk(() => {
+    anularItem (id) {
+      this.$alert.dialog('Desea anular el registro de caja de recepcion?').onOk(() => {
         this.loading = true
         this.$axios.delete(`caja-recepciones/${id}`).then(() => {
-          this.$alert.success('Registro eliminado')
+          this.$alert.success('Registro anulado')
           this.fetchItems()
         }).catch(err => {
-          this.$alert.error(err.response?.data?.message || 'No se pudo eliminar el registro')
+          this.$alert.error(err.response?.data?.message || 'No se pudo anular el registro')
         }).finally(() => {
           this.loading = false
         })
@@ -226,7 +239,7 @@ export default {
       const data = [{
         sheet: 'Caja recepcion',
         columns: [
-          { label: 'Fecha', value: 'fecha' },
+          { label: 'Fecha y hora', value: row => `${row.fecha || ''} ${row.hora || ''}`.trim() },
           { label: 'Paciente', value: row => row.paciente?.nombre_completo || '' },
           { label: 'Ficha', value: 'numero_ficha' },
           { label: 'Encargado', value: row => row.user?.name || '' },
@@ -247,3 +260,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.row-anulado td {
+  opacity: 0.82;
+}
+</style>
