@@ -70,7 +70,7 @@ class CompraController extends Controller{
         $hoy = Carbon::now()->format('Y-m-d');
         $perPage = $request->per_page ?? 10;
 
-        $productos = \App\Models\CompraDetalle::with('producto')
+        $productos = \App\Models\CompraDetalle::with(['producto', 'compra.user', 'compra.proveedor'])
             ->whereNotNull('fecha_vencimiento')
             ->where('fecha_vencimiento', '<', $hoy)
             ->orderBy('fecha_vencimiento', 'desc')
