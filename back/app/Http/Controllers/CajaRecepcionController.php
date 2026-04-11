@@ -43,8 +43,7 @@ class CajaRecepcionController extends Controller
             'total_efectivo' => (float) $items->sum('efectivo'),
             'total_farmacia' => (float) $items->sum('costo_farmacia'),
             'total_final' => (float) $items->sum('recaudado_total')
-                - (float) $items->sum('egreso')
-                - (float) $items->sum('costo_farmacia'),
+                - (float) $items->sum('egreso'),
         ];
 
         return response()->json([
@@ -93,6 +92,10 @@ class CajaRecepcionController extends Controller
 
     private function validatedData(Request $request): array
     {
+        $request->merge([
+            'formulario_detalle' => $this->normalizeFormularioDetalle($request->input('formulario_detalle')),
+        ]);
+
         return $request->validate([
             'fecha' => 'required|date',
             'paciente_id' => 'required|exists:pacientes,id',
@@ -104,36 +107,66 @@ class CajaRecepcionController extends Controller
             'formulario_diagnostico' => 'nullable|string',
             'formulario_observaciones' => 'nullable|string',
             'formulario_detalle' => 'nullable|array',
-            'formulario_detalle.caja_vaselina' => 'nullable|in:P,M,G',
-            'formulario_detalle.caja_curacion' => 'nullable|in:P,M,G',
-            'formulario_detalle.caja_sutura' => 'nullable|in:P,M,G',
-            'formulario_detalle.caja_retiro_uterino' => 'nullable|in:P,M,G',
-            'formulario_detalle.caja_retiro_puntos' => 'nullable|in:P,M,G',
-            'formulario_detalle.sutura' => 'nullable|in:P,M,G',
-            'formulario_detalle.uso_tela_adhesiva' => 'nullable|in:P,M,G',
-            'formulario_detalle.uso_micropor' => 'nullable|in:SI,NO',
-            'formulario_detalle.nebulizacion' => 'nullable|in:SI,NO',
-            'formulario_detalle.glicemia' => 'nullable|in:SI,NO',
-            'formulario_detalle.inyectable' => 'nullable|in:IM,EV,SC',
-            'formulario_detalle.guantes_dediles' => 'nullable|in:SI,NO',
-            'formulario_detalle.campo_fenestrado' => 'nullable|in:SI,NO',
-            'formulario_detalle.colocado_stopper' => 'nullable|in:SI,NO',
-            'formulario_detalle.monitor_desfibrilador' => 'nullable|in:SI,NO',
-            'formulario_detalle.antisepticos' => 'nullable|in:SI,NO',
-            'formulario_detalle.apositos_extras' => 'nullable|in:SI,NO',
-            'formulario_detalle.torundas_gasa_extras' => 'nullable|in:SI,NO',
-            'formulario_detalle.gases_extra' => 'nullable|in:SI,NO',
-            'formulario_detalle.venda_quemado' => 'nullable|in:SI,NO',
-            'formulario_detalle.curacion' => 'nullable|in:P,M,G',
-            'formulario_detalle.suero' => 'nullable|in:SI,NO',
-            'formulario_detalle.aspiracion' => 'nullable|in:SI,NO',
-            'formulario_detalle.sonda' => 'nullable|in:SNG,SOG,SV',
-            'formulario_detalle.compresas' => 'nullable|in:P,M,G',
-            'formulario_detalle.yeso' => 'nullable|in:SI,NO',
-            'formulario_detalle.oxigeno' => 'nullable|in:SI,NO',
-            'formulario_detalle.enema' => 'nullable|in:SI,NO',
-            'formulario_detalle.corbatas' => 'nullable|in:SI,NO',
-            'formulario_detalle.algodon' => 'nullable|in:SI,NO',
+            'formulario_detalle.caja_vaselina' => 'nullable|array',
+            'formulario_detalle.caja_vaselina.*' => 'in:P,M,G',
+            'formulario_detalle.caja_curacion' => 'nullable|array',
+            'formulario_detalle.caja_curacion.*' => 'in:P,M,G',
+            'formulario_detalle.caja_sutura' => 'nullable|array',
+            'formulario_detalle.caja_sutura.*' => 'in:P,M,G',
+            'formulario_detalle.caja_retiro_uterino' => 'nullable|array',
+            'formulario_detalle.caja_retiro_uterino.*' => 'in:P,M,G',
+            'formulario_detalle.caja_retiro_puntos' => 'nullable|array',
+            'formulario_detalle.caja_retiro_puntos.*' => 'in:P,M,G',
+            'formulario_detalle.sutura' => 'nullable|array',
+            'formulario_detalle.sutura.*' => 'in:P,M,G',
+            'formulario_detalle.uso_tela_adhesiva' => 'nullable|array',
+            'formulario_detalle.uso_tela_adhesiva.*' => 'in:P,M,G',
+            'formulario_detalle.uso_micropor' => 'nullable|array',
+            'formulario_detalle.uso_micropor.*' => 'in:SI,NO',
+            'formulario_detalle.nebulizacion' => 'nullable|array',
+            'formulario_detalle.nebulizacion.*' => 'in:SI,NO',
+            'formulario_detalle.glicemia' => 'nullable|array',
+            'formulario_detalle.glicemia.*' => 'in:SI,NO',
+            'formulario_detalle.inyectable' => 'nullable|array',
+            'formulario_detalle.inyectable.*' => 'in:IM,EV,SC',
+            'formulario_detalle.guantes_dediles' => 'nullable|array',
+            'formulario_detalle.guantes_dediles.*' => 'in:SI,NO',
+            'formulario_detalle.campo_fenestrado' => 'nullable|array',
+            'formulario_detalle.campo_fenestrado.*' => 'in:SI,NO',
+            'formulario_detalle.colocado_stopper' => 'nullable|array',
+            'formulario_detalle.colocado_stopper.*' => 'in:SI,NO',
+            'formulario_detalle.monitor_desfibrilador' => 'nullable|array',
+            'formulario_detalle.monitor_desfibrilador.*' => 'in:SI,NO',
+            'formulario_detalle.antisepticos' => 'nullable|array',
+            'formulario_detalle.antisepticos.*' => 'in:SI,NO',
+            'formulario_detalle.apositos_extras' => 'nullable|array',
+            'formulario_detalle.apositos_extras.*' => 'in:SI,NO',
+            'formulario_detalle.torundas_gasa_extras' => 'nullable|array',
+            'formulario_detalle.torundas_gasa_extras.*' => 'in:SI,NO',
+            'formulario_detalle.gases_extra' => 'nullable|array',
+            'formulario_detalle.gases_extra.*' => 'in:SI,NO',
+            'formulario_detalle.venda_quemado' => 'nullable|array',
+            'formulario_detalle.venda_quemado.*' => 'in:SI,NO',
+            'formulario_detalle.curacion' => 'nullable|array',
+            'formulario_detalle.curacion.*' => 'in:P,M,G',
+            'formulario_detalle.suero' => 'nullable|array',
+            'formulario_detalle.suero.*' => 'in:SI,NO',
+            'formulario_detalle.aspiracion' => 'nullable|array',
+            'formulario_detalle.aspiracion.*' => 'in:SI,NO',
+            'formulario_detalle.sonda' => 'nullable|array',
+            'formulario_detalle.sonda.*' => 'in:SNG,SOG,SV',
+            'formulario_detalle.compresas' => 'nullable|array',
+            'formulario_detalle.compresas.*' => 'in:P,M,G',
+            'formulario_detalle.yeso' => 'nullable|array',
+            'formulario_detalle.yeso.*' => 'in:SI,NO',
+            'formulario_detalle.oxigeno' => 'nullable|array',
+            'formulario_detalle.oxigeno.*' => 'in:SI,NO',
+            'formulario_detalle.enema' => 'nullable|array',
+            'formulario_detalle.enema.*' => 'in:SI,NO',
+            'formulario_detalle.corbatas' => 'nullable|array',
+            'formulario_detalle.corbatas.*' => 'in:SI,NO',
+            'formulario_detalle.algodon' => 'nullable|array',
+            'formulario_detalle.algodon.*' => 'in:SI,NO',
             'estado_pago' => 'nullable|in:Ahora,Luego',
             'laboratorio_nombre' => 'nullable|string|max:255',
             'medico_ecografia' => 'nullable|string|max:255',
@@ -161,6 +194,31 @@ class CajaRecepcionController extends Controller
             'costo_farmacia' => 'nullable|numeric|min:0',
             'otros_costos' => 'nullable|numeric|min:0',
         ]);
+    }
+
+    private function normalizeFormularioDetalle($detalle): mixed
+    {
+        if (!is_array($detalle)) {
+            return $detalle;
+        }
+
+        return collect($detalle)->map(function ($value) {
+            if ($value === null || $value === '' || $value === []) {
+                return null;
+            }
+
+            if (is_array($value)) {
+                $filtered = collect($value)
+                    ->filter(fn ($item) => $item !== null && $item !== '')
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                return empty($filtered) ? null : $filtered;
+            }
+
+            return [$value];
+        })->all();
     }
 
     private function calculateRecaudadoTotal(array $data): float

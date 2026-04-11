@@ -62,9 +62,21 @@ export function createEmptyDetail () {
 
 export function getControlAmount (key, value) {
   const item = controlCatalog.find(entry => entry.key === key)
-  if (!item || !value || value === 'NO') {
+  if (!item || !value) {
     return 0
   }
+
+  if (Array.isArray(value)) {
+    return value.reduce((sum, current) => {
+      if (!current || current === 'NO') return sum
+      return sum + Number(item.prices?.[current] || 0)
+    }, 0)
+  }
+
+  if (value === 'NO') {
+    return 0
+  }
+
   return Number(item.prices?.[value] || 0)
 }
 
@@ -73,6 +85,13 @@ export function getSelectedControlItems (detalle = {}) {
     .map(item => {
       const value = detalle[item.key]
       const amount = getControlAmount(item.key, value)
+      if (Array.isArray(value)) {
+        const selectedValues = value.filter(current => current && current !== 'NO')
+        return selectedValues.length
+          ? { key: item.key, label: item.label, value: selectedValues.join(', '), amount }
+          : null
+      }
+
       return value && value !== 'NO'
         ? { key: item.key, label: item.label, value, amount }
         : null

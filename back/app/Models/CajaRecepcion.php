@@ -146,6 +146,6 @@ class CajaRecepcion extends Model implements Auditable
 
     public function getSaldoFinalAttribute(): float
     {
-        return (float) $this->recaudado_total - (float) $this->costo_farmacia - (float) $this->egreso;
+        return (float) $this->recaudado_total - (float) $this->egreso;
     }
 }
