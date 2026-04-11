@@ -249,16 +249,25 @@
 
             <q-tab-panel name="costos" class="q-pa-sm">
               <div class="row q-col-gutter-sm">
-                <div v-for="field in costFields" :key="field.key" class="col-12 col-sm-6 col-md-3">
-                  <q-input
-                    v-model.number="form[field.key]"
-                    dense
-                    outlined
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    :label="field.label"
-                  />
+                <div v-for="field in costFields" :key="field.key" class="col-12 col-sm-6 col-md-3 col-xl-2">
+                  <q-card flat bordered class="cost-card" :class="field.cardClass">
+                    <q-card-section class="q-pa-sm">
+                      <q-input
+                        :model-value="displayCostValue(field.key)"
+                        dense
+                        outlined
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        :label="field.label"
+                        @update:model-value="updateCostValue(field.key, $event)"
+                      >
+                        <template #prepend>
+                          <q-icon :name="field.icon" :color="field.iconColor" />
+                        </template>
+                      </q-input>
+                    </q-card-section>
+                  </q-card>
                 </div>
                 <div class="col-12 col-md-6">
                   <q-input v-model="form.laboratorio_nombre" dense outlined label="A que laboratorio se lo llevo" />
@@ -527,25 +536,25 @@ export default {
         { label: 'Pendiente', value: 'pendiente' }
       ],
       costFields: [
-        { key: 'costo_atencion_medica', label: 'Atencion medica' },
-        { key: 'costo_curacion', label: 'Curacion' },
-        { key: 'costo_inyectable', label: 'Inyectables' },
-        { key: 'costo_toma_presion', label: 'Toma de presion' },
-        { key: 'costo_ambulancia', label: 'Ambulancia' },
-        { key: 'costo_laboratorio', label: 'Laboratorio' },
-        { key: 'costo_ecografia', label: 'Ecografia' },
-        { key: 'costo_uso_consultorio', label: 'Uso consultorio' },
-        { key: 'costo_glicemia', label: 'Glicemia' },
-        { key: 'costo_certificado_medico', label: 'Certificado medico' },
-        { key: 'costo_sutura', label: 'Sutura' },
-        { key: 'costo_antisepticos', label: 'Antisepticos' },
-        { key: 'costo_cama', label: 'Cama' },
-        { key: 'costo_compania_noche', label: 'Compania noche' },
-        { key: 'costo_uso_ecografia', label: 'Uso ecografia' },
-        { key: 'costo_flebotomia', label: 'Flebotomia' },
-        { key: 'costo_sonda', label: 'Sonda' },
-        { key: 'costo_farmacia', label: 'Farmacia' },
-        { key: 'otros_costos', label: 'Otros costos' }
+        { key: 'costo_atencion_medica', label: 'Atencion medica', icon: 'medical_services', iconColor: 'light-blue-7', cardClass: 'cost-card--sky' },
+        { key: 'costo_curacion', label: 'Curacion', icon: 'healing', iconColor: 'green-6', cardClass: 'cost-card--mint' },
+        { key: 'costo_inyectable', label: 'Inyectables', icon: 'vaccines', iconColor: 'pink-5', cardClass: 'cost-card--rose' },
+        { key: 'costo_toma_presion', label: 'Toma de presion', icon: 'monitor_heart', iconColor: 'deep-purple-4', cardClass: 'cost-card--violet' },
+        { key: 'costo_ambulancia', label: 'Ambulancia', icon: 'emergency', iconColor: 'orange-6', cardClass: 'cost-card--amber' },
+        { key: 'costo_laboratorio', label: 'Laboratorio', icon: 'science', iconColor: 'blue-6', cardClass: 'cost-card--blue' },
+        { key: 'costo_ecografia', label: 'Ecografia', icon: 'pregnant_woman', iconColor: 'purple-5', cardClass: 'cost-card--purple' },
+        { key: 'costo_uso_consultorio', label: 'Uso consultorio', icon: 'door_front', iconColor: 'brown-5', cardClass: 'cost-card--sand' },
+        { key: 'costo_glicemia', label: 'Glicemia', icon: 'water_drop', iconColor: 'cyan-6', cardClass: 'cost-card--aqua' },
+        { key: 'costo_certificado_medico', label: 'Certificado medico', icon: 'description', iconColor: 'blue-grey-5', cardClass: 'cost-card--silver' },
+        { key: 'costo_sutura', label: 'Sutura', icon: 'content_cut', iconColor: 'red-5', cardClass: 'cost-card--rose' },
+        { key: 'costo_antisepticos', label: 'Antisepticos', icon: 'sanitizer', iconColor: 'teal-5', cardClass: 'cost-card--mint' },
+        { key: 'costo_cama', label: 'Cama', icon: 'bed', iconColor: 'indigo-5', cardClass: 'cost-card--sky' },
+        { key: 'costo_compania_noche', label: 'Compania noche', icon: 'night_shelter', iconColor: 'deep-purple-5', cardClass: 'cost-card--violet' },
+        { key: 'costo_uso_ecografia', label: 'Uso ecografia', icon: 'devices', iconColor: 'light-blue-7', cardClass: 'cost-card--blue' },
+        { key: 'costo_flebotomia', label: 'Flebotomia', icon: 'bloodtype', iconColor: 'red-4', cardClass: 'cost-card--aqua' },
+        { key: 'costo_sonda', label: 'Sonda', icon: 'medication_liquid', iconColor: 'amber-7', cardClass: 'cost-card--sand' },
+        { key: 'costo_farmacia', label: 'Farmacia', icon: 'local_pharmacy', iconColor: 'light-green-6', cardClass: 'cost-card--mint' },
+        { key: 'otros_costos', label: 'Otros costos', icon: 'add_card', iconColor: 'grey-7', cardClass: 'cost-card--silver' }
       ]
     }
   },
@@ -650,6 +659,13 @@ export default {
     },
     money (value) {
       return `${Number(value || 0).toFixed(2)} Bs`
+    },
+    displayCostValue (key) {
+      const value = this.form[key]
+      return Number(value || 0) === 0 ? '' : value
+    },
+    updateCostValue (key, value) {
+      this.form[key] = value === '' || value === null ? '' : Number(value)
     },
     syncAtencionMedicaCost () {
       this.syncingAtencionMedica = true
@@ -908,6 +924,9 @@ export default {
     },
     buildPayload () {
       const payload = { ...this.form }
+      this.costFields.forEach(field => {
+        payload[field.key] = Number(payload[field.key] || 0)
+      })
       if (this.metodoPago === 'pendiente') {
         payload.qr = 0
         payload.efectivo = 0
@@ -942,6 +961,55 @@ export default {
 </script>
 
 <style scoped>
+.cost-card {
+  height: 100%;
+  border-radius: 10px;
+}
+
+.cost-card--sky {
+  background: linear-gradient(180deg, #f2f9ff 0%, #ffffff 100%);
+}
+
+.cost-card--mint {
+  background: linear-gradient(180deg, #f2fff7 0%, #ffffff 100%);
+}
+
+.cost-card--rose {
+  background: linear-gradient(180deg, #fff4f7 0%, #ffffff 100%);
+}
+
+.cost-card--violet {
+  background: linear-gradient(180deg, #f6f2ff 0%, #ffffff 100%);
+}
+
+.cost-card--amber {
+  background: linear-gradient(180deg, #fff8ec 0%, #ffffff 100%);
+}
+
+.cost-card--blue {
+  background: linear-gradient(180deg, #f1f7ff 0%, #ffffff 100%);
+}
+
+.cost-card--purple {
+  background: linear-gradient(180deg, #faf1ff 0%, #ffffff 100%);
+}
+
+.cost-card--sand {
+  background: linear-gradient(180deg, #fbf6ef 0%, #ffffff 100%);
+}
+
+.cost-card--aqua {
+  background: linear-gradient(180deg, #effdff 0%, #ffffff 100%);
+}
+
+.cost-card--silver {
+  background: linear-gradient(180deg, #f5f7f9 0%, #ffffff 100%);
+}
+
+.cost-card :deep(.q-field__control) {
+  background: transparent;
+}
+
 .control-row {
   display: grid;
   grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
