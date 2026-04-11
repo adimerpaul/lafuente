@@ -123,6 +123,8 @@
           <th>Total</th>
           <th>Detalle</th>
           <th>Tipo venta</th>
+          <th>Facturado</th>
+          <th>Nro factura</th>
         </tr>
       </thead>
       <tbody>
@@ -154,6 +156,12 @@
                 </q-item-section>
                 <q-item-section>Cambiar tipo pago {{ venta.tipo_pago === 'Efectivo' ? 'QR' : 'Efectivo' }}</q-item-section>
               </q-item>
+              <q-item clickable v-ripple @click="openFacturacion(venta)" v-close-popup>
+                <q-item-section avatar>
+                  <q-icon name="receipt_long" />
+                </q-item-section>
+                <q-item-section>Editar facturación</q-item-section>
+              </q-item>
               <q-item clickable v-ripple v-if="venta.estado==='Activo'" @click="openDevolver(venta)" v-close-popup>
                 <q-item-section avatar><q-icon name="undo" /></q-item-section>
                 <q-item-section>Devolver productos</q-item-section>
@@ -183,6 +191,12 @@
           <td>
             <q-chip :color="venta.tipo_venta === 'Internado' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
+          <td>
+            <q-chip :color="venta.facturado ? 'positive' : 'grey-7'" class="text-white" dense>
+              {{ venta.facturado ? 'Sí' : 'No' }}
+            </q-chip>
+          </td>
+          <td>{{ venta.numero_factura || '-' }}</td>
         </tr>
       </template>
       <template v-else>
@@ -412,6 +426,35 @@
 <!--    }-->
 <!--    ]-->
     <!-- Dialog devolución -->
+    <q-dialog v-model="facturacionDialog" persistent>
+      <q-card style="max-width: 480px; width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Editar facturación</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="facturacionDialog=false" />
+        </q-card-section>
+
+        <q-card-section class="row">
+          <div class="col-12 q-pa-xs">
+            <q-checkbox v-model="facturacionForm.facturado" label="Facturado" />
+          </div>
+          <div class="col-12 q-pa-xs">
+            <q-input
+              v-model="facturacionForm.numero_factura"
+              outlined
+              dense
+              label="Número de factura"
+              :disable="!facturacionForm.facturado"
+            />
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="negative" no-caps @click="facturacionDialog=false" />
+          <q-btn label="Guardar" color="primary" no-caps :loading="loading" @click="guardarFacturacion" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <q-dialog v-model="devDialog" persistent>
       <q-card style="max-width: 860px; width: 95vw">
         <q-card-section class="row items-center q-pb-none">
@@ -775,6 +818,12 @@ export default {
         { name: 'stock_minimo', label: 'Stock mínimo', align: 'left', field: 'stock_minimo' },
         { name: 'stock_maximo', label: 'Stock máximo', align: 'left', field: 'stock_maximo' },
       ],
+      facturacionDialog: false,
+      facturacionForm: {
+        id: null,
+        facturado: false,
+        numero_factura: '',
+      },
       devDialog: false,
       devVentaId: null,
       devItems: [],  // { id, producto_id, nombre, cantidad, _devolver }
@@ -829,6 +878,34 @@ export default {
       this.venta = venta;
       this.devDialog = true;
     },
+    openFacturacion(venta) {
+      this.facturacionForm = {
+        id: venta.id,
+        facturado: !!venta.facturado,
+        numero_factura: venta.numero_factura || '',
+      };
+      this.facturacionDialog = true;
+    },
+    guardarFacturacion() {
+      if (this.facturacionForm.facturado && !String(this.facturacionForm.numero_factura || '').trim()) {
+        this.$alert.error('Debe ingresar el número de factura');
+        return;
+      }
+
+      this.loading = true;
+      this.$axios.put(`ventasFacturacion/${this.facturacionForm.id}`, {
+        facturado: this.facturacionForm.facturado,
+        numero_factura: this.facturacionForm.facturado ? this.facturacionForm.numero_factura : null,
+      }).then(() => {
+        this.$alert.success('Facturación actualizada');
+        this.facturacionDialog = false;
+        this.ventasGet();
+      }).catch(error => {
+        this.$alert.error(error.response?.data?.message || 'No se pudo actualizar la facturación');
+      }).finally(() => {
+        this.loading = false;
+      });
+    },
     getVentasExportables(tipoVenta = null) {
       return (this.ventas || []).filter(v => {
         const esActiva = String(v.estado).toLowerCase() === 'activo';
@@ -856,6 +933,8 @@ export default {
           { label: "Total",     value: "total" },
           { label: "Detalle",   value: "detailsText" },
           { label: "Tipo venta",value: "tipo_venta" },
+          { label: "Facturado", value: row => row.facturado ? 'Sí' : 'No' },
+          { label: "Nro factura", value: row => row.numero_factura || '' },
         ],
         content: ventasActivas
       }];

@@ -210,6 +210,10 @@ class VentaController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->boolean('facturado') && trim((string)$request->input('numero_factura', '')) === '') {
+            return response()->json(['message' => 'Debe ingresar el número de factura cuando la venta está facturada.'], 422);
+        }
+
         DB::beginTransaction();
         try {
             // 1) Cliente
@@ -227,9 +231,6 @@ class VentaController extends Controller
                 'tipo_venta' => ($request->input('tipo_venta')=='Interno' || $request->input('tipo_venta')=='Internado')?'Internado':'Externo',
                 'facturado' => filter_var($request->input('facturado', false), FILTER_VALIDATE_BOOLEAN),
             ]);
-            if ($request->boolean('facturado') && trim((string)$request->input('numero_factura', '')) === '') {
-                return response()->json(['message' => 'Debe ingresar el número de factura cuando la venta está facturada.'], 422);
-            }
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',

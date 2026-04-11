@@ -179,6 +179,12 @@
                 <b>TIPO:</b> {{ $venta->tipo_venta ?: '—' }}
                 &nbsp; | &nbsp;
                 <b>PAGO:</b> {{ $venta->tipo_pago ?: '—' }}
+                &nbsp; | &nbsp;
+                <b>FACTURADO:</b> {{ $venta->facturado ? 'Sí' : 'No' }}
+                @if($venta->facturado)
+                    &nbsp; | &nbsp;
+                    <b>NRO FACTURA:</b> {{ $venta->numero_factura ?: '—' }}
+                @endif
                 <br>
                 <b>USUARIO:</b> {{ optional($venta->user)->name ?: '—' }}
                 &nbsp; | &nbsp;
