@@ -62,39 +62,39 @@ class CajaRecepcionController extends Controller
 
     public function pdf(Request $request)
     {
-//        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
-//        $activeItems = $items->where('estado', '!=', 'Anulado');
-//
-//        $summary = [
-//            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
-//            'total_egresos' => (float) $activeItems->sum('egreso'),
-//            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
-//            'saldo' => (float) $activeItems->sum('recaudado_total')
-//                - (float) $activeItems->sum('egreso')
-//                - (float) $activeItems->sum('costo_farmacia'),
-//            'total_qr' => (float) $activeItems->sum('qr'),
-//            'total_efectivo' => (float) $activeItems->sum('efectivo'),
-//            'saldo_final_efectivo' => ((float) $activeItems->sum('recaudado_total')
-//                    - (float) $activeItems->sum('egreso')
-//                    - (float) $activeItems->sum('costo_farmacia'))
-//                - (float) $activeItems->sum('qr'),
-//        ];
-//
-//        $hoy = now();
-//        $userId = $request->get('user_id');
-//        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
-//
-//        $pdf = Pdf::loadView('pdf.caja_recepciones_reporte', [
-//            'items' => $items,
-//            'summary' => $summary,
-//            'fechaInicio' => $request->get('fechaInicio'),
-//            'fechaFin' => $request->get('fechaFin'),
-//            'search' => $request->get('search'),
-//            'userLabel' => $userLabel,
-//            'hoy' => $hoy,
-//        ])->setPaper('letter', 'landscape');
-//
-//        return $pdf->stream('caja_recepciones_reporte.pdf');
+        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
+        $activeItems = $items->where('estado', '!=', 'Anulado');
+
+        $summary = [
+            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
+            'total_egresos' => (float) $activeItems->sum('egreso'),
+            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
+            'saldo' => (float) $activeItems->sum('recaudado_total')
+                - (float) $activeItems->sum('egreso')
+                - (float) $activeItems->sum('costo_farmacia'),
+            'total_qr' => (float) $activeItems->sum('qr'),
+            'total_efectivo' => (float) $activeItems->sum('efectivo'),
+            'saldo_final_efectivo' => ((float) $activeItems->sum('recaudado_total')
+                    - (float) $activeItems->sum('egreso')
+                    - (float) $activeItems->sum('costo_farmacia'))
+                - (float) $activeItems->sum('qr'),
+        ];
+
+        $hoy = now();
+        $userId = $request->get('user_id');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+
+        $pdf = Pdf::loadView('pdf.caja_recepciones_reporte', [
+            'items' => $items,
+            'summary' => $summary,
+            'fechaInicio' => $request->get('fechaInicio'),
+            'fechaFin' => $request->get('fechaFin'),
+            'search' => $request->get('search'),
+            'userLabel' => $userLabel,
+            'hoy' => $hoy,
+        ])->setPaper('letter', 'landscape');
+
+        return $pdf->stream('caja_recepciones_reporte.pdf');
     }
 
     public function show(CajaRecepcion $cajaRecepcion)

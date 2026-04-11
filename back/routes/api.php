@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //})->middleware('auth:sanctum');
 Route::post('/login', [App\Http\Controllers\UserController::class, 'login']);
-
+Route::get('/caja-recepciones/pdf', [App\Http\Controllers\CajaRecepcionController::class, 'pdf']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
     Route::get('/me', [App\Http\Controllers\UserController::class, 'me']);
@@ -104,7 +104,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'update']);
     Route::delete('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'destroy']);
     Route::get('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'index']);
-    Route::get('/caja-recepciones/pdf', [App\Http\Controllers\CajaRecepcionController::class, 'pdf']);
     Route::get('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'show']);
     Route::post('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'store']);
     Route::put('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'update']);
