@@ -42,8 +42,12 @@ class CompraController extends Controller{
     }
 
     function historialCompras($id){
-        $historial = \App\Models\CompraDetalle::with('compra')
+        $historial = \App\Models\CompraDetalle::with(['compra.user', 'compra.proveedor', 'producto'])
             ->where('producto_id', $id)
+            ->where('estado', 'Activo')
+            ->whereHas('compra', function ($q) {
+                $q->where('estado', 'Activo');
+            })
             ->orderByDesc('fecha_vencimiento')
             ->get();
 

@@ -1,13 +1,12 @@
 <template>
-  <q-page class="q-pa-md bg">
-    <!-- TOP BAR -->
-    <div class="row items-center q-col-gutter-md q-mb-md">
+  <q-page class="q-pa-sm bg">
+    <div class="row items-center q-col-gutter-sm q-mb-sm">
       <div class="col-12 col-md">
-        <div class="text-h5 text-weight-bold title">
-          Catálogo de Precios
+        <div class="text-h6 text-weight-bold title">
+          Catalogo de Precios
         </div>
         <div class="text-caption text-grey-6">
-          Solo nombre, imagen y precio — rápido y bonito.
+          Nombre, imagen y precio en bolivianos.
         </div>
       </div>
 
@@ -18,9 +17,9 @@
           outlined
           rounded
           debounce="350"
-          placeholder="Buscar producto…"
+          placeholder="Buscar producto..."
           @update:model-value="fetchProductos"
-          class="glass"
+          class="glass compact-input"
         >
           <template #prepend><q-icon name="search" /></template>
           <template #append>
@@ -50,17 +49,16 @@
       </div>
     </div>
 
-    <!-- STATS -->
-    <div class="row q-col-gutter-md q-mb-md">
+    <div class="row q-col-gutter-sm q-mb-sm">
       <div class="col-12 col-sm-6 col-md-3">
         <q-card class="glass card-soft" flat bordered>
-          <q-card-section class="row items-center no-wrap">
-            <q-avatar size="42px" class="bg-primary text-white">
+          <q-card-section class="row items-center no-wrap q-pa-sm">
+            <q-avatar size="34px" class="bg-primary text-white">
               <q-icon name="inventory_2" />
             </q-avatar>
-            <div class="q-ml-md">
+            <div class="q-ml-sm">
               <div class="text-caption text-grey-6">Total</div>
-              <div class="text-h6 text-weight-bold">{{ pagination.rowsNumber }}</div>
+              <div class="text-subtitle1 text-weight-bold">{{ pagination.rowsNumber }}</div>
             </div>
             <q-space />
             <q-badge color="primary" outline>{{ pagination.page }}/{{ maxPages }}</q-badge>
@@ -70,17 +68,17 @@
 
       <div class="col-12 col-sm-6 col-md-3">
         <q-card class="glass card-soft" flat bordered>
-          <q-card-section class="row items-center no-wrap">
-            <q-avatar size="42px" class="bg-green text-white">
+          <q-card-section class="row items-center no-wrap q-pa-sm">
+            <q-avatar size="34px" class="bg-green text-white">
               <q-icon name="sell" />
             </q-avatar>
-            <div class="q-ml-md">
+            <div class="q-ml-sm">
               <div class="text-caption text-grey-6">Vista</div>
-              <div class="text-h6 text-weight-bold">{{ productos.length }}</div>
+              <div class="text-subtitle1 text-weight-bold">{{ productos.length }}</div>
             </div>
             <q-space />
-            <q-chip dense color="green" text-color="white" icon="verified" class="q-ma-none">
-              Precios
+            <q-chip dense color="green" text-color="white" icon="payments" class="q-ma-none mini-chip">
+              Bs
             </q-chip>
           </q-card-section>
         </q-card>
@@ -88,8 +86,8 @@
 
       <div class="col-12 col-md-6">
         <q-card class="glass card-soft" flat bordered>
-          <q-card-section class="row items-center">
-            <q-icon name="tips_and_updates" size="24px" class="text-amber" />
+          <q-card-section class="row items-center q-pa-sm">
+            <q-icon name="tips_and_updates" size="20px" class="text-amber" />
             <div class="q-ml-sm">
               <div class="text-subtitle2 text-weight-bold">Tip</div>
               <div class="text-caption text-grey-6">
@@ -101,23 +99,21 @@
       </div>
     </div>
 
-    <!-- GRID -->
     <q-card class="glass" flat bordered>
-      <q-card-section class="q-pa-md">
-        <div class="row items-center q-mb-sm">
+      <q-card-section class="q-pa-sm">
+        <div class="row items-center q-mb-xs">
           <div class="text-subtitle1 text-weight-bold">Productos</div>
           <q-space />
-          <q-chip dense outline icon="grid_view" class="q-ma-none">
-            {{ pagination.rowsPerPage }} por página
+          <q-chip dense outline icon="grid_view" class="q-ma-none mini-chip">
+            {{ pagination.rowsPerPage }} por pagina
           </q-chip>
         </div>
 
-        <!-- Skeleton -->
-        <div v-if="loading" class="row q-col-gutter-md">
-          <div v-for="i in 12" :key="i" class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div v-if="loading" class="row q-col-gutter-sm">
+          <div v-for="i in 6" :key="i" class="col-12 col-sm-6 col-md-4 col-lg-2">
             <q-card flat bordered class="card-soft">
-              <q-skeleton height="170px" />
-              <q-card-section>
+              <q-skeleton height="110px" />
+              <q-card-section class="q-pa-sm">
                 <q-skeleton type="text" />
                 <q-skeleton type="text" width="60%" />
               </q-card-section>
@@ -125,12 +121,11 @@
           </div>
         </div>
 
-        <!-- Items -->
-        <div v-else class="row q-col-gutter-md">
+        <div v-else class="row q-col-gutter-sm">
           <div
             v-for="p in productos"
             :key="p.id"
-            class="col-12 col-sm-6 col-md-4 col-lg-3"
+            class="col-12 col-sm-6 col-md-4 col-lg-2"
           >
             <q-card
               flat
@@ -140,24 +135,22 @@
             >
               <q-img
                 :src="imgSrc(p.imagen)"
-                ratio="1"
-                class="rounded-top"
+                ratio="1.5"
+                class="rounded-top compact-img"
                 spinner-color="primary"
               >
                 <template #error>
                   <div class="absolute-full flex flex-center bg-grey-3 text-grey-7">
-                    <q-icon name="image_not_supported" size="28px" />
+                    <q-icon name="image_not_supported" size="24px" />
                   </div>
                 </template>
 
-                <div class="absolute-top-left q-pa-sm">
-                  <q-chip dense color="primary" text-color="white" icon="photo" class="q-ma-none">
-                    Imagen
-                  </q-chip>
+                <div class="absolute-top-left q-pa-xs">
+                  <q-avatar size="22px" color="primary" text-color="white" icon="photo" class="mini-icon" />
                 </div>
 
-                <div class="absolute-bottom q-pa-sm overlay">
-                  <div class="text-subtitle2 text-weight-bold ellipsis">
+                <div class="absolute-bottom q-pa-xs overlay">
+                  <div class="text-caption text-weight-bold ellipsis">
                     {{ p.nombre }}
                   </div>
                 </div>
@@ -165,7 +158,7 @@
 
               <q-separator />
 
-              <q-card-section class="q-pa-sm">
+              <q-card-section class="q-pa-xs">
                 <div class="row items-center">
                   <div class="text-caption text-grey-6">Precio</div>
                   <q-space />
@@ -173,14 +166,14 @@
                     dense
                     color="green"
                     text-color="white"
-                    icon="attach_money"
-                    class="q-ma-none"
+                    icon="payments"
+                    class="q-ma-none mini-chip"
                   >
                     {{ formatPrice(p.precio) }}
                   </q-chip>
                 </div>
 
-                <div class="row q-col-gutter-xs q-mt-sm">
+                <div class="row q-col-gutter-xs q-mt-xs">
                   <div class="col">
                     <q-btn
                       dense
@@ -189,6 +182,7 @@
                       outline
                       icon="content_copy"
                       label="Copiar"
+                      size="sm"
                       class="full-width"
                       @click.stop="copyPrice(p)"
                     />
@@ -201,6 +195,7 @@
                       color="primary"
                       icon="visibility"
                       label="Ver"
+                      size="sm"
                       class="full-width btn-soft"
                       @click.stop="openPreview(p)"
                     />
@@ -212,11 +207,11 @@
 
           <div v-if="!productos.length" class="col-12">
             <q-card flat bordered class="card-soft">
-              <q-card-section class="row items-center">
-                <q-icon name="search_off" size="28px" class="text-grey-6" />
+              <q-card-section class="row items-center q-pa-sm">
+                <q-icon name="search_off" size="24px" class="text-grey-6" />
                 <div class="q-ml-sm">
                   <div class="text-subtitle2 text-weight-bold">Sin resultados</div>
-                  <div class="text-caption text-grey-6">Prueba con otro texto de búsqueda.</div>
+                  <div class="text-caption text-grey-6">Prueba con otro texto de busqueda.</div>
                 </div>
               </q-card-section>
             </q-card>
@@ -226,18 +221,17 @@
 
       <q-separator />
 
-      <!-- Pagination -->
-      <q-card-section class="q-pa-sm">
+      <q-card-section class="q-pa-xs">
         <div class="row items-center q-col-gutter-sm">
           <div class="col-12 col-md-auto">
             <q-select
               v-model="pagination.rowsPerPage"
-              :options="[12, 24, 48, 96]"
+              :options="[6, 12, 24, 48, 96]"
               dense
               outlined
               rounded
-              label="Por página"
-              class="glass"
+              label="Por pagina"
+              class="glass compact-input"
               @update:model-value="changePerPage"
             />
           </div>
@@ -257,10 +251,9 @@
       </q-card-section>
     </q-card>
 
-    <!-- PREVIEW DIALOG -->
     <q-dialog v-model="preview.open">
-      <q-card style="width: 520px; max-width: 92vw;" class="card-soft">
-        <q-card-section class="row items-center q-pb-none">
+      <q-card style="width: 900px; max-width: 96vw;" class="card-soft">
+        <q-card-section class="row items-center q-pb-none q-pa-sm">
           <div class="text-subtitle1 text-weight-bold ellipsis">
             {{ preview.item?.nombre }}
           </div>
@@ -268,26 +261,100 @@
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pt-sm">
-          <q-img
-            :src="imgSrc(preview.item?.imagen)"
-            ratio="1"
-            class="rounded"
-            spinner-color="primary"
-          />
-          <div class="row items-center q-mt-md">
-            <q-chip color="green" text-color="white" icon="attach_money">
-              {{ formatPrice(preview.item?.precio) }}
-            </q-chip>
-            <q-space />
-            <q-btn
-              rounded
-              no-caps
-              outline
-              icon="content_copy"
-              label="Copiar precio"
-              @click="copyPrice(preview.item)"
-            />
+        <q-card-section class="q-pt-sm q-pa-sm">
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-4">
+              <q-img
+                :src="imgSrc(preview.item?.imagen)"
+                ratio="1.15"
+                class="rounded preview-img"
+                spinner-color="primary"
+              />
+              <div class="row items-center q-mt-sm">
+                <q-chip color="green" text-color="white" icon="payments" class="mini-chip">
+                  {{ formatPrice(preview.item?.precio) }}
+                </q-chip>
+                <q-space />
+                <q-btn
+                  rounded
+                  no-caps
+                  outline
+                  icon="content_copy"
+                  label="Copiar precio"
+                  size="sm"
+                  @click="copyPrice(preview.item)"
+                />
+              </div>
+            </div>
+            <div class="col-12 col-md-8">
+              <div class="row q-col-gutter-sm q-mb-sm">
+                <div class="col-12 col-sm-6">
+                  <q-card flat bordered class="glass">
+                    <q-card-section class="q-pa-sm">
+                      <div class="text-caption text-grey-6">Producto</div>
+                      <div class="text-subtitle2 text-weight-bold">{{ preview.item?.nombre || '-' }}</div>
+                      <div class="text-caption text-grey-7 q-mt-xs">{{ preview.item?.descripcion || 'Sin descripcion' }}</div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12 col-sm-3">
+                  <q-card flat bordered class="glass">
+                    <q-card-section class="q-pa-sm">
+                      <div class="text-caption text-grey-6">Unidad</div>
+                      <div class="text-subtitle2 text-weight-bold">{{ preview.item?.unidad || '-' }}</div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12 col-sm-3">
+                  <q-card flat bordered class="glass">
+                    <q-card-section class="q-pa-sm">
+                      <div class="text-caption text-grey-6">ID</div>
+                      <div class="text-subtitle2 text-weight-bold">{{ preview.item?.id || '-' }}</div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+              </div>
+
+              <div class="row items-center q-mb-xs">
+                <div class="text-subtitle2 text-weight-bold">Historial de compras activas</div>
+                <q-space />
+                <q-spinner v-if="preview.loadingHistorial" color="primary" size="20px" />
+              </div>
+
+              <q-markup-table dense flat bordered wrap-cells>
+                <thead>
+                <tr>
+                  <th>ID compra</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Usuario</th>
+                  <th>Proveedor</th>
+                  <th>Lote</th>
+                  <th>Vence</th>
+                  <th class="text-right">Cant.</th>
+                  <th class="text-right">Disponible</th>
+                  <th class="text-right">P/U</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="item in preview.historial" :key="item.id">
+                  <td>{{ item.compra?.id || '-' }}</td>
+                  <td>{{ item.compra?.fecha || '-' }}</td>
+                  <td>{{ item.compra?.hora || '-' }}</td>
+                  <td>{{ item.compra?.user?.name || '-' }}</td>
+                  <td>{{ item.compra?.proveedor?.nombre || item.compra?.nombre || '-' }}</td>
+                  <td>{{ item.lote || '-' }}</td>
+                  <td>{{ item.fecha_vencimiento || '-' }}</td>
+                  <td class="text-right">{{ item.cantidad || 0 }}</td>
+                  <td class="text-right">{{ item.cantidad_venta || 0 }}</td>
+                  <td class="text-right">{{ formatPrice(item.precio) }}</td>
+                </tr>
+                <tr v-if="!preview.loadingHistorial && !preview.historial.length">
+                  <td colspan="10" class="text-center text-grey-6">Sin compras activas para este producto.</td>
+                </tr>
+                </tbody>
+              </q-markup-table>
+            </div>
           </div>
         </q-card-section>
       </q-card>
@@ -307,12 +374,14 @@ export default {
       filters: { search: '' },
       pagination: {
         page: 1,
-        rowsPerPage: 24,
+        rowsPerPage: 6,
         rowsNumber: 0
       },
       preview: {
         open: false,
-        item: null
+        item: null,
+        historial: [],
+        loadingHistorial: false
       }
     }
   },
@@ -333,7 +402,7 @@ export default {
     },
     formatPrice (v) {
       const n = Number(v || 0)
-      return n.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${n.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs`
     },
     clearSearch () {
       this.filters.search = ''
@@ -346,7 +415,17 @@ export default {
     },
     openPreview (p) {
       this.preview.item = { ...p }
+      this.preview.historial = []
       this.preview.open = true
+      this.preview.loadingHistorial = true
+      this.$axios.get(`productos/${p.id}/historial-compras`)
+        .then(res => {
+          this.preview.historial = res.data || []
+        }).catch(() => {
+          this.$alert.error('No se pudo cargar el historial de compras')
+        }).finally(() => {
+          this.preview.loadingHistorial = false
+        })
     },
     async copyPrice (p) {
       try {
@@ -369,7 +448,7 @@ export default {
         this.productos = res.data.data || []
         this.pagination.rowsNumber = res.data.total || 0
       }).catch(err => {
-        this.$alert.error(err.response?.data?.message || 'Error al cargar catálogo')
+        this.$alert.error(err.response?.data?.message || 'Error al cargar catalogo')
       }).finally(() => {
         this.loading = false
       })
@@ -393,13 +472,17 @@ export default {
 }
 
 .glass{
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.78);
   backdrop-filter: blur(10px);
-  border-radius: 16px;
+  border-radius: 14px;
+}
+
+.compact-input{
+  font-size: 12px;
 }
 
 .card-soft{
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
@@ -413,17 +496,33 @@ export default {
 }
 
 .btn-soft{
-  box-shadow: 0 10px 24px rgba(25,118,210,.18);
+  box-shadow: 0 8px 18px rgba(25,118,210,.18);
 }
 
 .rounded{
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
 }
 .rounded-top{
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
   overflow: hidden;
+}
+
+.compact-img{
+  max-height: 118px;
+}
+
+.preview-img{
+  max-height: 240px;
+}
+
+.mini-chip{
+  font-size: 11px;
+}
+
+.mini-icon{
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
 }
 
 .overlay{
