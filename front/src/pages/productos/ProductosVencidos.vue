@@ -38,6 +38,7 @@
         <q-markup-table dense class="q-mt-md" flat bordered>
           <thead>
           <tr>
+            <th class="text-right">Opciones</th>
             <th>#</th>
             <th>Producto</th>
             <th>Cantidad</th>
@@ -45,11 +46,26 @@
             <th>Fecha de vencimiento</th>
             <th>Estado</th>
             <th>Días vencido</th>
-            <th class="text-right">Opciones</th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="(p, i) in productos" :key="p.id">
+            <td class="text-right">
+              <q-btn-dropdown color="primary" label="Opciones" no-caps dense size="10px">
+                <q-item clickable v-close-popup @click="verDetalle(p)">
+                  <q-item-section avatar>
+                    <q-icon name="visibility" />
+                  </q-item-section>
+                  <q-item-section>Detalle de compra</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="imprimirDetalle(p)">
+                  <q-item-section avatar>
+                    <q-icon name="print" />
+                  </q-item-section>
+                  <q-item-section>Imprimir pequeño</q-item-section>
+                </q-item>
+              </q-btn-dropdown>
+            </td>
             <td>{{ (pagina - 1) * porPagina + i + 1 }}</td>
             <td>{{ p.producto?.nombre }}</td>
             <td>{{ p.cantidad_venta }}</td>
@@ -64,16 +80,6 @@
               <q-badge color="negative" class="q-pa-xs">
                 {{ diasVencido(p.fecha_vencimiento) }} días
               </q-badge>
-            </td>
-            <td class="text-right">
-              <q-btn-dropdown color="primary" label="Opciones" no-caps dense>
-                <q-item clickable v-close-popup @click="verDetalle(p)">
-                  <q-item-section avatar>
-                    <q-icon name="visibility" />
-                  </q-item-section>
-                  <q-item-section>Detalle de compra</q-item-section>
-                </q-item>
-              </q-btn-dropdown>
             </td>
           </tr>
           </tbody>
@@ -113,11 +119,13 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <div id="printProductoVencido" class="hidden"></div>
   </q-page>
 </template>
 
 <script>
 import moment from "moment";
+import { Printd } from "printd";
 
 export default {
   name: "ProductosVencidos",
@@ -161,6 +169,63 @@ export default {
     verDetalle(producto) {
       this.detalleActual = producto;
       this.detalleDialog = true;
+    },
+    imprimirDetalle(producto) {
+      const compra = producto.compra || {};
+      const proveedor = compra.proveedor?.nombre || compra.nombre || '-';
+      const comprador = compra.user?.name || '-';
+      const styles = `
+        @page { size: 80mm auto; margin: 6mm; }
+        .imprimir-scope { font-family: "Courier New", Courier, monospace; color: #111; }
+        .imprimir-scope .ticket { width: 290px; margin: 0 auto; font-size: 11px; }
+        .imprimir-scope .center { text-align: center; }
+        .imprimir-scope .row { margin: 4px 0; }
+        .imprimir-scope .label { font-weight: 700; }
+        .imprimir-scope hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
+        .imprimir-scope .title { font-size: 14px; font-weight: 700; }
+      `;
+      const html = `
+        <div class="imprimir-scope">
+          <div class="ticket">
+            <div class="center title">CLINICA LA FUENTE</div>
+            <div class="center">PRODUCTO VENCIDO</div>
+            <hr>
+            <div class="row"><span class="label">Producto:</span> ${producto.producto?.nombre || '-'}</div>
+            <div class="row"><span class="label">Lote:</span> ${producto.lote || '-'}</div>
+            <div class="row"><span class="label">Vencimiento:</span> ${producto.fecha_vencimiento || '-'}</div>
+            <div class="row"><span class="label">Dias vencido:</span> ${this.diasVencido(producto.fecha_vencimiento)} dias</div>
+            <div class="row"><span class="label">Cantidad vencida:</span> ${producto.cantidad_venta || 0}</div>
+            <div class="row"><span class="label">Cantidad comprada:</span> ${producto.cantidad || 0}</div>
+            <hr>
+            <div class="row"><span class="label">Compra ID:</span> ${compra.id || '-'}</div>
+            <div class="row"><span class="label">Compro:</span> ${comprador}</div>
+            <div class="row"><span class="label">Proveedor:</span> ${proveedor}</div>
+            <div class="row"><span class="label">Fecha:</span> ${compra.fecha || '-'}</div>
+            <div class="row"><span class="label">Hora:</span> ${compra.hora || '-'}</div>
+            <div class="row"><span class="label">Nro factura:</span> ${compra.nro_factura || producto.nro_factura || '-'}</div>
+            <hr>
+            <div class="row"><span class="label">Precio compra:</span> ${Number(producto.precio || 0).toFixed(2)}</div>
+            <div class="row"><span class="label">Precio venta:</span> ${Number(producto.precio_venta || 0).toFixed(2)}</div>
+          </div>
+        </div>
+      `;
+      const mount = document.getElementById('printProductoVencido');
+
+      if (!mount) {
+        this.$alert.error('No se pudo preparar la impresión');
+        return;
+      }
+
+      mount.innerHTML = html;
+      const node = mount.querySelector('.imprimir-scope');
+
+      if (!node) {
+        this.$alert.error('No se pudo preparar la impresión');
+        return;
+      }
+
+      const d = new Printd();
+      d.print(node, styles);
     },
     cambiarPorPagina() {
       this.pagina = 1;

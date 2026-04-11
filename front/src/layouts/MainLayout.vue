@@ -15,14 +15,11 @@
         />
 
         <q-toolbar-title>
-<!--          <q-btn no-caps flat dense round icon="o_search" />-->
-<!--          {{ rutaActual }}-->
           <span class="text-subtitle2">
             {{ $version }}
           </span>
         </q-toolbar-title>
         <div>
-<!--          Quasar v{{ $q.version }}-->
           <q-btn-group flat>
             <q-btn icon="notifications" flat dense>
               <q-badge v-if="notificaciones.length" color="red" floating>{{ notificaciones.length }}</q-badge>
@@ -39,7 +36,7 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>{{ n.producto }}</q-item-label>
-                      <q-item-label caption>Vence en {{ n.dias_restantes }} días</q-item-label>
+                      <q-item-label caption>Vence en {{ n.dias_restantes }} dÃ­as</q-item-label>
                     </q-item-section>
                   </q-item>
                 </q-list>
@@ -81,62 +78,69 @@
     <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
-      :width="200"
+      :width="250"
       :breakpoint="500"
-      class="bg-primary text-white"
+      class="drawer-shell text-white"
     >
-      <q-list dense>
-        <q-item dense>
-          <q-item-section avatar>
-            <q-icon name="account_circle" />
-          </q-item-section>
-          <q-item-section>
-<!--            <pre>-->
-<!--              {{ $store.user}}-->
-<!--            </pre>-->
-            <q-item-label >
+      <div class="drawer-content">
+        <div class="drawer-profile">
+          <div class="drawer-profile__avatar">
+            <q-icon name="account_circle" size="32px" />
+          </div>
+          <div class="drawer-profile__info">
+            <div class="drawer-profile__name">
               {{ $store.user.name }}
-<!--              <q-chip color="white" text-color="primary" dense>-->
-<!--              <span class="text-bold">-->
-<!--                {{ $store.user.role }}-->
-<!--              </span>-->
-<!--              </q-chip>-->
-            </q-item-label>
-            <q-item-label caption>
-              <q-chip :color="$store.user.color" text-color="white" dense>
-                {{ $store.user.role }}
-              </q-chip>
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-<!--        <q-separator  class="bg-white" inset />-->
-        <div class="text-white text-center text-bold">
-          Opciones
+            </div>
+            <q-chip :color="$store.user.color" text-color="white" dense class="drawer-profile__role">
+              {{ $store.user.role }}
+            </q-chip>
+          </div>
         </div>
-        <template v-for="link in linksList" :key="link.title">
-          <q-item
-            clickable
-            :to="link.link"
-            exact
-            class="text-grey"
-            active-class="menu"
-            v-if="link && canAccess(link)"
-          >
-            <q-item-section avatar>
-              <q-icon
-                :name="$route.path === link.link ? 'o_' + link.icon : link.icon"
-                :class="$route.path === link.link ? 'text-white' : ''"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label :class="$route.path === link.link ? 'text-white text-bold' : ''">
-                {{ link.title }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
 
-        <q-item clickable class="text-red" @click="logout">
+        <div class="drawer-section-label">
+          Navegación
+        </div>
+
+        <q-list dense class="drawer-list">
+          <template v-for="section in visibleSections" :key="section.title">
+            <q-expansion-item
+              dense
+              dense-toggle
+              expand-separator
+              default-opened
+              :icon="section.icon"
+              :label="section.title"
+              :header-class="sectionIsActive(section) ? 'drawer-group drawer-group--active' : 'drawer-group'"
+            >
+              <q-list dense class="q-px-xs q-pb-xs">
+                <q-item
+                  v-for="link in section.links.filter(canAccess)"
+                  :key="link.title"
+                  clickable
+                  :to="link.link"
+                  exact
+                  class="drawer-link"
+                  :active="linkIsActive(link)"
+                  active-class="menu"
+                >
+                  <q-item-section avatar class="drawer-link__avatar">
+                    <q-icon
+                      :name="linkIsActive(link) ? 'o_' + link.icon : link.icon"
+                      :class="linkIsActive(link) ? 'text-white' : 'text-blue-grey-2'"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label :class="linkIsActive(link) ? 'text-white text-weight-bold' : 'text-blue-grey-1'">
+                      {{ link.title }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+          </template>
+        </q-list>
+
+        <q-item clickable class="drawer-logout" @click="logout">
           <q-item-section avatar>
             <q-icon name="exit_to_app" />
           </q-item-section>
@@ -144,7 +148,7 @@
             <q-item-label>Salir</q-item-label>
           </q-item-section>
         </q-item>
-      </q-list>
+      </div>
     </q-drawer>
 
     <q-page-container class="bg-grey-3">
@@ -152,54 +156,90 @@
     </q-page-container>
   </q-layout>
 </template>
+
 <script>
 export default {
   name: 'MainLayout',
   data () {
     return {
       leftDrawerOpen: false,
-      linksList: [
-        { title: 'Principal', icon: 'dashboard', link: '/', can: 'Todos'},
-        { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios'},
-        { title: 'Doctores', icon: 'medical_services', link: '/doctores', can: 'Doctores'},
-        { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes'},
-        { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos'},
-        { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas'},
-        { title: 'Venta Nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Nueva venta'},
-        { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores'},
-        { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: 'Compras'},
-        { title: 'Compras Nueva', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas'},
-        { title: 'Productos por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer'},
-        { title: 'Productos vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos'},
-        { title: 'Productos y precios', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos'},
-        { title: 'Aranceles', icon: 'medical_information', link: '/aranceles', can: 'Aranceles'},
-        { title: 'Formularios control', icon: 'assignment_turned_in', link: '/formularios-control', can: 'Formularios control'},
-        { title: 'Formulario control nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control']},
-        { title: 'Caja recepcion', icon: 'point_of_sale', link: '/caja-recepciones', can: 'Caja recepcion'},
-        { title: 'Caja recepcion crear', icon: 'post_add', link: '/caja-recepciones/nuevo', can: 'Caja recepcion crear'},
+      menuSections: [
+        {
+          title: 'General',
+          icon: 'space_dashboard',
+          links: [
+            { title: 'Principal', icon: 'dashboard', link: '/', can: 'Todos' },
+          ]
+        },
+        {
+          title: 'Farmacia',
+          icon: 'local_pharmacy',
+          links: [
+            { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios' },
+            { title: 'Doctores', icon: 'medical_services', link: '/doctores', can: 'Doctores' },
+            { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes' },
+            { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos' },
+            { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas' },
+            { title: 'Venta nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Nueva venta' },
+            { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores' },
+            { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: 'Compras' },
+            { title: 'Compras nuevas', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas' },
+            { title: 'Por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer' },
+            { title: 'Vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos' },
+            { title: 'Precios productos', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos' },
+          ]
+        },
+        {
+          title: 'Financiera',
+          icon: 'account_balance_wallet',
+          links: [
+            { title: 'Aranceles', icon: 'medical_information', link: '/aranceles', can: 'Aranceles' },
+            { title: 'Formularios control', icon: 'assignment_turned_in', link: '/formularios-control', can: 'Formularios control' },
+            { title: 'Formulario nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control'] },
+            { title: 'Caja recepción', icon: 'point_of_sale', link: '/caja-recepciones', can: 'Caja recepcion' },
+            { title: 'Crear caja recepción', icon: 'receipt_long', link: '/caja-recepciones/nuevo', can: 'Caja recepcion crear' },
+          ]
+        }
       ],
       notificaciones: [],
     }
   },
-  mounted() {
+  mounted () {
     this.getNotificaciones()
   },
+  computed: {
+    rutaActual () {
+      return this.$route.path
+    },
+    visibleSections () {
+      return this.menuSections.filter(section => this.groupHasAccess(section))
+    }
+  },
   methods: {
-      getNotificaciones() {
-        this.$axios.get('/productos-por-vencer-campana').then(res => {
-          this.notificaciones = res.data;
-        }).catch(() => {
-          this.notificaciones = [];
-        });
-      },
-      canAccess (link) {
-        if (!link || !link.can) return false
-        if (link.can === 'Todos') return true
-        const required = Array.isArray(link.can) ? link.can : [link.can]
-        return this.$store.permissions.some(p => required.includes(p.name))
-      },
-      logout () {
-      this.$alert.dialog('¿Desea salir del sistema?')
+    getNotificaciones () {
+      this.$axios.get('/productos-por-vencer-campana').then(res => {
+        this.notificaciones = res.data
+      }).catch(() => {
+        this.notificaciones = []
+      })
+    },
+    canAccess (link) {
+      if (!link || !link.can) return false
+      if (link.can === 'Todos') return true
+      const required = Array.isArray(link.can) ? link.can : [link.can]
+      return this.$store.permissions.some(p => required.includes(p.name))
+    },
+    groupHasAccess (section) {
+      return section.links.some(link => this.canAccess(link))
+    },
+    linkIsActive (link) {
+      return this.$route.path === link.link
+    },
+    sectionIsActive (section) {
+      return section.links.some(link => this.linkIsActive(link))
+    },
+    logout () {
+      this.$alert.dialog('Â¿Desea salir del sistema?')
         .onOk(() => {
           this.$store.isLogged = false
           this.$store.user = {}
@@ -210,19 +250,101 @@ export default {
     toggleLeftDrawer () {
       this.leftDrawerOpen = !this.leftDrawerOpen
     }
-  },
-  computed: {
-    rutaActual () {
-      return this.$route.path
-    }
   }
 }
 </script>
+
 <style>
-.menu{
+.drawer-shell {
+  background: linear-gradient(180deg, #0f4c81 0%, #0a3558 100%);
+}
+
+.drawer-content {
+  min-height: 100%;
+  padding: 12px 10px 16px;
+}
+
+.drawer-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(6px);
+}
+
+.drawer-profile__avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.drawer-profile__info {
+  min-width: 0;
+}
+
+.drawer-profile__name {
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.drawer-profile__role {
+  margin-left: 0;
+}
+
+.drawer-section-label {
+  padding: 2px 8px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-group {
+  margin: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-weight: 600;
+}
+
+.drawer-group--active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.drawer-link {
+  min-height: 36px;
+  border-radius: 10px;
+  margin: 2px 0;
+}
+
+.drawer-link__avatar {
+  min-width: 34px;
+}
+
+.menu {
   background-color: #1976D2;
   border-radius: 10px;
-  margin: 5px;
-  padding: 5px
+}
+
+.drawer-logout {
+  margin-top: 12px;
+  border-radius: 12px;
+  background: rgba(244, 67, 54, 0.14);
+  color: #ffd5d2;
 }
 </style>
