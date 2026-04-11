@@ -26,6 +26,8 @@ class CajaRecepcionController extends Controller
                         ->orWhereHas('paciente', function ($pacienteQuery) use ($search) {
                             $pacienteQuery->where('nombre', 'like', "%{$search}%")
                                 ->orWhere('apellido', 'like', "%{$search}%")
+                                ->orWhereRaw("TRIM(CONCAT(COALESCE(nombre, ''), ' ', COALESCE(apellido, ''))) like ?", ["%{$search}%"])
+                                ->orWhereRaw("TRIM(CONCAT(COALESCE(apellido, ''), ' ', COALESCE(nombre, ''))) like ?", ["%{$search}%"])
                                 ->orWhere('identificacion', 'like', "%{$search}%");
                         });
                 });
@@ -99,6 +101,39 @@ class CajaRecepcionController extends Controller
             'punto' => 'nullable|integer|in:0,1',
             'nombre_factura' => 'nullable|string|max:255',
             'numero_ficha' => 'nullable|string|max:255',
+            'formulario_diagnostico' => 'nullable|string',
+            'formulario_observaciones' => 'nullable|string',
+            'formulario_detalle' => 'nullable|array',
+            'formulario_detalle.caja_vaselina' => 'nullable|in:P,M,G',
+            'formulario_detalle.caja_curacion' => 'nullable|in:P,M,G',
+            'formulario_detalle.caja_sutura' => 'nullable|in:P,M,G',
+            'formulario_detalle.caja_retiro_uterino' => 'nullable|in:P,M,G',
+            'formulario_detalle.caja_retiro_puntos' => 'nullable|in:P,M,G',
+            'formulario_detalle.sutura' => 'nullable|in:P,M,G',
+            'formulario_detalle.uso_tela_adhesiva' => 'nullable|in:P,M,G',
+            'formulario_detalle.uso_micropor' => 'nullable|in:SI,NO',
+            'formulario_detalle.nebulizacion' => 'nullable|in:SI,NO',
+            'formulario_detalle.glicemia' => 'nullable|in:SI,NO',
+            'formulario_detalle.inyectable' => 'nullable|in:IM,EV,SC',
+            'formulario_detalle.guantes_dediles' => 'nullable|in:SI,NO',
+            'formulario_detalle.campo_fenestrado' => 'nullable|in:SI,NO',
+            'formulario_detalle.colocado_stopper' => 'nullable|in:SI,NO',
+            'formulario_detalle.monitor_desfibrilador' => 'nullable|in:SI,NO',
+            'formulario_detalle.antisepticos' => 'nullable|in:SI,NO',
+            'formulario_detalle.apositos_extras' => 'nullable|in:SI,NO',
+            'formulario_detalle.torundas_gasa_extras' => 'nullable|in:SI,NO',
+            'formulario_detalle.gases_extra' => 'nullable|in:SI,NO',
+            'formulario_detalle.venda_quemado' => 'nullable|in:SI,NO',
+            'formulario_detalle.curacion' => 'nullable|in:P,M,G',
+            'formulario_detalle.suero' => 'nullable|in:SI,NO',
+            'formulario_detalle.aspiracion' => 'nullable|in:SI,NO',
+            'formulario_detalle.sonda' => 'nullable|in:SNG,SOG,SV',
+            'formulario_detalle.compresas' => 'nullable|in:P,M,G',
+            'formulario_detalle.yeso' => 'nullable|in:SI,NO',
+            'formulario_detalle.oxigeno' => 'nullable|in:SI,NO',
+            'formulario_detalle.enema' => 'nullable|in:SI,NO',
+            'formulario_detalle.corbatas' => 'nullable|in:SI,NO',
+            'formulario_detalle.algodon' => 'nullable|in:SI,NO',
             'estado_pago' => 'nullable|in:Ahora,Luego',
             'laboratorio_nombre' => 'nullable|string|max:255',
             'medico_ecografia' => 'nullable|string|max:255',

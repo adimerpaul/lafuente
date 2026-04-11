@@ -194,8 +194,8 @@ export default {
           icon: 'account_balance_wallet',
           links: [
             { title: 'Aranceles', icon: 'medical_information', link: '/aranceles', can: 'Aranceles' },
-            { title: 'Formularios control', icon: 'assignment_turned_in', link: '/formularios-control', can: 'Formularios control' },
-            { title: 'Formulario nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control'] },
+            // { title: 'Formularios control', icon: 'assignment_turned_in', link: '/formularios-control', can: 'Formularios control' },
+            // { title: 'Formulario nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control'] },
             { title: 'Caja recepción', icon: 'point_of_sale', link: '/caja-recepciones', can: 'Caja recepcion' },
             { title: 'Crear caja recepción', icon: 'receipt_long', link: '/caja-recepciones/nuevo', can: 'Caja recepcion crear' },
           ]

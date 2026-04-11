@@ -65,6 +65,7 @@
 
           <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-8">
             <q-tab name="datos" icon="assignment" label="Datos" no-caps />
+            <q-tab name="formulario" icon="assignment_turned_in" label="Formulario" no-caps />
             <q-tab name="costos" icon="payments" label="Costos" no-caps />
             <q-tab name="pagos" icon="point_of_sale" label="Pago y cierre" no-caps />
           </q-tabs>
@@ -159,6 +160,69 @@
                     :options="doctorOptions"
                     label="Medico"
                     @filter="filterDoctores"
+                  />
+                </div>
+              </div>
+            </q-tab-panel>
+
+            <q-tab-panel name="formulario" class="q-pa-sm">
+              <div class="row q-col-gutter-sm">
+                <div class="col-12 col-md-3">
+                  <q-card flat bordered class="bg-blue-1">
+                    <q-card-section class="q-pa-sm">
+                      <div class="text-caption">Total referencial</div>
+                      <div class="text-h6 text-primary">{{ money(formularioTotalReferencial) }}</div>
+                      <div class="text-caption">Seleccionados: {{ formularioSelectedItems.length }}</div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12 col-md-9">
+                  <q-input
+                    v-model="form.formulario_diagnostico"
+                    dense
+                    outlined
+                    type="textarea"
+                    autogrow
+                    label="Diagnostico"
+                  />
+                </div>
+                <div class="col-12">
+                  <q-card flat bordered>
+                    <q-card-section class="bg-grey-2 text-weight-bold q-py-sm">
+                      Registro compacto para celular
+                    </q-card-section>
+                    <q-card-section class="q-pa-xs">
+                      <div v-for="item in controlItems" :key="item.key" class="control-row">
+                        <div class="control-label">
+                          <div class="text-caption text-weight-medium">{{ item.label }}</div>
+                          <div class="text-grey-7 control-price">{{ money(getFormularioAmount(item.key, form.formulario_detalle[item.key])) }}</div>
+                        </div>
+                        <div class="control-actions">
+                          <q-btn-toggle
+                            v-model="form.formulario_detalle[item.key]"
+                            :options="item.options"
+                            dense
+                            no-caps
+                            unelevated
+                            toggle-color="primary"
+                            color="grey-3"
+                            text-color="dark"
+                            spread
+                            clearable
+                          />
+                        </div>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12">
+                  <q-input
+                    v-model="form.formulario_observaciones"
+                    dense
+                    outlined
+                    type="textarea"
+                    autogrow
+                    label="Observaciones del formulario"
                   />
                 </div>
               </div>
@@ -282,6 +346,14 @@
 
 <script>
 import moment from 'moment'
+import {
+  controlCatalog,
+  controlOptions,
+  createEmptyDetail,
+  getControlAmount,
+  getControlTotal,
+  getSelectedControlItems
+} from '../formularios-control/controlCatalog'
 
 const emptyForm = () => ({
   fecha: moment().format('YYYY-MM-DD'),
@@ -291,6 +363,9 @@ const emptyForm = () => ({
   punto: 0,
   nombre_factura: '',
   numero_ficha: '',
+  formulario_diagnostico: '',
+  formulario_detalle: createEmptyDetail(),
+  formulario_observaciones: '',
   estado_pago: 'Ahora',
   laboratorio_nombre: '',
   medico_ecografia: '',
@@ -327,6 +402,8 @@ export default {
       loading: false,
       saving: false,
       savingPatient: false,
+      patientSearchTimer: null,
+      patientSearchSeq: 0,
       form: emptyForm(),
       doctores: [],
       pacienteOptions: [],
@@ -402,6 +479,18 @@ export default {
     },
     showEfectivo () {
       return this.metodoPago === 'efectivo' || this.metodoPago === 'mixto'
+    },
+    controlItems () {
+      return controlCatalog.map(item => ({
+        ...item,
+        options: controlOptions[item.type] || []
+      }))
+    },
+    formularioSelectedItems () {
+      return getSelectedControlItems(this.form.formulario_detalle)
+    },
+    formularioTotalReferencial () {
+      return getControlTotal(this.form.formulario_detalle)
     }
   },
   mounted () {
@@ -413,6 +502,9 @@ export default {
     },
     money (value) {
       return `${Number(value || 0).toFixed(2)} Bs`
+    },
+    getFormularioAmount (key, value) {
+      return getControlAmount(key, value)
     },
     loadFormData () {
       this.loading = true
@@ -428,7 +520,11 @@ export default {
           this.form = {
             ...emptyForm(),
             ...itemRes.data,
-            fecha: itemRes.data.fecha ? itemRes.data.fecha.substring(0, 10) : moment().format('YYYY-MM-DD')
+            fecha: itemRes.data.fecha ? itemRes.data.fecha.substring(0, 10) : moment().format('YYYY-MM-DD'),
+            formulario_detalle: {
+              ...createEmptyDetail(),
+              ...(itemRes.data.formulario_detalle || {})
+            }
           }
           this.metodoPago = this.detectMetodoPago()
           const paciente = itemRes.data.paciente
@@ -465,13 +561,33 @@ export default {
         value: doctor.id
       }
     },
-    filterPacientes (val, update) {
-      update(() => {})
-      this.$axios.get('pacientes', { params: { search: val || '', page: 1 } }).then(res => {
-        this.pacienteOptions = (res.data.data || []).map(this.mapPacienteOption)
-      }).catch(() => {
-        this.pacienteOptions = []
-      })
+    filterPacientes (val, update, abort) {
+      const search = (val || '').trim()
+
+      clearTimeout(this.patientSearchTimer)
+
+      if (search === '') {
+        update(() => {
+          this.pacienteOptions = [...this.pacienteOptions]
+        })
+        return
+      }
+
+      const seq = ++this.patientSearchSeq
+
+      this.patientSearchTimer = setTimeout(() => {
+        this.$axios.get('pacientes', { params: { search, page: 1 } }).then(res => {
+          if (seq !== this.patientSearchSeq) return
+          update(() => {
+            this.pacienteOptions = (res.data.data || []).map(this.mapPacienteOption)
+          })
+        }).catch(() => {
+          if (seq !== this.patientSearchSeq) return
+          update(() => {
+            this.pacienteOptions = []
+          })
+        })
+      }, 350)
     },
     filterDoctores (val, update) {
       update(() => {
@@ -542,3 +658,45 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.control-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 180px) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.control-label {
+  min-width: 0;
+}
+
+.control-price {
+  font-size: 11px;
+}
+
+.control-actions :deep(.q-btn-toggle) {
+  width: 100%;
+}
+
+.control-actions :deep(.q-btn) {
+  min-height: 28px;
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+@media (max-width: 600px) {
+  .control-row {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .control-actions :deep(.q-btn) {
+    min-height: 26px;
+    font-size: 10px;
+    padding: 0 4px;
+  }
+}
+</style>
