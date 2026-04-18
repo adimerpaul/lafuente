@@ -104,7 +104,7 @@
             <q-input v-model="paciente.direccion" label="Dirección" dense filled hint=""/>
             <q-input v-model="paciente.telefono" label="Teléfono" dense filled hint=""/>
 <!--          select Interno Externo-->
-          <q-select v-model="paciente.tipo_paciente" label="Tipo paciente" dense filled hint="" :options="[ 'Interno','Externo'] "/>
+          <q-select v-model="paciente.tipo_paciente" label="Tipo paciente" dense filled hint="" :options="['Interno', 'Externo', 'Seguro', 'Recepción']" />
             <q-card-actions align="right">
               <q-btn label="Cancelar" color="primary" flat @click="pacienteDialog = false" :loading="$store.loading"/>
               <q-btn label="Guardar" color="primary" flat type="submit" :loading="$store.loading"/>

@@ -124,7 +124,7 @@
                 <q-input v-model="quickPatient.telefono" dense outlined label="Telefono" />
               </div>
               <div class="col-12 col-md-6">
-                <q-select v-model="quickPatient.tipo_paciente" :options="['Externo', 'Interno']" dense outlined label="Tipo paciente" />
+                <q-select v-model="quickPatient.tipo_paciente" :options="['Externo', 'Interno', 'Seguro', 'Recepción']" dense outlined label="Tipo paciente" />
               </div>
               <div class="col-12">
                 <q-input v-model="quickPatient.direccion" dense outlined label="Direccion" />

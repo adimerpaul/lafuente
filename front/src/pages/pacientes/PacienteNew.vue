@@ -49,10 +49,12 @@
               <q-input v-model="paciente.direccion" dense outlined placeholder="Dirección" />
             </div>
             <div class="col-12 col-md-6 q-pa-xs">
-              <label class="text-bold">Dirección:</label>
+              <label class="text-bold">Tipo:</label>
 <!--              <q-input v-model="paciente.direccion" dense outlined placeholder="Dirección" />-->
               <q-radio v-model="paciente.tipo_paciente" val="Interno" label="Interno" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
               <q-radio v-model="paciente.tipo_paciente" val="Externo" label="Externo" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
+              <q-radio v-model="paciente.tipo_paciente" val="Seguro" label="Seguro" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
+              <q-radio v-model="paciente.tipo_paciente" val="Recepción" label="Recepción" :rules="[val => !!val || 'Campo requerido']" name="tipo_paciente" />
             </div>
             <div class="col-12 q-pa-xs">
               <div class="text-center">
