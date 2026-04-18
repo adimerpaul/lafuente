@@ -2,7 +2,7 @@
   <q-page class="q-pa-xs">
     <q-card flat bordered>
       <q-card-section class="q-pa-xs">
-        <div class="text-h6">Productos por vencer en {{ dias }} días</div>
+        <div class="text-h6">Productos por vencer en {{ dias }} dias - {{ farmaciaNombre }}</div>
 
         <div class="row items-end q-col-gutter-md">
           <div class="col-12 col-md-2">
@@ -12,10 +12,10 @@
             <q-option-group
               v-model="unidad"
               :options="[
-                { label: 'Días', value: 'dias' },
+                { label: 'Dias', value: 'dias' },
                 { label: 'Semanas', value: 'semanas' },
                 { label: 'Meses', value: 'meses' },
-                { label: 'Años', value: 'anios' }
+                { label: 'Anios', value: 'anios' }
               ]"
               type="radio"
               inline
@@ -36,7 +36,7 @@
             <th>Lote</th>
             <th>Fecha de Vencimiento</th>
             <th>Estado</th>
-            <th>Días restantes</th>
+            <th>Dias restantes</th>
           </tr>
           </thead>
           <tbody>
@@ -53,7 +53,7 @@
             </td>
             <td>
               <q-badge :color="diasRestantesColor(p.fecha_vencimiento).color" class="q-pa-xs">
-                {{ diasRestantesColor(p.fecha_vencimiento).dias }} días
+                {{ diasRestantesColor(p.fecha_vencimiento).dias }} dias
               </q-badge>
             </td>
           </tr>
@@ -64,64 +64,71 @@
   </q-page>
 </template>
 <script>
-import moment from 'moment';
+import moment from 'moment'
 export default {
-  name: "ProductosPorVencer",
-  data() {
+  name: 'ProductosPorVencer',
+  data () {
     return {
       valor: 1,
-      unidad: 'meses', // o 'semanas', 'meses'
+      unidad: 'meses',
       dias: 1,
       productos: [],
       loading: false
-    };
+    }
   },
-  mounted() {
-    this.consultar();
+  computed: {
+    farmaciaTipo () {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre () {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    }
+  },
+  mounted () {
+    this.consultar()
   },
   methods: {
-    consultar() {
-      this.dias = this.convertirADias(this.valor, this.unidad);
+    consultar () {
+      this.dias = this.convertirADias(this.valor, this.unidad)
 
-      this.loading = true;
-      this.$axios.get('/productosPorVencer', { params: { dias: this.dias } })
+      this.loading = true
+      this.$axios.get('/productosPorVencer', { params: { dias: this.dias, farmacia_tipo: this.farmaciaTipo } })
         .then(res => {
           this.productos = res.data
         })
         .catch(() => {
-          this.$alert.error("Error al consultar productos por vencer");
+          this.$alert.error('Error al consultar productos por vencer')
         }).finally(() => {
-        this.loading = false;
-      });
+          this.loading = false
+        })
     },
-    convertirADias(valor, unidad) {
+    convertirADias (valor, unidad) {
       switch (unidad) {
         case 'semanas':
-          return valor * 7;
+          return valor * 7
         case 'meses':
-          return valor * 30;
+          return valor * 30
         case 'anios':
-          return valor * 365;
+          return valor * 365
         default:
-          return valor;
+          return valor
       }
     },
-    diasRestantesColor(fechaVencimiento) {
-      const hoy = moment();
-      const vencimiento = moment(fechaVencimiento);
-      const diasRestantes = vencimiento.diff(hoy, 'days');
+    diasRestantesColor (fechaVencimiento) {
+      const hoy = moment()
+      const vencimiento = moment(fechaVencimiento)
+      const diasRestantes = vencimiento.diff(hoy, 'days')
 
-      const tercio = Math.ceil(this.dias / 3);
+      const tercio = Math.ceil(this.dias / 3)
 
       if (diasRestantes <= tercio) {
-        return { color: 'red', dias: diasRestantes };
+        return { color: 'red', dias: diasRestantes }
       } else if (diasRestantes <= tercio * 2) {
-        return { color: 'orange', dias: diasRestantes };
+        return { color: 'orange', dias: diasRestantes }
       } else {
-        return { color: 'green', dias: diasRestantes };
+        return { color: 'green', dias: diasRestantes }
       }
     }
   }
 }
-
 </script>

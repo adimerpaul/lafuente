@@ -11,15 +11,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller{
+    private function resolveFarmaciaTipo(Request $request): string
+    {
+        $tipo = trim((string) $request->input('farmacia_tipo', 'Farmacia'));
+
+        return $tipo !== '' ? $tipo : 'Farmacia';
+    }
+
     public function cambiarLoteFecha(Request $request, Compra $compra)
     {
         DB::beginTransaction();
         try {
-
             foreach ($request->compra_detalles as $detalle) {
-
                 CompraDetalle::where('id', $detalle['id'])
-                    ->where('compra_id', $compra->id) // seguridad mínima
+                    ->where('compra_id', $compra->id)
                     ->update([
                         'lote' => $detalle['lote'],
                         'fecha_vencimiento' => $detalle['fecha_vencimiento'],
@@ -31,7 +36,6 @@ class CompraController extends Controller{
             return response()->json([
                 'message' => 'Lote y fecha de vencimiento actualizados correctamente'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -42,8 +46,11 @@ class CompraController extends Controller{
     }
 
     function historialCompras($id){
-        $historial = \App\Models\CompraDetalle::with(['compra.user', 'compra.proveedor', 'producto'])
+        $farmaciaTipo = $this->resolveFarmaciaTipo(request());
+
+        $historial = CompraDetalle::with(['compra.user', 'compra.proveedor', 'producto'])
             ->where('producto_id', $id)
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->where('estado', 'Activo')
             ->whereHas('compra', function ($q) {
                 $q->where('estado', 'Activo');
@@ -53,13 +60,16 @@ class CompraController extends Controller{
 
         return response()->json($historial);
     }
+
     public function productosPorVencer(Request $request){
-        $dias = (int) ($request->dias ?? 5); // Conversión explícita
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+        $dias = (int) ($request->dias ?? 5);
 
         $hoy = Carbon::now();
         $limite = $hoy->copy()->addDays($dias);
 
-        $productos = \App\Models\CompraDetalle::with('producto')
+        $productos = CompraDetalle::with('producto')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereNotNull('fecha_vencimiento')
             ->whereBetween('fecha_vencimiento', [$hoy->format('Y-m-d'), $limite->format('Y-m-d')])
             ->orderBy('fecha_vencimiento')
@@ -69,12 +79,15 @@ class CompraController extends Controller{
 
         return response()->json($productos);
     }
+
     public function productosVencidos(Request $request)
     {
         $hoy = Carbon::now()->format('Y-m-d');
         $perPage = $request->per_page ?? 10;
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-        $productos = \App\Models\CompraDetalle::with(['producto', 'compra.user', 'compra.proveedor'])
+        $productos = CompraDetalle::with(['producto', 'compra.user', 'compra.proveedor'])
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereNotNull('fecha_vencimiento')
             ->where('fecha_vencimiento', '<', $hoy)
             ->orderBy('fecha_vencimiento', 'desc')
@@ -85,9 +98,12 @@ class CompraController extends Controller{
         return response()->json($productos);
     }
 
-
     public function index(Request $request){
-        $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->orderBy('id', 'desc');
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+
+        $query = Compra::with(['user', 'proveedor', 'compraDetalles.producto'])
+            ->where('farmacia_tipo', $farmaciaTipo)
+            ->orderBy('id', 'desc');
 
         if ($request->fechaInicio && $request->fechaFin) {
             $query->whereBetween('fecha', [$request->fechaInicio, $request->fechaFin]);
@@ -127,7 +143,6 @@ class CompraController extends Controller{
         }
     }
 
-
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -135,14 +150,13 @@ class CompraController extends Controller{
         try {
             $fecha = Carbon::now()->format('Y-m-d');
             $hora = Carbon::now()->format('H:i:s');
+            $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-            // Crear la compra
             $proveedor = Proveedor::find($request->proveedor_id);
-//            error_log('Proveedor: ' . json_encode($proveedor));
-//            error_log('Ci:' . $proveedor->ci);
             $compra = Compra::create([
                 'user_id' => auth()->id(),
                 'proveedor_id' => $request->proveedor_id ?? null,
+                'farmacia_tipo' => $farmaciaTipo,
                 'fecha' => $fecha,
                 'hora' => $hora,
                 'ci' => $proveedor->ci ?? null,
@@ -154,12 +168,12 @@ class CompraController extends Controller{
                 'nro_factura' => $request->nro_factura ?? null,
             ]);
 
-            // Crear los detalles
             foreach ($request->productos as $p) {
                 CompraDetalle::create([
                     'compra_id' => $compra->id,
                     'user_id' => auth()->id(),
                     'producto_id' => $p['producto_id'],
+                    'farmacia_tipo' => $farmaciaTipo,
                     'proveedor_id' => $compra->proveedor_id,
                     'nombre' => $p['producto']['nombre'],
                     'precio' => $p['precio'],
@@ -176,9 +190,14 @@ class CompraController extends Controller{
                     'nro_factura' => $compra->nro_factura,
                 ]);
 
-                // Actualizar el stock del producto
-//                Producto::where('id', $p['producto_id'])->increment('stock', $p['cantidad']);
-                $producto = Producto::find($p['producto_id']);
+                $producto = Producto::where('id', $p['producto_id'])
+                    ->where('farmacia_tipo', $farmaciaTipo)
+                    ->first();
+
+                if (!$producto) {
+                    throw new \RuntimeException('Producto no encontrado para la farmacia seleccionada.');
+                }
+
                 $producto->precio = $p['precio_venta'];
                 $producto->save();
             }
@@ -191,5 +210,4 @@ class CompraController extends Controller{
             return response()->json(['message' => 'Error al registrar la compra', 'error' => $e->getMessage()], 500);
         }
     }
-
 }

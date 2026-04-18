@@ -67,7 +67,7 @@
           </div>
 <!--           btn crear-->
           <div class="col-12 col-md-2">
-            <q-btn color="positive" label="Compra" icon="add_circle_outline" @click="$router.push({ name: 'compras-create' })" no-caps :loading="loading" />
+            <q-btn color="positive" :label="`Compra ${farmaciaNombre}`" icon="add_circle_outline" @click="$router.push({ name: compraCreateRoute })" no-caps :loading="loading" />
           </div>
           <div class="col-12 col-md-2">
             <q-btn color="primary" label="Excel" icon="file_download" @click="excel" no-caps :loading="loading" />
@@ -246,6 +246,15 @@ export default {
     this.usersGet()
   },
   computed: {
+    farmaciaTipo() {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre() {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
+    compraCreateRoute() {
+      return this.farmaciaTipo === 'Farmacia institucional' ? 'compras-create-institucional' : 'compras-create'
+    },
     usersTodos() {
       return [{ label: 'Todos', value: '' }, ...this.users.map(u => ({ label: u.name, value: u.id }))]
     },
@@ -298,7 +307,8 @@ export default {
         params: {
           fechaInicio: this.fechaInicio,
           fechaFin: this.fechaFin,
-          user: this.user
+          user: this.user,
+          farmacia_tipo: this.farmaciaTipo
         }
       }).then(res => {
         this.compras = res.data

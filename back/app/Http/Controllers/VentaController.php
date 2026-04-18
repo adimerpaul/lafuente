@@ -14,14 +14,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class VentaController extends Controller
 {
+    private function resolveFarmaciaTipo(Request $request): string
+    {
+        $tipo = trim((string) $request->input('farmacia_tipo', 'Farmacia'));
+
+        return $tipo !== '' ? $tipo : 'Farmacia';
+    }
+
     private function ventasIndexQuery(Request $request)
     {
         $fechaInicio = $request->input('fechaInicio');
         $fechaFin    = $request->input('fechaFin');
         $user        = $request->input('user');
         $tipoVenta   = $request->input('tipoVenta');
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
         $q = Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->when($fechaInicio && $fechaFin, fn($qq) => $qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
             ->when($user, fn($qq) => $qq->where('user_id', $user))
             ->when($tipoVenta, fn($qq) => $qq->where('tipo_venta', $tipoVenta))
@@ -218,12 +227,14 @@ class VentaController extends Controller
         try {
             // 1) Cliente
             $cliente = $this->clienteUpdateOrCreate($request);
+            $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
             $fecha = $request->input('fecha') ?? date('Y-m-d');
             // 2) Venta cabecera
             $request->merge([
                 'user_id'    => auth()->id(),
                 'cliente_id' => $cliente->id,
+                'farmacia_tipo' => $farmaciaTipo,
                 'fecha'      => $fecha,
                 'hora'       => date('H:i:s'),
                 'estado'     => 'Activo',
@@ -234,7 +245,7 @@ class VentaController extends Controller
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',
-                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','facturado','numero_factura','pagado_interno','doctor_id'
+                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','facturado','numero_factura','pagado_interno','doctor_id','farmacia_tipo'
             ]));
 
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
@@ -249,7 +260,9 @@ class VentaController extends Controller
                     abort(422, 'Producto o cantidad inválida.');
                 }
 
-                $producto = Producto::select('id','nombre')->findOrFail($productoId);
+                $producto = Producto::select('id','nombre')
+                    ->where('farmacia_tipo', $farmaciaTipo)
+                    ->findOrFail($productoId);
                 $nombreProducto = $producto->nombre;
 
                 // Si vino un lote concreto, usarlo
@@ -257,6 +270,7 @@ class VentaController extends Controller
                     $loteId = (int)$item['compra_detalle_id'];
 
                     $cd = CompraDetalle::where('id', $loteId)
+                        ->where('farmacia_tipo', $farmaciaTipo)
                         ->lockForUpdate()
                         ->firstOrFail();
 
@@ -273,6 +287,7 @@ class VentaController extends Controller
                     VentaDetalle::create([
                         'venta_id'          => $venta->id,
                         'producto_id'       => $productoId,
+                        'farmacia_tipo'     => $farmaciaTipo,
                         'compra_detalle_id' => $cd->id,
                         'nombre'            => $nombreProducto,
                         'cantidad'          => $cantidad,
@@ -292,6 +307,7 @@ class VentaController extends Controller
                 // FIFO por fecha de vencimiento (nulos al final)
                 $restante = $cantidad;
                 $lotes = CompraDetalle::where('producto_id', $productoId)
+                    ->where('farmacia_tipo', $farmaciaTipo)
                     ->where('estado', 'Activo')
                     ->whereNull('deleted_at')
                     ->where('cantidad_venta', '>', 0)
@@ -308,6 +324,7 @@ class VentaController extends Controller
                     VentaDetalle::create([
                         'venta_id'          => $venta->id,
                         'producto_id'       => $productoId,
+                        'farmacia_tipo'     => $farmaciaTipo,
                         'compra_detalle_id' => $l->id,
                         'nombre'            => $nombreProducto,
                         'cantidad'          => $take,

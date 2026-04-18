@@ -23,6 +23,7 @@ class VentaDetalle extends Model{
     protected $fillable = [
         'venta_id',
         'producto_id',
+        'farmacia_tipo',
         'compra_detalle_id',
         'nombre',
         'cantidad',

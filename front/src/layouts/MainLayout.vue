@@ -185,6 +185,19 @@ export default {
           ]
         },
         {
+          title: 'Farmacia Institucional',
+          icon: 'medical_services',
+          links: [
+            { title: 'Productos', icon: 'inventory_2', link: '/institucional/productos', can: 'Productos' },
+            { title: 'Ventas', icon: 'sell', link: '/institucional/venta', can: 'Ventas' },
+            { title: 'Venta nueva', icon: 'add_shopping_cart', link: '/institucional/ventaNuevo', can: 'Nueva venta' },
+            { title: 'Compras', icon: 'shopping_cart_checkout', link: '/institucional/compras', can: 'Compras' },
+            { title: 'Compras nuevas', icon: 'add_business', link: '/institucional/compras-create', can: 'Compras nuevas' },
+            { title: 'Por vencer', icon: 'hourglass_bottom', link: '/institucional/productos-vencer', can: 'Productos por vencer' },
+            { title: 'Vencidos', icon: 'report_problem', link: '/institucional/productos-vencidos', can: 'Productos vencidos' },
+          ]
+        },
+        {
           title: 'Clínica',
           icon: 'local_hospital',
           links: [
@@ -213,6 +226,11 @@ export default {
   mounted () {
     this.getNotificaciones()
   },
+  watch: {
+    '$route.fullPath' () {
+      this.getNotificaciones()
+    }
+  },
   computed: {
     rutaActual () {
       return this.$route.path
@@ -223,7 +241,11 @@ export default {
   },
   methods: {
     getNotificaciones () {
-      this.$axios.get('/productos-por-vencer-campana').then(res => {
+      this.$axios.get('/productos-por-vencer-campana', {
+        params: {
+          farmacia_tipo: this.$route.meta?.farmaciaTipo || 'Farmacia'
+        }
+      }).then(res => {
         this.notificaciones = res.data
       }).catch(() => {
         this.notificaciones = []

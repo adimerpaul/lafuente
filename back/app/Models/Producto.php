@@ -9,6 +9,7 @@ class Producto extends Model{
     use SoftDeletes;
     protected $fillable = [
         'nombre',
+        'farmacia_tipo',
         'descripcion',
         'unidad',
         'precio',

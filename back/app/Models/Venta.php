@@ -10,6 +10,7 @@ class Venta extends Model{
     protected $fillable = [
         'user_id',
         'cliente_id',
+        'farmacia_tipo',
         'fecha',
         'hora',
         'ci',

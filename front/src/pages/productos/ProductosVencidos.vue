@@ -2,7 +2,7 @@
   <q-page class="q-pa-xs">
     <q-card flat bordered>
       <q-card-section class="q-pa-xs">
-        <div class="text-h6">Productos Vencidos</div>
+        <div class="text-h6">Productos Vencidos - {{ farmaciaNombre }}</div>
 
         <div class="row q-col-gutter-sm items-end">
           <div class="col-12 col-md-3">
@@ -45,7 +45,7 @@
             <th>Lote</th>
             <th>Fecha de vencimiento</th>
             <th>Estado</th>
-            <th>Días vencido</th>
+            <th>Dias vencido</th>
           </tr>
           </thead>
           <tbody>
@@ -62,7 +62,7 @@
                   <q-item-section avatar>
                     <q-icon name="print" />
                   </q-item-section>
-                  <q-item-section>Imprimir pequeño</q-item-section>
+                  <q-item-section>Imprimir pequeno</q-item-section>
                 </q-item>
               </q-btn-dropdown>
             </td>
@@ -78,7 +78,7 @@
             </td>
             <td>
               <q-badge color="negative" class="q-pa-xs">
-                {{ diasVencido(p.fecha_vencimiento) }} días
+                {{ diasVencido(p.fecha_vencimiento) }} dias
               </q-badge>
             </td>
           </tr>
@@ -105,7 +105,7 @@
           </div>
           <div class="col-12 col-md-6">
             <div><b>ID compra:</b> {{ detalleActual.compra?.id || '-' }}</div>
-            <div><b>Compró:</b> {{ detalleActual.compra?.user?.name || '-' }}</div>
+            <div><b>Compro:</b> {{ detalleActual.compra?.user?.name || '-' }}</div>
             <div><b>Proveedor:</b> {{ detalleActual.compra?.proveedor?.nombre || detalleActual.compra?.nombre || '-' }}</div>
             <div><b>Fecha:</b> {{ detalleActual.compra?.fecha || '-' }}</div>
             <div><b>Hora:</b> {{ detalleActual.compra?.hora || '-' }}</div>
@@ -124,12 +124,12 @@
 </template>
 
 <script>
-import moment from "moment";
-import { Printd } from "printd";
+import moment from 'moment'
+import { Printd } from 'printd'
 
 export default {
-  name: "ProductosVencidos",
-  data() {
+  name: 'ProductosVencidos',
+  data () {
     return {
       productos: [],
       loading: false,
@@ -138,42 +138,58 @@ export default {
       total: 0,
       detalleDialog: false,
       detalleActual: {}
-    };
+    }
   },
-  mounted() {
-    this.consultar();
+  computed: {
+    farmaciaTipo () {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre () {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
+    desde () {
+      if (this.total === 0) return 0
+      return (this.pagina - 1) * this.porPagina + 1
+    },
+    hasta () {
+      return Math.min(this.pagina * this.porPagina, this.total)
+    }
+  },
+  mounted () {
+    this.consultar()
   },
   methods: {
-    consultar() {
-      this.loading = true;
+    consultar () {
+      this.loading = true
       this.$axios.get('/productosVencidos', {
         params: {
           page: this.pagina,
-          per_page: this.porPagina
+          per_page: this.porPagina,
+          farmacia_tipo: this.farmaciaTipo
         }
       }).then(res => {
-        this.productos = res.data.data;
-        this.total = res.data.total;
+        this.productos = res.data.data
+        this.total = res.data.total
       }).catch(() => {
-        this.$alert.error("Error al consultar productos vencidos");
+        this.$alert.error('Error al consultar productos vencidos')
       }).finally(() => {
-        this.loading = false;
-      });
+        this.loading = false
+      })
     },
-    diasVencido(fechaVencimiento) {
-      const vencimiento = moment(fechaVencimiento);
-      const hoy = moment();
-      const dias = hoy.diff(vencimiento, 'days');
-      return dias < 0 ? 0 : dias;
+    diasVencido (fechaVencimiento) {
+      const vencimiento = moment(fechaVencimiento)
+      const hoy = moment()
+      const dias = hoy.diff(vencimiento, 'days')
+      return dias < 0 ? 0 : dias
     },
-    verDetalle(producto) {
-      this.detalleActual = producto;
-      this.detalleDialog = true;
+    verDetalle (producto) {
+      this.detalleActual = producto
+      this.detalleDialog = true
     },
-    imprimirDetalle(producto) {
-      const compra = producto.compra || {};
-      const proveedor = compra.proveedor?.nombre || compra.nombre || '-';
-      const comprador = compra.user?.name || '-';
+    imprimirDetalle (producto) {
+      const compra = producto.compra || {}
+      const proveedor = compra.proveedor?.nombre || compra.nombre || '-'
+      const comprador = compra.user?.name || '-'
       const styles = `
         @page { size: 80mm auto; margin: 6mm; }
         .imprimir-scope { font-family: "Courier New", Courier, monospace; color: #111; }
@@ -183,12 +199,12 @@ export default {
         .imprimir-scope .label { font-weight: 700; }
         .imprimir-scope hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
         .imprimir-scope .title { font-size: 14px; font-weight: 700; }
-      `;
+      `
       const html = `
         <div class="imprimir-scope">
           <div class="ticket">
             <div class="center title">CLINICA LA FUENTE</div>
-            <div class="center">PRODUCTO VENCIDO</div>
+            <div class="center">PRODUCTO VENCIDO - ${this.farmaciaNombre}</div>
             <hr>
             <div class="row"><span class="label">Producto:</span> ${producto.producto?.nombre || '-'}</div>
             <div class="row"><span class="label">Lote:</span> ${producto.lote || '-'}</div>
@@ -208,37 +224,28 @@ export default {
             <div class="row"><span class="label">Precio venta:</span> ${Number(producto.precio_venta || 0).toFixed(2)}</div>
           </div>
         </div>
-      `;
-      const mount = document.getElementById('printProductoVencido');
+      `
+      const mount = document.getElementById('printProductoVencido')
 
       if (!mount) {
-        this.$alert.error('No se pudo preparar la impresión');
-        return;
+        this.$alert.error('No se pudo preparar la impresion')
+        return
       }
 
-      mount.innerHTML = html;
-      const node = mount.querySelector('.imprimir-scope');
+      mount.innerHTML = html
+      const node = mount.querySelector('.imprimir-scope')
 
       if (!node) {
-        this.$alert.error('No se pudo preparar la impresión');
-        return;
+        this.$alert.error('No se pudo preparar la impresion')
+        return
       }
 
-      const d = new Printd();
-      d.print(node, styles);
+      const d = new Printd()
+      d.print(node, styles)
     },
-    cambiarPorPagina() {
-      this.pagina = 1;
-      this.consultar();
-    }
-  },
-  computed: {
-    desde() {
-      if (this.total === 0) return 0;
-      return (this.pagina - 1) * this.porPagina + 1;
-    },
-    hasta() {
-      return Math.min(this.pagina * this.porPagina, this.total);
+    cambiarPorPagina () {
+      this.pagina = 1
+      this.consultar()
     }
   }
 }

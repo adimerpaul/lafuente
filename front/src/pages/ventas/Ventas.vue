@@ -103,7 +103,7 @@
                 </q-btn-dropdown>
               </div>
               <div class="col-12 col-md-2 text-right">
-                <q-btn color="positive" label="Nueva venta"  no-caps  icon="add_circle_outline" :loading="loading" :to="'/ventaNuevo'" />
+                <q-btn color="positive" :label="`Nueva venta ${farmaciaNombre}`"  no-caps  icon="add_circle_outline" :loading="loading" :to="ventaNuevaPath" />
               </div>
             </div>
           </q-card-section>
@@ -864,7 +864,8 @@ export default {
         this.$axios.post('ventasDevolverProducto', {
           venta_id: ventaId,
           venta_detalle_id: ventaDetalleId,
-          cantidad: cantidadNum
+          cantidad: cantidadNum,
+          farmacia_tipo: this.farmaciaTipo
         }).then(res => {
           this.$alert.success('Producto devuelto correctamente');
           this.devDialog = false;
@@ -951,6 +952,7 @@ export default {
         fechaInicio: this.fechaInicio || '',
         fechaFin: this.fechaFin || '',
         user: this.user || '',
+        farmacia_tipo: this.farmaciaTipo,
       });
       if (tipoVenta) params.append('tipoVenta', tipoVenta);
 
@@ -1008,7 +1010,8 @@ export default {
         params: {
           fechaInicio: this.fechaInicio,
           fechaFin: this.fechaFin,
-          user: this.user
+          user: this.user,
+          farmacia_tipo: this.farmaciaTipo
         }
       }).then(res => {
         this.ventas = res.data
@@ -1020,6 +1023,15 @@ export default {
     },
   },
   computed: {
+    farmaciaTipo() {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre() {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
+    ventaNuevaPath() {
+      return this.farmaciaTipo === 'Farmacia institucional' ? '/institucional/ventaNuevo' : '/ventaNuevo'
+    },
     usersTodos() {
       // colocar a user todos
       return [{label: 'Todos', value: ''}, ...this.users.map(user => ({label: user.name, value: user.id}))]

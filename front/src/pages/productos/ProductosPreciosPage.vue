@@ -3,7 +3,7 @@
     <div class="row items-center q-col-gutter-sm q-mb-sm">
       <div class="col-12 col-md">
         <div class="text-h6 text-weight-bold title">
-          Catalogo de Precios
+          Catalogo de Precios - {{ farmaciaNombre }}
         </div>
         <div class="text-caption text-grey-6">
           Nombre, imagen y precio en bolivianos.
@@ -386,6 +386,12 @@ export default {
     }
   },
   computed: {
+    farmaciaTipo () {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre () {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
     maxPages () {
       const max = Math.ceil((this.pagination.rowsNumber || 0) / (this.pagination.rowsPerPage || 1))
       return max || 1
@@ -418,7 +424,11 @@ export default {
       this.preview.historial = []
       this.preview.open = true
       this.preview.loadingHistorial = true
-      this.$axios.get(`productos/${p.id}/historial-compras`)
+      this.$axios.get(`productos/${p.id}/historial-compras`, {
+        params: {
+          farmacia_tipo: this.farmaciaTipo
+        }
+      })
         .then(res => {
           this.preview.historial = res.data || []
         }).catch(() => {
@@ -442,7 +452,8 @@ export default {
         params: {
           search: this.filters.search,
           page: this.pagination.page,
-          per_page: this.pagination.rowsPerPage
+          per_page: this.pagination.rowsPerPage,
+          farmacia_tipo: this.farmaciaTipo
         }
       }).then(res => {
         this.productos = res.data.data || []

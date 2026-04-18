@@ -10,6 +10,7 @@ class Compra extends Model{
     protected $fillable = [
         'user_id',
         'proveedor_id',
+        'farmacia_tipo',
         'fecha',
         'hora',
         'ci',

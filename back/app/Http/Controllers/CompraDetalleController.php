@@ -7,12 +7,14 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CompraDetalleController extends Controller{
-    public function vencimientosCampana()
+    public function vencimientosCampana(Request $request)
     {
+        $farmaciaTipo = trim((string) $request->input('farmacia_tipo', 'Farmacia'));
         $hoy = Carbon::today();
         $limite = Carbon::today()->addDays(90);
 
         $productos = CompraDetalle::with('producto')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereNotNull('fecha_vencimiento')
             ->whereDate('fecha_vencimiento', '>=', $hoy)
             ->whereDate('fecha_vencimiento', '<=', $limite)

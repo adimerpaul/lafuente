@@ -2,7 +2,7 @@
   <q-page class="q-pa-xs">
     <q-card flat bordered>
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Ventas</div>
+        <div class="text-h6">Ventas - {{ farmaciaNombre }}</div>
         <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)"/>
         <q-btn flat round dense icon="refresh" @click="productosGet" :loading="loading"/>
         <q-space/>
@@ -475,7 +475,11 @@ export default {
       this.lotes = [];
       this.lotesLoading = true;
       try {
-        const res = await this.$axios.get(`productos/${producto.id}/historial-compras-ventas`);
+        const res = await this.$axios.get(`productos/${producto.id}/historial-compras-ventas`, {
+          params: {
+            farmacia_tipo: this.farmaciaTipo
+          }
+        });
         this.lotes = res.data || [];
         // Si hay 1 solo lote, lo pre-seleccionamos:
         if (this.lotes.length === 1) {
@@ -574,6 +578,7 @@ export default {
           search: this.productosSearch,
           page: this.pagination.page,
           per_page: this.pagination.rowsPerPage,
+          farmacia_tipo: this.farmaciaTipo,
         },
       }).then((res) => {
         this.productos = res.data.data;
@@ -613,6 +618,7 @@ export default {
         facturado: this.venta.facturado,
         numero_factura: this.venta.facturado ? this.venta.numero_factura : null,
         comentario: this.venta.comentario,
+        farmacia_tipo: this.farmaciaTipo,
       }).then((res) => {
         this.ventaDialog = false;
         this.$alert?.success?.("Venta realizada con éxito");
@@ -653,6 +659,12 @@ export default {
   },
 
   computed: {
+    farmaciaTipo() {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre() {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
     totalVenta() {
       return this.productosVentas.reduce(
         (acc, it) => acc + (Number(it.cantidad) * Number(it.precio)), 0

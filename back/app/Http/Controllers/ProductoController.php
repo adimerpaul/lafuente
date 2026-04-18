@@ -12,14 +12,23 @@ use Intervention\Image\Drivers\Gd\Driver;
 class ProductoController extends Controller{
     private const FECHA_INICIO_EXISTENCIAS = '2025-10-01';
 
-    private function baseProductosQuery(?string $search = null)
+    private function resolveFarmaciaTipo(Request $request): string
+    {
+        $tipo = trim((string) $request->input('farmacia_tipo', 'Farmacia'));
+
+        return $tipo !== '' ? $tipo : 'Farmacia';
+    }
+
+    private function baseProductosQuery(?string $search = null, ?string $farmaciaTipo = null)
     {
         $search = trim((string) $search);
+        $farmaciaTipo = trim((string) $farmaciaTipo);
 
         return Producto::query()
             ->select([
                 'productos.id',
                 'productos.nombre',
+                'productos.farmacia_tipo',
                 'productos.descripcion',
                 'productos.unidad',
                 'productos.precio',
@@ -28,6 +37,9 @@ class ProductoController extends Controller{
                 'productos.stock_maximo',
                 'productos.imagen',
             ])
+            ->when($farmaciaTipo !== '', function ($q) use ($farmaciaTipo) {
+                $q->where('productos.farmacia_tipo', $farmaciaTipo);
+            })
             ->withSum(
                 ['comprasDetalles as cantidad' => function ($q) {
                     $q->where('estado', 'Activo')
@@ -64,15 +76,19 @@ class ProductoController extends Controller{
         return $fechaNormalizada;
     }
 
-    private function baseProductosExistenciaFechaQuery(string $fecha, ?string $search = null)
+    private function baseProductosExistenciaFechaQuery(string $fecha, ?string $search = null, ?string $farmaciaTipo = null)
     {
         $search = trim((string) $search);
+        $farmaciaTipo = trim((string) $farmaciaTipo);
 
         $ingresosSubquery = DB::table('compra_detalles as cd')
             ->join('compras as c', 'c.id', '=', 'cd.compra_id')
             ->selectRaw('cd.producto_id, SUM(COALESCE(cd.cantidad, 0)) as ingresos')
             ->where('c.estado', 'Activo')
             ->where('cd.estado', 'Activo')
+            ->when($farmaciaTipo !== '', function ($q) use ($farmaciaTipo) {
+                $q->where('cd.farmacia_tipo', $farmaciaTipo);
+            })
             ->whereNull('c.deleted_at')
             ->whereNull('cd.deleted_at')
             ->whereDate('c.fecha', '<=', $fecha)
@@ -82,6 +98,9 @@ class ProductoController extends Controller{
             ->join('ventas as v', 'v.id', '=', 'vd.venta_id')
             ->selectRaw('vd.producto_id, SUM(COALESCE(vd.cantidad, 0)) as salidas')
             ->where('v.estado', 'Activo')
+            ->when($farmaciaTipo !== '', function ($q) use ($farmaciaTipo) {
+                $q->where('vd.farmacia_tipo', $farmaciaTipo);
+            })
             ->whereNull('v.deleted_at')
             ->whereNull('vd.deleted_at')
             ->whereDate('v.fecha', '<=', $fecha)
@@ -97,6 +116,7 @@ class ProductoController extends Controller{
             ->select([
                 'productos.id',
                 'productos.nombre',
+                'productos.farmacia_tipo',
                 'productos.descripcion',
                 'productos.unidad',
                 'productos.precio',
@@ -105,6 +125,9 @@ class ProductoController extends Controller{
                 'productos.stock_maximo',
                 'productos.imagen',
             ])
+            ->when($farmaciaTipo !== '', function ($q) use ($farmaciaTipo) {
+                $q->where('productos.farmacia_tipo', $farmaciaTipo);
+            })
             ->selectRaw('COALESCE(ingresos_hasta_fecha.ingresos, 0) - COALESCE(salidas_hasta_fecha.salidas, 0) as cantidad')
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($query) use ($search) {
@@ -118,8 +141,9 @@ class ProductoController extends Controller{
     {
         $search  = trim($request->input('search', ''));
         $perPage = (int) $request->input('per_page', 24);
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-        $productos = $this->baseProductosQuery($search)
+        $productos = $this->baseProductosQuery($search, $farmaciaTipo)
             ->select(['id','nombre','precio','imagen'])
             ->orderBy('nombre')
             ->paginate($perPage);
@@ -128,8 +152,11 @@ class ProductoController extends Controller{
     }
     public function historialComprasVentas($productoId)
     {
+        $farmaciaTipo = trim((string) request()->input('farmacia_tipo', 'Farmacia'));
+
         $detalles = \App\Models\CompraDetalle::with('compra')
             ->where('producto_id', $productoId)
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->where('estado', 'Activo')
             ->whereNull('deleted_at')
             ->where('cantidad_venta', '>', 0)
@@ -161,8 +188,10 @@ class ProductoController extends Controller{
     {
         $search  = trim($request->input('search', ''));
         $perPage = (int) $request->input('per_page', 10);
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
         $productos = Producto::query()
+            ->where('productos.farmacia_tipo', $farmaciaTipo)
             // Calcula el cantidad en SQL (suma de cantidad_venta con estado Activo)
             ->withSum(
                 ['comprasDetalles as cantidad' => function ($q) {
@@ -187,7 +216,9 @@ class ProductoController extends Controller{
         return response()->json($productos);
     }
     function productosAll(){
-        return $this->baseProductosQuery()
+        $farmaciaTipo = trim((string) request()->input('farmacia_tipo', 'Farmacia'));
+
+        return $this->baseProductosQuery(null, $farmaciaTipo)
             ->orderBy('nombre')
             ->get();
     }
@@ -196,8 +227,9 @@ class ProductoController extends Controller{
         $search = $request->input('search');
         $perPage = min((int) $request->input('per_page', 5000), 10000);
         $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-        $query = $this->baseProductosQuery($search);
+        $query = $this->baseProductosQuery($search, $farmaciaTipo);
 
         if ($soloExistentes) {
             $query->having('cantidad', '>', 0)
@@ -215,8 +247,9 @@ class ProductoController extends Controller{
         $search = $request->input('search');
         $perPage = min((int) $request->input('per_page', 5000), 10000);
         $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-        $query = $this->baseProductosExistenciaFechaQuery($fecha, $search);
+        $query = $this->baseProductosExistenciaFechaQuery($fecha, $search, $farmaciaTipo);
 
         if ($soloExistentes) {
             $query->having('cantidad', '>', 0)
@@ -231,6 +264,7 @@ class ProductoController extends Controller{
             'fecha' => $fecha,
             'existentes' => $soloExistentes,
             'search' => $search,
+            'farmacia_tipo' => $farmaciaTipo,
         ]);
 
         return response()->json($result);
@@ -238,8 +272,9 @@ class ProductoController extends Controller{
     public function index(Request $request) {
         $search = $request->search;
         $perPage = $request->per_page ?? 10;
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
-        $productos = $this->baseProductosQuery($search)
+        $productos = $this->baseProductosQuery($search, $farmaciaTipo)
             ->orderBy('nombre')
             ->paginate($perPage);
 
@@ -267,10 +302,15 @@ class ProductoController extends Controller{
         $producto->save();
     }
     function store(Request $request){
-        return Producto::create($request->all());
+        $data = $request->all();
+        $data['farmacia_tipo'] = $this->resolveFarmaciaTipo($request);
+
+        return Producto::create($data);
     }
     function update(Request $request, Producto $producto){
-        $producto->update($request->all());
+        $data = $request->all();
+        $data['farmacia_tipo'] = $request->input('farmacia_tipo', $producto->farmacia_tipo ?: 'Farmacia');
+        $producto->update($data);
         return $producto;
     }
     function destroy(Producto $producto){

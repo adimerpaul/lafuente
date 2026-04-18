@@ -11,6 +11,7 @@ class CompraDetalle extends Model{
         'compra_id',
         'user_id',
         'producto_id',
+        'farmacia_tipo',
         'proveedor_id',
         'nombre',
         'precio',

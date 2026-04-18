@@ -56,7 +56,7 @@
 
           <q-btn
             color="green"
-            label="Nuevo"
+            :label="`Nuevo ${farmaciaNombre}`"
             @click="productoNew"
             no-caps
             icon="add_circle_outline"
@@ -210,7 +210,7 @@
     <q-dialog v-model="historialDialog" persistent>
       <q-card style="width: 800px;">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Historial de Compras: {{ productoHistorialNombre }}</div>
+          <div class="text-h6">Historial de Compras: {{ productoHistorialNombre }} - {{ farmaciaNombre }}</div>
           <q-space />
           <q-btn icon="close" flat round dense @click="historialDialog = false" />
         </q-card-section>
@@ -391,6 +391,14 @@ export default {
     this.debouncedCambioPrecio = debounce(this.cambioPrecio, 500)
     this.existenciaFecha = this.fechaHoy
   },
+  computed: {
+    farmaciaTipo () {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre () {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    }
+  },
   methods: {
     getExportMeta (mode) {
       const existing = mode === 'existing'
@@ -426,6 +434,7 @@ export default {
             page,
             per_page: perPage,
             existentes: existingOnly,
+            farmacia_tipo: this.farmaciaTipo,
           }
         })
 
@@ -455,6 +464,7 @@ export default {
             page,
             per_page: perPage,
             existentes: existingOnly,
+            farmacia_tipo: this.farmaciaTipo,
           }
         })
 
@@ -759,7 +769,11 @@ export default {
     verHistorial (producto) {
       this.loading = true
       this.productoHistorialNombre = producto.nombre
-      this.$axios.get(`productos/${producto.id}/historial-compras`)
+      this.$axios.get(`productos/${producto.id}/historial-compras`, {
+        params: {
+          farmacia_tipo: this.farmaciaTipo,
+        }
+      })
         .then((res) => {
           this.historialCompras = res.data
           this.historialDialog = true
@@ -771,7 +785,7 @@ export default {
     },
     cambioStock (producto) {
       this.loading = true
-      this.$axios.put(`productos/${producto.id}`, { stock: producto.stock }).then(() => {
+      this.$axios.put(`productos/${producto.id}`, { stock: producto.stock, farmacia_tipo: this.farmaciaTipo }).then(() => {
         this.productosGet()
         this.$alert.success('Stock actualizado')
       }).catch((error) => {
@@ -782,7 +796,7 @@ export default {
     },
     cambioPrecio (producto) {
       this.loading = true
-      this.$axios.put(`productos/${producto.id}`, { precio: producto.precio }).then(() => {
+      this.$axios.put(`productos/${producto.id}`, { precio: producto.precio, farmacia_tipo: this.farmaciaTipo }).then(() => {
         this.productosGet()
         this.$alert.success('Precio actualizado')
       }).catch((error) => {
@@ -810,7 +824,8 @@ export default {
         params: {
           search: this.filter,
           page: this.pagination.page,
-          per_page: this.pagination.rowsPerPage
+          per_page: this.pagination.rowsPerPage,
+          farmacia_tipo: this.farmaciaTipo,
         }
       }).then((res) => {
         this.productos = res.data.data
@@ -833,7 +848,10 @@ export default {
     },
     productoPost () {
       this.loading = true
-      this.$axios.post('productos', this.producto).then(() => {
+      this.$axios.post('productos', {
+        ...this.producto,
+        farmacia_tipo: this.farmaciaTipo,
+      }).then(() => {
         this.productosGet()
         this.productoDialog = false
         this.$alert.success('Periodo creado')
@@ -845,7 +863,10 @@ export default {
     },
     productoPut () {
       this.loading = true
-      this.$axios.put(`productos/${this.producto.id}`, this.producto).then(() => {
+      this.$axios.put(`productos/${this.producto.id}`, {
+        ...this.producto,
+        farmacia_tipo: this.farmaciaTipo,
+      }).then(() => {
         this.productosGet()
         this.productoDialog = false
         this.$alert.success('Periodo actualizado')

@@ -2,7 +2,7 @@
   <q-page class="q-pa-xs">
     <q-card flat bordered>
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Compras</div>
+        <div class="text-h6">Compras - {{ farmaciaNombre }}</div>
         <q-btn flat round dense icon="arrow_back" @click="$router.back()" class="q-mr-sm" />
       </q-card-section>
 
@@ -424,6 +424,12 @@ export default {
     };
   },
   computed: {
+    farmaciaTipo() {
+      return this.$route.meta?.farmaciaTipo || 'Farmacia'
+    },
+    farmaciaNombre() {
+      return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
     totalCompra() {
       // return this.productosCompras.reduce(
       //   (acc, p) => acc + (p.cantidad * p.precio),
@@ -589,7 +595,8 @@ export default {
         params: {
           search: this.productosSearch,
           page: this.pagination.page,
-          per_page: this.pagination.rowsPerPage
+          per_page: this.pagination.rowsPerPage,
+          farmacia_tipo: this.farmaciaTipo
         },
       }).then((res) => {
         this.productos = res.data.data;
@@ -653,6 +660,7 @@ export default {
         comentario: this.compra.comentario,
         productos: this.productosCompras,
         agencia: this.compra.agencia,
+        farmacia_tipo: this.farmaciaTipo,
       };
 
       this.$axios.post("compras", data).then((res) => {
