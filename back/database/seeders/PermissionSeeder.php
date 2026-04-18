@@ -40,6 +40,7 @@ class PermissionSeeder extends Seeder
             'Productos vencidos farmacia',
             'Productos vencidos farmacia institucional',
             'Precio de ventas productos',
+            'Traspaso',
             'Aranceles',
             'Formularios control',
             'Formulario control nuevo',

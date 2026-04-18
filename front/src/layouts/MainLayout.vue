@@ -198,6 +198,14 @@ export default {
           ]
         },
         {
+          title: 'Operaciones',
+          icon: 'swapHoriz',
+          links: [
+            { title: 'Traspaso de productos', icon: 'swap_horiz', link: '/traspaso', can: 'Traspaso' },
+            { title: 'Listado de traspasos', icon: 'receipt_long', link: '/historial-traspasos', can: 'Traspaso' },
+          ]
+        },
+        {
           title: 'Clínica',
           icon: 'local_hospital',
           links: [

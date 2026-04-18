@@ -19,7 +19,9 @@ class Compra extends Model{
         'tipo_pago',
         'total',
         'comentario',
-        'nro_factura'
+        'nro_factura',
+        'tipo',
+        'traspaso_venta_id'
     ];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
     function user(){

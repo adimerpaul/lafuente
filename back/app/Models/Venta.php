@@ -24,6 +24,8 @@ class Venta extends Model{
         'facturado',
         'numero_factura',
         'pagado_interno',
+        'tipo',
+        'traspaso_compra_id',
         'doctor_id',
         'paciente_id_ref'
     ];

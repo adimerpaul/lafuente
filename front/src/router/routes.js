@@ -32,6 +32,8 @@ const routes = [
       { path: 'caja-recepciones', name: 'caja-recepciones', component: () => import('pages/caja-recepcion/CajaRecepcionList.vue'), meta: { requiresAuth: true } },
       { path: 'caja-recepciones/nuevo', name: 'caja-recepciones-nuevo', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
       { path: 'caja-recepciones/:id', name: 'caja-recepciones-editar', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
+      { path: 'traspaso', name: 'traspaso', component: () => import('pages/Traspaso.vue'), meta: { requiresAuth: true } },
+      { path: 'historial-traspasos', name: 'historial-traspasos', component: () => import('pages/HistorialTraspasos.vue'), meta: { requiresAuth: true } },
       {
         path: '/productos-precios',
         component: () => import('pages/productos/ProductosPreciosPage.vue'),

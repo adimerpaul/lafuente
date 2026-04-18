@@ -85,6 +85,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productosVencidos', [App\Http\Controllers\CompraController::class, 'productosVencidos']);
     Route::get('/productos/{id}/historial-compras', [App\Http\Controllers\CompraController::class, 'historialCompras']);
 
+    // Rutas de Traspaso
+    Route::get('/traspasos', [App\Http\Controllers\TraspasoController::class, 'index']);
+    Route::get('/traspasos/productos', [App\Http\Controllers\TraspasoController::class, 'getProductos']);
+    Route::get('/traspasos/lotes', [App\Http\Controllers\TraspasoController::class, 'getLotes']);
+    Route::post('/traspasos', [App\Http\Controllers\TraspasoController::class, 'store']);
+    Route::post('/traspasos/{venta}/anular', [App\Http\Controllers\TraspasoController::class, 'anular']);
+
     Route::get('/productos-por-vencer-campana', [\App\Http\Controllers\CompraDetalleController::class, 'vencimientosCampana']);
     Route::get('/productosCantidad', [\App\Http\Controllers\ProductoController::class, 'productosCantidad']);
 

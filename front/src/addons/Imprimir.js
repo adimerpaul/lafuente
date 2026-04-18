@@ -715,6 +715,59 @@ Oruro</div>
     })
   }
 
+  static reciboTraspaso (traspaso) {
+    return new Promise((resolve, reject) => {
+      try {
+        const env = useCounterStore().env
+        const comentario = (traspaso.comentario ?? '').toString().trim()
+        let cadena = `${this.head()}
+    <div style='padding-left: 0.5cm;padding-right: 0.5cm'>
+    <img src="logo.png" alt="logo" style="width: 100px; height: 100px; display: block; margin-left: auto; margin-right: auto;">
+      <div class='titulo'>RECIBO DE TRASPASO</div>
+      <div class='titulo2'>${env.razon} <br>
+      Casa Matriz<br>
+      No. Punto de Venta 0<br>
+    ${env.direccion}<br>
+    Tel. ${env.telefono}<br>
+    Oruro</div>
+    <hr>
+    <div style='display:flex;justify-content:space-between; font-size:10px;'>
+      <span><b>ID:</b> ${traspaso.id}</span>
+      <span><b>Fecha:</b> ${traspaso.fecha} ${traspaso.hora || ''}</span>
+    </div>
+    <div style='font-size:10px; margin-top:4px;'>
+      <b>Origen:</b> ${traspaso.farmacia_origen || '-'}<br>
+      <b>Destino:</b> ${traspaso.farmacia_destino || '-'}<br>
+      <b>Usuario:</b> ${traspaso.user?.name || '-'}
+    </div>
+    <hr>
+    <div class='titulo'>DETALLE</div>`
+
+        ;(traspaso.venta_detalles || []).forEach(detalle => {
+          cadena += `<div style='font-size: 12px'><b>${detalle.nombre || detalle.producto?.nombre || 'Producto'}</b></div>`
+          cadena += `<div>${detalle.cantidad} u | Lote: ${detalle.lote || '-'} | Vence: ${detalle.fecha_vencimiento || '-'}
+          <span style='float:right'>${parseFloat(detalle.precio || 0).toFixed(2)} Bs</span></div>`
+        })
+
+        cadena += `<hr>
+      <div>${comentario ? 'Comentario: ' + comentario : ''}</div>
+      <table style='font-size: 8px;'>
+      <tr><td class='titder' style='width: 60%'>TOTAL Bs</td><td class='conte2'>${parseFloat(traspaso.total || 0).toFixed(2)}</td></tr>
+      </table>
+      </div>
+    </body>
+    </html>`
+
+        document.getElementById('myElement').innerHTML = cadena
+        const d = new Printd()
+        d.print(document.getElementById('myElement'))
+        resolve(true)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   static head () {
     return `<html>
 <style>
