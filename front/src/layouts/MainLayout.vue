@@ -175,17 +175,23 @@ export default {
           title: 'Farmacia',
           icon: 'local_pharmacy',
           links: [
-            { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios' },
-            { title: 'Doctores', icon: 'medical_services', link: '/doctores', can: 'Doctores' },
-            { title: 'Pacientes', icon: 'local_hospital', link: '/pacientes', can: 'Pacientes' },
             { title: 'Productos', icon: 'inventory_2', link: '/productos', can: 'Productos' },
             { title: 'Ventas', icon: 'sell', link: '/venta', can: 'Ventas' },
             { title: 'Venta nueva', icon: 'add_shopping_cart', link: '/ventaNuevo', can: 'Nueva venta' },
-            { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores' },
             { title: 'Compras', icon: 'shopping_cart_checkout', link: '/compras', can: 'Compras' },
             { title: 'Compras nuevas', icon: 'add_business', link: '/compras-create', can: 'Compras nuevas' },
             { title: 'Por vencer', icon: 'hourglass_bottom', link: '/productos-vencer', can: 'Productos por vencer' },
             { title: 'Vencidos', icon: 'report_problem', link: '/productos-vencidos', can: 'Productos vencidos' },
+          ]
+        },
+        {
+          title: 'Clínica',
+          icon: 'local_hospital',
+          links: [
+            { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios' },
+            { title: 'Doctor', icon: 'medical_services', link: '/doctores', can: 'Doctores' },
+            { title: 'Pacientes', icon: 'personal_injury', link: '/pacientes', can: 'Pacientes' },
+            { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores' },
             { title: 'Precios productos', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos' },
           ]
         },
