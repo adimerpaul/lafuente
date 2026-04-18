@@ -158,37 +158,76 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="dialogPermisos">
-      <q-card>
-        <q-card-section class="q-pb-none row items-center">
-          <div>
-            Permisos de {{ user.name }}
-          </div>
+    <q-dialog v-model="dialogPermisos" position="top">
+      <q-card style="min-width: 600px; max-width: 800px;">
+        <q-card-section class="q-pb-none row items-center bg-primary text-white">
+          <div class="text-h6">🔐 Permisos de {{ user.name }}</div>
           <q-space />
           <q-btn icon="close" flat round dense @click="dialogPermisos = false" />
         </q-card-section>
-        <q-card-section class="q-pt-none">
-<!--          <q-option-group-->
-<!--            v-model="group"-->
-<!--            :options="options"-->
-<!--            color="green"-->
-<!--            type="checkbox"-->
-<!--          />-->
-          <div class="permission-grid">
-            <q-checkbox
-              v-for="permiso in permisos"
-              :key="permiso.id"
-              :model-value="user.permissionsSelected.includes(permiso.name)"
-              :label="permiso.name"
+        
+        <q-separator />
+        
+        <q-card-section class="q-pt-md">
+          <div class="row items-center q-mb-md">
+            <q-input
+              v-model="permisosFilterText"
+              placeholder="Buscar permisos..."
               dense
-              color="green"
-              class="permission-item"
-              @update:model-value="togglePermission(permiso.name, $event)"
+              outlined
+              class="col"
+            >
+              <template v-slot:prepend>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+            <q-chip
+              class="q-ml-md"
+              :label="`${user.permissionsSelected.length} / ${permisos.length}`"
+              color="info"
+              text-color="white"
             />
           </div>
-          <div class="text-right q-mt-md">
-            <q-btn label="Guardar permisos" color="primary" @click="guardarPermisos" :loading="loading" no-caps />
+
+          <div class="permission-categories">
+            <div v-for="category in permissionCategories" :key="category.name" class="category-section q-mb-lg">
+              <div class="category-header q-mb-md">
+                <q-icon :name="category.icon" size="24px" :color="category.color" class="q-mr-sm" />
+                <span class="text-subtitle2 text-weight-bold">{{ category.name }}</span>
+                <q-chip
+                  dense
+                  size="sm"
+                  :label="`${countCategorySelected(category.name)} / ${category.permisos.length}`"
+                  class="q-ml-md"
+                  :color="countCategorySelected(category.name) > 0 ? 'positive' : 'grey-3'"
+                  :text-color="countCategorySelected(category.name) > 0 ? 'white' : 'grey-7'"
+                />
+              </div>
+              <div class="permission-grid">
+                <div
+                  v-for="(permiso, index) in category.permisos.filter(p => p.name.toLowerCase().includes(permisosFilterText.toLowerCase()))"
+                  :key="permiso.id"
+                  class="permission-card"
+                >
+                  <q-checkbox
+                    :model-value="user.permissionsSelected.includes(permiso.name)"
+                    :label="`${index + 1}. ${permiso.name}`"
+                    dense
+                    color="primary"
+                    class="full-width"
+                    @update:model-value="togglePermission(permiso.name, $event)"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="text-right">
+          <q-btn label="Cancelar" color="negative" flat @click="dialogPermisos = false" class="q-mr-sm" />
+          <q-btn label="Guardar permisos" color="primary" @click="guardarPermisos" :loading="loading" />
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -219,6 +258,7 @@ export default {
       ],
       permisos: [],
       dialogPermisos: false,
+      permisosFilterText: '',
     }
   },
   mounted() {
@@ -435,6 +475,11 @@ export default {
             this.loading = false
           })
         })
+    },
+    countCategorySelected(categoryName) {
+      const category = this.permissionCategories.find(c => c.name === categoryName)
+      if (!category) return 0
+      return category.permisos.filter(p => this.user.permissionsSelected?.includes(p.name)).length
     }
   },
   computed: {
@@ -469,6 +514,34 @@ export default {
 
         return haystack.includes(text)
       })
+    },
+    permissionCategories() {
+      return [
+        {
+          name: 'Productos',
+          icon: 'inventory_2',
+          color: 'orange',
+          permisos: this.permisos.filter(p => p.name.includes('Productos'))
+        },
+        {
+          name: 'Ventas',
+          icon: 'sell',
+          color: 'green',
+          permisos: this.permisos.filter(p => p.name.includes('Ventas') && !p.name.includes('Compras'))
+        },
+        {
+          name: 'Compras',
+          icon: 'shopping_cart_checkout',
+          color: 'blue',
+          permisos: this.permisos.filter(p => p.name.includes('Compras'))
+        },
+        {
+          name: 'Administración',
+          icon: 'admin_panel_settings',
+          color: 'purple',
+          permisos: this.permisos.filter(p => !p.name.includes('Productos') && !p.name.includes('Ventas') && !p.name.includes('Compras'))
+        }
+      ]
     }
   }
 }
@@ -492,5 +565,68 @@ export default {
 
 .permission-item {
   margin: 0;
+}
+
+.permission-categories {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.permission-categories::-webkit-scrollbar {
+  width: 6px;
+}
+
+.permission-categories::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.permission-categories::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.permission-categories::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.category-section {
+  background: #f9f9f9;
+  border-left: 4px solid #e0e0e0;
+  padding: 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.category-section:hover {
+  background: #f0f8ff;
+  border-left-color: #1976d2;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-card {
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.permission-card:hover {
+  background: #f5f5f5;
+  border-color: #1976d2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
 }
 </style>
