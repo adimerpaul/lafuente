@@ -14,6 +14,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class VentaController extends Controller
 {
+    private function canAgregarProducto(?User $user): bool
+    {
+        return $user?->can('Ventas agregar producto') ?? false;
+    }
+
     private function resolveFarmaciaTipo(Request $request): string
     {
         $tipo = trim((string) $request->input('farmacia_tipo', 'Farmacia'));
@@ -69,6 +74,148 @@ class VentaController extends Controller
         $venta->save();
 
         return Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')->findOrFail($venta->id);
+    }
+    public function agregarProducto(Request $request, $id)
+    {
+        if (!$this->canAgregarProducto($request->user())) {
+            return response()->json(['message' => 'No tiene permiso para agregar productos a una venta.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $venta = Venta::where('id', $id)->lockForUpdate()->firstOrFail();
+            if ($venta->estado !== 'Activo') {
+                abort(422, 'Solo se pueden agregar productos a ventas activas.');
+            }
+
+            $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+            if ($venta->farmacia_tipo !== $farmaciaTipo) {
+                abort(422, 'La venta no corresponde a la farmacia seleccionada.');
+            }
+
+            $productoId = (int) $request->input('producto_id', 0);
+            $compraDetalleId = (int) $request->input('compra_detalle_id', 0);
+            $cantidad = (float) $request->input('cantidad', 0);
+            $precio = (float) $request->input('precio', 0);
+
+            if ($productoId <= 0 || $compraDetalleId <= 0 || $cantidad <= 0 || $precio < 0) {
+                abort(422, 'Datos inválidos para agregar el producto.');
+            }
+
+            $producto = Producto::select('id', 'nombre')
+                ->where('farmacia_tipo', $farmaciaTipo)
+                ->findOrFail($productoId);
+
+            $compraDetalle = CompraDetalle::where('id', $compraDetalleId)
+                ->where('farmacia_tipo', $farmaciaTipo)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $compraDetalle->producto_id !== $productoId) {
+                abort(422, 'El lote seleccionado no corresponde al producto.');
+            }
+            if ($compraDetalle->estado !== 'Activo') {
+                abort(422, 'El lote seleccionado no está activo.');
+            }
+            if ((float) $compraDetalle->cantidad_venta < $cantidad) {
+                abort(422, "Stock insuficiente en el lote {$compraDetalle->lote}.");
+            }
+
+            VentaDetalle::create([
+                'venta_id' => $venta->id,
+                'producto_id' => $productoId,
+                'farmacia_tipo' => $farmaciaTipo,
+                'compra_detalle_id' => $compraDetalle->id,
+                'nombre' => $producto->nombre,
+                'cantidad' => $cantidad,
+                'precio' => $precio,
+                'lote' => $compraDetalle->lote,
+                'fecha_vencimiento' => $compraDetalle->fecha_vencimiento,
+            ]);
+
+            $compraDetalle->cantidad_venta = (float) $compraDetalle->cantidad_venta - $cantidad;
+            $compraDetalle->save();
+
+            $venta->total = (float) $venta->total + ($cantidad * $precio);
+            $venta->save();
+
+            DB::commit();
+
+            return Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')->findOrFail($venta->id);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                throw $e;
+            }
+
+            return response()->json(['message' => 'No se pudo agregar el producto: ' . $e->getMessage()], 500);
+        }
+    }
+    public function aumentarProducto(Request $request, $id)
+    {
+        if (!$this->canAgregarProducto($request->user())) {
+            return response()->json(['message' => 'No tiene permiso para aumentar productos en una venta.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $venta = Venta::where('id', $id)->lockForUpdate()->firstOrFail();
+            if ($venta->estado !== 'Activo') {
+                abort(422, 'Solo se pueden aumentar productos en ventas activas.');
+            }
+
+            $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+            if ($venta->farmacia_tipo !== $farmaciaTipo) {
+                abort(422, 'La venta no corresponde a la farmacia seleccionada.');
+            }
+
+            $ventaDetalleId = (int) $request->input('venta_detalle_id', 0);
+            $cantidad = (float) $request->input('cantidad', 0);
+            if ($ventaDetalleId <= 0 || $cantidad <= 0) {
+                abort(422, 'Datos inválidos para aumentar el producto.');
+            }
+
+            $detalle = VentaDetalle::where('id', $ventaDetalleId)
+                ->where('venta_id', $venta->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (!$detalle->compra_detalle_id) {
+                abort(422, 'El detalle de venta no tiene lote asociado.');
+            }
+
+            $compraDetalle = CompraDetalle::where('id', $detalle->compra_detalle_id)
+                ->where('farmacia_tipo', $farmaciaTipo)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($compraDetalle->estado !== 'Activo') {
+                abort(422, 'El lote asociado no está activo.');
+            }
+            if ((float) $compraDetalle->cantidad_venta < $cantidad) {
+                abort(422, "Stock insuficiente en el lote {$compraDetalle->lote}.");
+            }
+
+            $detalle->cantidad = (float) $detalle->cantidad + $cantidad;
+            $detalle->save();
+
+            $compraDetalle->cantidad_venta = (float) $compraDetalle->cantidad_venta - $cantidad;
+            $compraDetalle->save();
+
+            $venta->total = (float) $venta->total + ($cantidad * (float) $detalle->precio);
+            $venta->save();
+
+            DB::commit();
+
+            return Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')->findOrFail($venta->id);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                throw $e;
+            }
+
+            return response()->json(['message' => 'No se pudo aumentar el producto: ' . $e->getMessage()], 500);
+        }
     }
     function ventasDevolverProducto(Request $request){
 //        venta_id: ventaId,

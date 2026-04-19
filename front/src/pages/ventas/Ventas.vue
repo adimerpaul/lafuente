@@ -459,6 +459,15 @@
       <q-card style="max-width: 860px; width: 95vw">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Devolver productos</div>
+          <q-btn
+            v-if="canAgregarProductoVenta && venta.estado === 'Activo'"
+            class="q-ml-md"
+            color="primary"
+            icon="add"
+            label="Agregar producto"
+            no-caps
+            @click="openAgregarProducto()"
+          />
           <q-space />
           <q-btn flat round dense icon="close" @click="devDialog=false" />
         </q-card-section>
@@ -472,6 +481,7 @@
               <th>Lote</th>
               <th>Vencimiento</th>
               <th style="width:100px;">Vendido</th>
+              <th style="width:140px;">Aumentar</th>
               <th style="width:140px;">Devolver</th>
             </tr>
             </thead>
@@ -484,6 +494,17 @@
               <td class="text-center">{{ d.lote || '—' }}</td>
               <td class="text-center">{{ d.fecha_vencimiento || '—' }}</td>
               <td class="text-center">{{ d.cantidad }}</td>
+              <td class="text-center">
+                <q-btn
+                  v-if="canAgregarProductoVenta && venta.estado === 'Activo'"
+                  size="sm"
+                  color="primary"
+                  label="Aumentar"
+                  no-caps
+                  icon="add"
+                  @click="aumentarProducto(venta.id, d)"
+                />
+              </td>
               <td>
 <!--                devolver btn-->
                 <q-btn size="sm" color="negative" label="Devolver" no-caps @click="devolverProducto(venta.id, d.id, d.cantidad)"
@@ -785,6 +806,139 @@
 <!--        }-->
       </q-card>
     </q-dialog>
+    <q-dialog v-model="agregarProductoDialog" persistent>
+      <q-card style="max-width: 720px; width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Agregar producto a la venta</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="agregarProductoDialog = false" />
+        </q-card-section>
+
+        <q-card-section class="row q-col-gutter-md">
+          <div class="col-12">
+            <q-select
+              v-model="agregarProductoForm.producto"
+              :options="agregarProductoOptions"
+              option-label="nombre"
+              outlined
+              dense
+              use-input
+              fill-input
+              hide-selected
+              clearable
+              input-debounce="300"
+              label="Producto"
+              @filter="filterAgregarProducto"
+              @update:model-value="onProductoAgregarChange"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.nombre }}</q-item-label>
+                    <q-item-label caption>
+                      Precio: {{ scope.opt.precio }} | Stock: {{ scope.opt.cantidad ?? scope.opt.stock ?? 0 }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+          </div>
+          <div class="col-12 col-md-4">
+            <q-input
+              v-model.number="agregarProductoForm.cantidad"
+              type="number"
+              min="1"
+              outlined
+              dense
+              label="Cantidad"
+            />
+          </div>
+          <div class="col-12 col-md-4">
+            <q-input
+              v-model.number="agregarProductoForm.precio"
+              type="number"
+              min="0"
+              step="0.01"
+              outlined
+              dense
+              label="Precio"
+            />
+          </div>
+          <div class="col-12 col-md-4">
+            <q-btn
+              class="full-width"
+              color="secondary"
+              icon="inventory_2"
+              label="Seleccionar lote"
+              no-caps
+              :disable="!agregarProductoForm.producto"
+              @click="openAgregarProductoLote()"
+            />
+          </div>
+          <div v-if="agregarProductoLote" class="col-12">
+            <q-banner dense rounded class="bg-blue-1 text-primary">
+              Lote: <b>{{ agregarProductoLote.lote || 'Sin lote' }}</b>
+              | Vence: <b>{{ agregarProductoLote.fecha_vencimiento || 'Sin fecha' }}</b>
+              | Disponible: <b>{{ agregarProductoLote.disponible }}</b>
+            </q-banner>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat color="negative" label="Cancelar" no-caps @click="agregarProductoDialog = false" />
+          <q-btn
+            color="primary"
+            label="Agregar a venta"
+            no-caps
+            :loading="agregandoProductoLoading"
+            @click="guardarProductoVenta()"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="agregarProductoLoteDialog" persistent>
+      <q-card style="max-width: 720px; width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Seleccionar lote</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="agregarProductoLoteDialog = false" />
+        </q-card-section>
+
+        <q-card-section>
+          <div class="q-mb-sm">
+            Producto: <b>{{ agregarProductoForm.producto?.nombre || '-' }}</b>
+          </div>
+          <q-markup-table dense wrap-cells flat bordered>
+            <thead>
+            <tr>
+              <th>#</th>
+              <th>Lote</th>
+              <th>Vencimiento</th>
+              <th>Disponible</th>
+              <th>Elegir</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-if="agregarProductoLotesLoading">
+              <td colspan="5" class="text-center">Cargando...</td>
+            </tr>
+            <tr v-for="(lote, index) in agregarProductoLotes" :key="lote.id">
+              <td>{{ index + 1 }}</td>
+              <td>{{ lote.lote || '—' }}</td>
+              <td>{{ lote.fecha_vencimiento || '—' }}</td>
+              <td class="text-center">{{ lote.disponible }}</td>
+              <td class="text-center">
+                <q-btn size="sm" color="primary" label="Elegir" no-caps @click="selectAgregarProductoLote(lote)" />
+              </td>
+            </tr>
+            <tr v-if="!agregarProductoLotesLoading && agregarProductoLotes.length === 0">
+              <td colspan="5" class="text-center text-negative">Sin lotes disponibles</td>
+            </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
     <div id="myElement" class="hidden"></div>
   </q-page>
 </template>
@@ -827,6 +981,18 @@ export default {
       devDialog: false,
       devVentaId: null,
       devItems: [],  // { id, producto_id, nombre, cantidad, _devolver }
+      agregarProductoDialog: false,
+      agregarProductoLoteDialog: false,
+      agregandoProductoLoading: false,
+      agregarProductoOptions: [],
+      agregarProductoLotes: [],
+      agregarProductoLotesLoading: false,
+      agregarProductoForm: {
+        producto: null,
+        cantidad: 1,
+        precio: 0,
+      },
+      agregarProductoLote: null,
     }
   },
   mounted() {
@@ -878,6 +1044,153 @@ export default {
     openDevolver(venta) {
       this.venta = venta;
       this.devDialog = true;
+    },
+    can(permission) {
+      return (this.$store.permissions || []).some(item => item.name === permission);
+    },
+    openAgregarProducto() {
+      this.agregarProductoDialog = true;
+      this.agregarProductoForm = {
+        producto: null,
+        cantidad: 1,
+        precio: 0,
+      };
+      this.agregarProductoLote = null;
+      this.agregarProductoOptions = [];
+      this.buscarProductosAgregar();
+    },
+    filterAgregarProducto(val, update) {
+      update(async () => {
+        await this.buscarProductosAgregar(val);
+      });
+    },
+    buscarProductosAgregar(search = '') {
+      return this.$axios.get('productosCantidad', {
+        params: {
+          search,
+          page: 1,
+          per_page: 20,
+          farmacia_tipo: this.farmaciaTipo,
+        }
+      }).then(res => {
+        this.agregarProductoOptions = res.data.data || [];
+      }).catch(error => {
+        this.agregarProductoOptions = [];
+        this.$alert.error(error.response?.data?.message || 'No se pudieron cargar los productos');
+      });
+    },
+    onProductoAgregarChange(producto) {
+      this.agregarProductoForm.precio = Number(producto?.precio || 0);
+      this.agregarProductoLote = null;
+    },
+    openAgregarProductoLote() {
+      if (!this.agregarProductoForm.producto?.id) {
+        this.$alert.error('Seleccione un producto');
+        return;
+      }
+      this.agregarProductoLoteDialog = true;
+      this.agregarProductoLotesLoading = true;
+      this.agregarProductoLotes = [];
+      this.$axios.get(`productos/${this.agregarProductoForm.producto.id}/historial-compras-ventas`, {
+        params: {
+          farmacia_tipo: this.farmaciaTipo
+        }
+      }).then(res => {
+        this.agregarProductoLotes = res.data || [];
+      }).catch(error => {
+        this.$alert.error(error.response?.data?.message || 'No se pudieron cargar los lotes');
+        this.agregarProductoLoteDialog = false;
+      }).finally(() => {
+        this.agregarProductoLotesLoading = false;
+      });
+    },
+    selectAgregarProductoLote(lote) {
+      this.agregarProductoLote = lote;
+      this.agregarProductoLoteDialog = false;
+    },
+    guardarProductoVenta() {
+      const producto = this.agregarProductoForm.producto;
+      const cantidad = Number(this.agregarProductoForm.cantidad || 0);
+      const precio = Number(this.agregarProductoForm.precio || 0);
+      const disponible = Number(this.agregarProductoLote?.disponible || 0);
+
+      if (!producto?.id) {
+        this.$alert.error('Seleccione un producto');
+        return;
+      }
+      if (!this.agregarProductoLote?.id) {
+        this.$alert.error('Seleccione un lote');
+        return;
+      }
+      if (cantidad <= 0 || cantidad > disponible) {
+        this.$alert.error(`La cantidad debe estar entre 1 y ${disponible}`);
+        return;
+      }
+      if (precio < 0) {
+        this.$alert.error('El precio no puede ser negativo');
+        return;
+      }
+
+      this.agregandoProductoLoading = true;
+      this.$axios.post(`ventas/${this.venta.id}/agregar-producto`, {
+        producto_id: producto.id,
+        compra_detalle_id: this.agregarProductoLote.id,
+        cantidad,
+        precio,
+        farmacia_tipo: this.farmaciaTipo,
+      }).then(res => {
+        this.venta = res.data;
+        this.agregarProductoDialog = false;
+        this.$alert.success('Producto agregado correctamente');
+        this.ventasGet();
+      }).catch(error => {
+        this.$alert.error(error.response?.data?.message || 'No se pudo agregar el producto');
+      }).finally(() => {
+        this.agregandoProductoLoading = false;
+      });
+    },
+    aumentarProducto(ventaId, detalle) {
+      const disponible = Number(detalle?.producto?.cantidad ?? 0);
+      if (disponible <= 0) {
+        this.$alert.error('No hay stock disponible para aumentar este producto');
+        return;
+      }
+
+      this.$q.dialog({
+        title: 'Aumentar producto',
+        message: `Ingrese la cantidad adicional para ${detalle.nombre || detalle.producto?.nombre || 'el producto'} (disponible: ${disponible}):`,
+        prompt: {
+          model: 1,
+          type: 'number',
+          isValid: val => {
+            const num = Number(val);
+            return !isNaN(num) && num > 0 && num <= disponible;
+          },
+          label: 'Cantidad adicional',
+          hint: `Debe ser un número entre 1 y ${disponible}`,
+          mask: '##########'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(cantidadAumentar => {
+        const cantidad = Number(cantidadAumentar);
+        if (isNaN(cantidad) || cantidad <= 0 || cantidad > disponible) {
+          this.$alert.error('Cantidad inválida');
+          return;
+        }
+
+        this.$axios.post(`ventas/${ventaId}/aumentar-producto`, {
+          venta_detalle_id: detalle.id,
+          cantidad,
+          farmacia_tipo: this.farmaciaTipo,
+        }).then(res => {
+          this.venta = res.data;
+          this.$alert.success('Cantidad aumentada correctamente');
+          this.ventasGet();
+        }).catch(error => {
+          this.$alert.error(error.response?.data?.message || 'No se pudo aumentar el producto');
+        });
+      });
     },
     openFacturacion(venta) {
       this.facturacionForm = {
@@ -1031,6 +1344,9 @@ export default {
     },
     ventaNuevaPath() {
       return this.farmaciaTipo === 'Farmacia institucional' ? '/institucional/ventaNuevo' : '/ventaNuevo'
+    },
+    canAgregarProductoVenta() {
+      return this.can('Ventas agregar producto')
     },
     usersTodos() {
       // colocar a user todos
