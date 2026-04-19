@@ -2,47 +2,50 @@
   <q-page class="q-pa-xs">
     <div class="row">
       <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-none">
-            <q-item class="bg-indigo">
-              <q-item-section avatar>
-                <q-icon name="monetization_on" size="50px" color="white" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label caption class="text-white">Ventas Internaciones</q-item-label>
-                <q-item-label  class="text-white text-h4">{{totalInternos}} Bs</q-item-label>
-              </q-item-section>
-            </q-item>
+        <q-card flat class="ventas-resumen-card ventas-resumen-card--qr text-white">
+          <q-card-section class="row items-center no-wrap">
+            <q-item-section avatar>
+              <div class="ventas-resumen-card__icon">
+                <q-icon name="qr_code_2" size="34px" color="white" />
+              </div>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white text-weight-medium">Ventas con QR</q-item-label>
+              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalQr.toFixed(2) }} Bs</q-item-label>
+              <q-item-label caption class="text-blue-1">Monto calculado en ventas activas pagadas por QR</q-item-label>
+            </q-item-section>
           </q-card-section>
         </q-card>
       </div>
       <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-none">
-            <q-item class="bg-orange">
-              <q-item-section avatar>
-                <q-icon name="monetization_on" size="50px" color="white" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label caption class="text-white">Ventas Externo</q-item-label>
-                <q-item-label  class="text-white text-h4">{{totalExternos}} Bs</q-item-label>
-              </q-item-section>
-            </q-item>
+        <q-card flat class="ventas-resumen-card ventas-resumen-card--cash text-white">
+          <q-card-section class="row items-center no-wrap">
+            <q-item-section avatar>
+              <div class="ventas-resumen-card__icon">
+                <q-icon name="payments" size="34px" color="white" />
+              </div>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white text-weight-medium">Ventas en Efectivo</q-item-label>
+              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalEfectivo.toFixed(2) }} Bs</q-item-label>
+              <q-item-label caption class="text-orange-1">Monto calculado en ventas activas cobradas en efectivo</q-item-label>
+            </q-item-section>
           </q-card-section>
         </q-card>
       </div>
       <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-none">
-            <q-item class="bg-green">
-              <q-item-section avatar>
-                <q-icon name="monetization_on" size="50px" color="white" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label caption class="text-white">Ventas Total</q-item-label>
-                <q-item-label  class="text-white text-h4">{{totalInternos + totalExternos}} Bs</q-item-label>
-              </q-item-section>
-            </q-item>
+        <q-card flat class="ventas-resumen-card ventas-resumen-card--total text-white">
+          <q-card-section class="row items-center no-wrap">
+            <q-item-section avatar>
+              <div class="ventas-resumen-card__icon">
+                <q-icon name="account_balance_wallet" size="34px" color="white" />
+              </div>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white text-weight-medium">Total Ventas Activas</q-item-label>
+              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalVentasActivas.toFixed(2) }} Bs</q-item-label>
+              <q-item-label caption class="text-green-1">{{ ventasActivasCount }} ventas activas en el rango seleccionado</q-item-label>
+            </q-item-section>
           </q-card-section>
         </q-card>
       </div>
@@ -1352,6 +1355,30 @@ export default {
       // colocar a user todos
       return [{label: 'Todos', value: ''}, ...this.users.map(user => ({label: user.name, value: user.id}))]
     },
+    totalQr() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'QR'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    totalEfectivo() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'EFECTIVO'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    totalVentasActivas() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    ventasActivasCount() {
+      return this.ventas.filter(venta => venta.estado === 'Activo').length
+    },
     totalInternos() {
       return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Internado' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     },
@@ -1361,3 +1388,33 @@ export default {
   }
 }
 </script>
+<style scoped>
+.ventas-resumen-card {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
+}
+
+.ventas-resumen-card--qr {
+  background: linear-gradient(135deg, #0f4c81 0%, #2563eb 100%);
+}
+
+.ventas-resumen-card--cash {
+  background: linear-gradient(135deg, #b45309 0%, #f97316 100%);
+}
+
+.ventas-resumen-card--total {
+  background: linear-gradient(135deg, #0f766e 0%, #22c55e 100%);
+}
+
+.ventas-resumen-card__icon {
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+}
+</style>

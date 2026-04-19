@@ -1,107 +1,139 @@
 <template>
   <q-page class="q-pa-md">
-    <q-table :rows="pacientes" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
-             title="Usuarios" @rowClick="pacienteEdit" hide-bottom>
+    <q-table
+      :rows="pacientes"
+      :columns="columns"
+      dense
+      wrap-cells
+      flat
+      bordered
+      :rows-per-page-options="[0]"
+      title="Pacientes"
+      @rowClick="pacienteEdit"
+      hide-bottom
+    >
       <template v-slot:top>
-        <div style="width: 100%">
-          <div>
-<!--            <q-btn color="primary" label="Nuevo" @click="pacienteNew" outline no-caps  icon="add_circle_outline" :loading="loading" />-->
-            <q-input v-model="filter" label="Buscar" dense outlined @update:modelValue="pacientesGet" :debounce="500" clearable>
-              <template v-slot:append>
-                <q-icon name="search" />
-              </template>
-              <template v-slot:before>
-                <q-btn color="positive" label="Nuevo" @click="pacienteNew" no-caps  icon="add_circle_outline" :loading="loading" />
-              </template>
-            </q-input>
+        <div class="full-width">
+          <div class="row q-col-gutter-sm items-end">
+            <div class="col-12 col-md-4">
+              <q-input v-model="filter" label="Buscar" dense outlined @update:modelValue="onSearchChange" :debounce="500" clearable>
+                <template v-slot:append>
+                  <q-icon name="search" />
+                </template>
+                <template v-slot:before>
+                  <q-btn color="positive" label="Nuevo" @click="pacienteNew" no-caps icon="add_circle_outline" :loading="loading" />
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-2">
+              <q-select
+                v-model="estadoInternacion"
+                :options="estadoInternacionOptions"
+                label="Estado internación"
+                dense
+                outlined
+                emit-value
+                map-options
+                clearable
+                @update:modelValue="onFilterChange"
+              />
+            </div>
+            <div class="col-12 col-md-2">
+              <q-input v-model="fechaAltaInicio" label="Alta desde" dense outlined type="date" />
+            </div>
+            <div class="col-12 col-md-2">
+              <q-input v-model="fechaAltaFin" label="Alta hasta" dense outlined type="date" />
+            </div>
+            <div class="col-12 col-md-2">
+              <div class="row q-gutter-sm justify-end">
+                <q-btn color="primary" label="Filtrar" no-caps icon="filter_alt" :loading="loading" @click="onFilterChange" />
+                <q-btn color="secondary" label="Reporte" no-caps icon="picture_as_pdf" :loading="reportLoading" @click="generarReporte" />
+              </div>
+            </div>
           </div>
-          <div class="flex flex-center">
+          <div class="flex flex-center q-mt-sm">
             <q-pagination v-model="current_page" :max="Math.ceil(total / per_page)" @update:modelValue="pacientesGet" :max-pages="5" />
           </div>
         </div>
       </template>
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props">
-          <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">
-            <q-list>
-              <q-item clickable @click="pacienteEdit(props.row)" v-close-popup>
-                <q-item-section avatar>
-                  <q-icon name="edit" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>Editar</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item clickable @click="pacienteDelete(props.row.id)" v-close-popup>
-                <q-item-section avatar>
-                  <q-icon name="delete" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>Eliminar</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </q-td>
-      </template>
+
       <template v-slot:body-cell-tipo_paciente="props">
         <q-td :props="props">
-          <q-chip :label="props.row.tipo_paciente" :color="props.row.tipo_paciente === 'Interno' ? 'indigo' : 'orange'" dense class="text-white" style="height: 10px" size="10px"/>
+          <q-chip
+            :label="props.row.tipo_paciente"
+            :color="props.row.tipo_paciente === 'Interno' ? 'indigo' : 'orange'"
+            dense
+            class="text-white"
+          />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-estado_internacion="props">
+        <q-td :props="props">
+          <q-chip
+            :label="props.row.estado_internacion || 'No internado'"
+            :color="chipEstadoColor(props.row.estado_internacion)"
+            dense
+            class="text-white"
+          />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-registro_user="props">
+        <q-td :props="props">
+          {{ props.row.registro_user?.name || '-' }}
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-fecha_alta="props">
+        <q-td :props="props">
+          {{ formatDateTime(props.row.fecha_alta) }}
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-alta_user="props">
+        <q-td :props="props">
+          {{ props.row.alta_user?.name || '-' }}
         </q-td>
       </template>
     </q-table>
-<!--    <pre>{{ pacientes }}</pre>-->
-    <q-dialog v-model="pacienteDialog" persistent>
-      <q-card>
-        <q-card-section class="q-pb-none row items-center">
-          <div>
-            {{ actionPeriodo }} paciente
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense @click="pacienteDialog = false" />
-        </q-card-section>
-        <q-card-section class="q-pt-none">
-          <q-form @submit="paciente.id ? pacientePut() : pacientePost()">
-            <q-input v-model="paciente.name" label="Nombre" dense outlined :rules="[val => !!val || 'Campo requerido']" />
-            <q-input v-model="paciente.pacientename" label="Usuario" dense outlined :rules="[val => !!val || 'Campo requerido']" />
-            <q-input v-model="paciente.email" label="Email" dense outlined hint="" />
-            <q-input v-model="paciente.password" label="Contraseña" dense outlined :rules="[val => !!val || 'Campo requerido']" v-if="!paciente.id" />
-            <q-select v-model="paciente.role" label="Rol" dense outlined :options="roles" :rules="[val => !!val || 'Campo requerido']" />
-            <div class="text-right" >
-              <q-btn color="negative" label="Cancelar" @click="pacienteDialog = false" no-caps :loading="loading" />
-              <q-btn color="primary" label="Guardar" type="submit" no-caps :loading="loading" class="q-ml-sm" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
   </q-page>
 </template>
+
 <script>
 import moment from 'moment'
+
 export default {
-  name: 'ProductosPage',
+  name: 'PacientesPage',
   data() {
     return {
       pacientes: [],
-      paciente: {},
-      pacienteDialog: false,
       loading: false,
+      reportLoading: false,
       filter: '',
+      estadoInternacion: '',
+      fechaAltaInicio: '',
+      fechaAltaFin: '',
       current_page: 1,
       total: 0,
       per_page: 10,
+      estadoInternacionOptions: [
+        { label: 'Todos', value: '' },
+        { label: 'Internado', value: 'Internado' },
+        { label: 'Alta', value: 'Alta' },
+        { label: 'No internado', value: 'No internado' },
+      ],
       columns: [
-        // { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'nombre_completo', label: 'Nombre', align: 'left', field: 'nombre_completo' },
         { name: 'tipo_paciente', label: 'Tipo paciente', align: 'left', field: 'tipo_paciente' },
+        { name: 'estado_internacion', label: 'Estado internación', align: 'left', field: 'estado_internacion' },
         { name: 'identificacion', label: 'Identificación', align: 'left', field: 'identificacion' },
         { name: 'edad', label: 'Edad', align: 'left', field: 'edad' },
         { name: 'sexo', label: 'Sexo', align: 'left', field: 'sexo' },
-        { name: 'estado_civil', label: 'Estado civil', align: 'left', field: 'estado_civil' },
-        { name: 'direccion', label: 'Dirección', align: 'left', field: 'direccion' },
+        { name: 'registro_user', label: 'Registrado por', align: 'left', field: row => row.registro_user?.name || '' },
+        { name: 'fecha_alta', label: 'Fecha alta', align: 'left', field: 'fecha_alta' },
+        { name: 'alta_user', label: 'Alta por', align: 'left', field: row => row.alta_user?.name || '' },
         { name: 'telefono', label: 'Teléfono', align: 'left', field: 'telefono' },
-        // tipo_paciente
       ]
     }
   },
@@ -112,12 +144,26 @@ export default {
     pacienteNew() {
       this.$router.push({ name: 'pacienteNew' })
     },
+    pacienteEdit(_evt, paciente) {
+      this.$router.push({ name: 'paciente', params: { id: paciente.id } })
+    },
+    onSearchChange() {
+      this.current_page = 1
+      this.pacientesGet()
+    },
+    onFilterChange() {
+      this.current_page = 1
+      this.pacientesGet()
+    },
     pacientesGet() {
       this.loading = true
-      this.$axios.get('pacientes',{
+      this.$axios.get('pacientes', {
         params: {
           search: this.filter,
-          page: this.current_page
+          page: this.current_page,
+          estado_internacion: this.estadoInternacion,
+          fecha_alta_inicio: this.fechaAltaInicio,
+          fecha_alta_fin: this.fechaAltaFin,
         }
       }).then(res => {
         this.pacientes = res.data.data
@@ -125,78 +171,38 @@ export default {
         this.per_page = res.data.per_page
         this.current_page = res.data.current_page
       }).catch(error => {
-        this.$alert.error(error.response.data.message)
+        this.$alert.error(error.response?.data?.message || 'No se pudo cargar pacientes')
       }).finally(() => {
         this.loading = false
       })
     },
-    gestionGet() {
-      this.loading = true
-      this.$axios.get('gestiones').then(res => {
-        this.gestiones = res.data
-        this.loading = false
-      }).catch(error => {
-        this.$alert.error(error.response.data.message)
-        this.loading = false
-      })
+    formatDateTime(value) {
+      if (!value) return '-'
+      return moment(value).format('YYYY-MM-DD HH:mm')
     },
-    pacientePost() {
-      this.loading = true
-      this.$axios.post('pacientes', this.paciente).then(res => {
-        this.pacientesGet()
-        this.pacienteDialog = false
-        this.$alert.success('Periodo creado')
+    chipEstadoColor(estado) {
+      if (estado === 'Internado') return 'indigo'
+      if (estado === 'Alta') return 'positive'
+      return 'grey-7'
+    },
+    generarReporte() {
+      this.reportLoading = true
+      this.$axios.get('pacientes-reporte/pdf', {
+        params: {
+          fecha_alta_inicio: this.fechaAltaInicio,
+          fecha_alta_fin: this.fechaAltaFin,
+        },
+        responseType: 'blob',
+      }).then(res => {
+        const file = new Blob([res.data], { type: 'application/pdf' })
+        const fileURL = URL.createObjectURL(file)
+        window.open(fileURL, '_blank')
       }).catch(error => {
-        this.$alert.error(error.response.data.message)
+        this.$alert.error(error.response?.data?.message || 'No se pudo generar el reporte')
       }).finally(() => {
-        this.loading = false
+        this.reportLoading = false
       })
     },
-    pacientePut() {
-      this.loading = true
-      this.$axios.put('pacientes/' + this.paciente.id, this.paciente).then(res => {
-        this.pacientesGet()
-        this.pacienteDialog = false
-        this.$alert.success('Periodo actualizado')
-      }).catch(error => {
-        this.$alert.error(error.response.data.message)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    pacienteEditPassword(paciente) {
-      this.paciente = { ...paciente }
-      this.$alert.dialogPrompt('Nueva contraseña', 'Ingrese la nueva contraseña', 'password')
-        .onOk(password => {
-          this.$axios.put('updatePassword/' + paciente.id, { password }).then(res => {
-            this.pacientesGet()
-            this.$alert.success('Contraseña actualizada')
-          }).catch(error => {
-            this.$alert.error(error.response.data.message)
-          })
-        })
-    },
-    pacienteEdit(row,paciente) {
-      // this.paciente = { ...paciente }
-      // this.actionPeriodo = 'Editar'
-      // this.pacienteDialog = true
-      console.log(paciente)
-      this.$router.push({ name: 'paciente', params: { id: paciente.id } })
-    },
-    pacienteDelete(id) {
-      this.$alert.dialog('¿Desea eliminar el paciente?')
-        .onOk(() => {
-          this.loading = true
-          this.$axios.delete('pacientes/' + id).then(res => {
-            this.pacientesGet()
-            this.$alert.success('Periodo eliminado')
-          }).catch(error => {
-            this.$alert.error(error.response.data.message)
-          }).finally(() => {
-            this.loading = false
-          })
-        })
-    }
   }
 }
 </script>

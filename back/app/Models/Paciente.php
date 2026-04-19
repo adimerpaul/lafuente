@@ -21,6 +21,10 @@ class Paciente extends Model{
         'direccion',
         'telefono',
         'fecha_creacion',
+        'user_id',
+        'estado_internacion',
+        'fecha_alta',
+        'alta_user_id',
     ];
 
     protected $hidden = [
@@ -75,5 +79,11 @@ class Paciente extends Model{
     }
     function formulariosControl(){
         return $this->hasMany(FormularioControl::class);
+    }
+    function registroUser(){
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    function altaUser(){
+        return $this->belongsTo(User::class, 'alta_user_id');
     }
 }
