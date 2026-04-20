@@ -13,6 +13,16 @@
               <q-item-label caption class="text-white text-weight-medium">Ventas con QR</q-item-label>
               <q-item-label class="text-white text-h4 text-weight-bold">{{ totalQr.toFixed(2) }} Bs</q-item-label>
               <q-item-label caption class="text-blue-1">Monto calculado en ventas activas pagadas por QR</q-item-label>
+              <div class="ventas-resumen-card__breakdown">
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Internado</span>
+                  <strong>{{ totalQrInternado.toFixed(2) }} Bs</strong>
+                </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Externo</span>
+                  <strong>{{ totalQrExterno.toFixed(2) }} Bs</strong>
+                </div>
+              </div>
             </q-item-section>
           </q-card-section>
         </q-card>
@@ -29,6 +39,16 @@
               <q-item-label caption class="text-white text-weight-medium">Ventas en Efectivo</q-item-label>
               <q-item-label class="text-white text-h4 text-weight-bold">{{ totalEfectivo.toFixed(2) }} Bs</q-item-label>
               <q-item-label caption class="text-orange-1">Monto calculado en ventas activas cobradas en efectivo</q-item-label>
+              <div class="ventas-resumen-card__breakdown">
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Internado</span>
+                  <strong>{{ totalEfectivoInternado.toFixed(2) }} Bs</strong>
+                </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Externo</span>
+                  <strong>{{ totalEfectivoExterno.toFixed(2) }} Bs</strong>
+                </div>
+              </div>
             </q-item-section>
           </q-card-section>
         </q-card>
@@ -45,6 +65,16 @@
               <q-item-label caption class="text-white text-weight-medium">Total Ventas Activas</q-item-label>
               <q-item-label class="text-white text-h4 text-weight-bold">{{ totalVentasActivas.toFixed(2) }} Bs</q-item-label>
               <q-item-label caption class="text-green-1">{{ ventasActivasCount }} ventas activas en el rango seleccionado</q-item-label>
+              <div class="ventas-resumen-card__breakdown">
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Internado</span>
+                  <strong>{{ totalInternos.toFixed(2) }} Bs</strong>
+                </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Externo</span>
+                  <strong>{{ totalExternos.toFixed(2) }} Bs</strong>
+                </div>
+              </div>
             </q-item-section>
           </q-card-section>
         </q-card>
@@ -1362,9 +1392,45 @@ export default {
           : acc
       }, 0)
     },
+    totalQrInternado() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'QR' &&
+        venta.tipo_venta === 'Internado'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    totalQrExterno() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'QR' &&
+        venta.tipo_venta === 'Externo'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
     totalEfectivo() {
       return this.ventas.reduce((acc, venta) => {
         return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'EFECTIVO'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    totalEfectivoInternado() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' &&
+        venta.tipo_venta === 'Internado'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
+    totalEfectivoExterno() {
+      return this.ventas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' &&
+        venta.tipo_venta === 'Externo'
           ? acc + parseFloat(venta.total || 0)
           : acc
       }, 0)
@@ -1416,5 +1482,28 @@ export default {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(8px);
+}
+
+.ventas-resumen-card__breakdown {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.ventas-resumen-card__breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 12px;
+}
+
+.ventas-resumen-card__breakdown-item span {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ventas-resumen-card__breakdown-item strong {
+  font-weight: 700;
 }
 </style>

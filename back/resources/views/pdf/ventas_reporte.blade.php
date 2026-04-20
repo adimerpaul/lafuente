@@ -68,6 +68,38 @@
             font-weight: 800;
         }
 
+        .summary-blocks {
+            margin-bottom: 6px;
+        }
+
+        .summary-blocks table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-blocks th,
+        .summary-blocks td {
+            border: 1px solid #dbeafe;
+            padding: 4px 5px;
+            font-size: 9px;
+        }
+
+        .summary-blocks th {
+            background: #eff6ff;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .summary-blocks td {
+            text-align: right;
+        }
+
+        .summary-blocks td.label {
+            text-align: left;
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
         .muted {
             color: #6b7280;
             font-size: 9px;
@@ -153,6 +185,35 @@
         <b>Ventas:</b> {{ $ventas->count() }}
         &nbsp;&nbsp; <b>Total:</b> {{ number_format((float)$totalGeneral, 2) }} Bs
     </div>
+</div>
+
+<div class="summary-blocks">
+    <table>
+        <tr>
+            <th>Resumen</th>
+            <th>Internado</th>
+            <th>Externo</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td class="label">QR</td>
+            <td>{{ number_format((float) $totalQrInternado, 2) }} Bs</td>
+            <td>{{ number_format((float) $totalQrExterno, 2) }} Bs</td>
+            <td>{{ number_format((float) ($totalQrInternado + $totalQrExterno), 2) }} Bs</td>
+        </tr>
+        <tr>
+            <td class="label">Efectivo</td>
+            <td>{{ number_format((float) $totalEfectivoInternado, 2) }} Bs</td>
+            <td>{{ number_format((float) $totalEfectivoExterno, 2) }} Bs</td>
+            <td>{{ number_format((float) ($totalEfectivoInternado + $totalEfectivoExterno), 2) }} Bs</td>
+        </tr>
+        <tr>
+            <td class="label">Totales</td>
+            <td>{{ number_format((float) $totalInternado, 2) }} Bs</td>
+            <td>{{ number_format((float) $totalExterno, 2) }} Bs</td>
+            <td>{{ number_format((float) $totalGeneral, 2) }} Bs</td>
+        </tr>
+    </table>
 </div>
 
 @forelse($ventas as $venta)
@@ -241,6 +302,10 @@
     Internado: {{ number_format((float)$totalInternado, 2) }} Bs
     &nbsp;&nbsp; | &nbsp;&nbsp;
     Externo: {{ number_format((float)$totalExterno, 2) }} Bs
+    &nbsp;&nbsp; | &nbsp;&nbsp;
+    QR: {{ number_format((float) ($totalQrInternado + $totalQrExterno), 2) }} Bs
+    &nbsp;&nbsp; | &nbsp;&nbsp;
+    Efectivo: {{ number_format((float) ($totalEfectivoInternado + $totalEfectivoExterno), 2) }} Bs
 </div>
 </body>
 </html>

@@ -322,6 +322,18 @@ class VentaController extends Controller
         $totalExterno = $ventas
             ->where('tipo_venta', 'Externo')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalQrInternado = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'QR' && $venta->tipo_venta === 'Internado')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalQrExterno = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'QR' && $venta->tipo_venta === 'Externo')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalEfectivoInternado = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'EFECTIVO' && $venta->tipo_venta === 'Internado')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalEfectivoExterno = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'EFECTIVO' && $venta->tipo_venta === 'Externo')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
 
         $hoy = now();
         $tipoVenta = $request->input('tipoVenta');
@@ -338,6 +350,10 @@ class VentaController extends Controller
             'totalGeneral' => $totalGeneral,
             'totalInternado' => $totalInternado,
             'totalExterno' => $totalExterno,
+            'totalQrInternado' => $totalQrInternado,
+            'totalQrExterno' => $totalQrExterno,
+            'totalEfectivoInternado' => $totalEfectivoInternado,
+            'totalEfectivoExterno' => $totalEfectivoExterno,
             'fechaInicio' => $request->input('fechaInicio'),
             'fechaFin' => $request->input('fechaFin'),
             'userId' => $userId,
