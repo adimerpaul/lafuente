@@ -31,6 +31,85 @@ export const controlCatalog = [
   { key: 'algodon', label: 'Algodon', type: 'yesno', prices: { SI: 5 } }
 ]
 
+const controlArancelCodeMap = {
+  caja_vaselina: {
+    P: ['caja_vaselinada_p', 'caja_vaselina_p'],
+    M: ['caja_vaselinada_m', 'caja_vaselina_m'],
+    G: ['caja_vaselinada_g', 'caja_vaselina_g']
+  },
+  caja_curacion: {
+    P: 'caja_curacion_p',
+    M: 'caja_curacion_m',
+    G: 'caja_curacion_g'
+  },
+  caja_sutura: {
+    P: 'caja_sutura_p',
+    M: 'caja_sutura_m',
+    G: 'caja_sutura_g'
+  },
+  caja_retiro_uterino: {
+    P: ['caja_retiro_uretero_p', 'caja_retiro_uterino_p'],
+    M: ['caja_retiro_uretero_m', 'caja_retiro_uterino_m'],
+    G: ['caja_retiro_uretero_g', 'caja_retiro_uterino_g']
+  },
+  caja_retiro_puntos: {
+    P: 'caja_retiro_puntos_p',
+    M: 'caja_retiro_puntos_m',
+    G: 'caja_retiro_puntos_g'
+  },
+  sutura: {
+    P: 'sutura_p',
+    M: 'sutura_m',
+    G: 'sutura_g'
+  },
+  uso_tela_adhesiva: {
+    P: 'uso_tela_adhesiva',
+    M: 'uso_tela_adhesiva',
+    G: 'uso_tela_adhesiva'
+  },
+  uso_micropor: 'uso_micropor',
+  nebulizacion: 'nebulizacion',
+  glicemia: 'glicemia',
+  inyectable: {
+    IM: 'inyectable_im',
+    EV: 'inyectable_ev',
+    SC: 'inyectable_sc'
+  },
+  guantes_dediles: 'guantes_dediles',
+  campo_fenestrado: 'campo_fenestrado',
+  colocado_stopper: 'colocado_stopper',
+  monitor_desfibrilador: 'monitor_desfibrilador',
+  antisepticos: 'antisepticos',
+  apositos_extras: 'apositos_extras',
+  torundas_gasa_extras: 'torundas_gasa_extras',
+  gases_extra: ['gasas_extra', 'gases_extra'],
+  venda_quemado: 'venda_quemado',
+  curacion: {
+    P: 'curacion_p',
+    M: 'curacion_m',
+    G: 'curacion_g'
+  },
+  suero: 'suero',
+  aspiracion: 'aspiracion',
+  sonda: {
+    SNG: 'sonda_sng',
+    SOG: 'sonda_sog',
+    SV: 'sonda_sv'
+  },
+  compresas: {
+    P: 'compresas',
+    M: 'compresas',
+    G: 'compresas'
+  },
+  yeso: {
+    SI: ['yeso_p', 'yeso_m', 'yeso_g', 'yeso']
+  },
+  oxigeno: 'oxigeno',
+  enema: 'enema',
+  corbatas: 'corbatas',
+  algodon: 'algodon'
+}
+
 export const controlOptions = {
   size: [
     { label: 'P', value: 'P' },
@@ -58,6 +137,18 @@ export function createEmptyDetail () {
     acc[item.key] = null
     return acc
   }, {})
+}
+
+export function getControlArancelCodes (key, option) {
+  const config = controlArancelCodeMap[key]
+  if (!config) return []
+
+  if (typeof config === 'string') return [config]
+  if (Array.isArray(config)) return config
+
+  const byOption = config?.[option] ?? config?.default
+  if (!byOption) return []
+  return Array.isArray(byOption) ? byOption : [byOption]
 }
 
 export function getControlAmount (key, value) {
