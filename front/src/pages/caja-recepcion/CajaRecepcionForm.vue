@@ -443,11 +443,87 @@ import moment from 'moment'
 import {
   controlCatalog,
   controlOptions,
-  createEmptyDetail,
-  getControlAmount,
-  getControlTotal,
-  getSelectedControlItems
+  createEmptyDetail
 } from '../formularios-control/controlCatalog'
+
+const controlArancelCodeMap = {
+  caja_vaselina: {
+    P: ['caja_vaselinada_p', 'caja_vaselina_p'],
+    M: ['caja_vaselinada_m', 'caja_vaselina_m'],
+    G: ['caja_vaselinada_g', 'caja_vaselina_g']
+  },
+  caja_curacion: {
+    P: 'caja_curacion_p',
+    M: 'caja_curacion_m',
+    G: 'caja_curacion_g'
+  },
+  caja_sutura: {
+    P: 'caja_sutura_p',
+    M: 'caja_sutura_m',
+    G: 'caja_sutura_g'
+  },
+  caja_retiro_uterino: {
+    P: ['caja_retiro_uretero_p', 'caja_retiro_uterino_p'],
+    M: ['caja_retiro_uretero_m', 'caja_retiro_uterino_m'],
+    G: ['caja_retiro_uretero_g', 'caja_retiro_uterino_g']
+  },
+  caja_retiro_puntos: {
+    P: 'caja_retiro_puntos_p',
+    M: 'caja_retiro_puntos_m',
+    G: 'caja_retiro_puntos_g'
+  },
+  sutura: {
+    P: 'sutura_p',
+    M: 'sutura_m',
+    G: 'sutura_g'
+  },
+  uso_tela_adhesiva: {
+    P: 'uso_tela_adhesiva',
+    M: 'uso_tela_adhesiva',
+    G: 'uso_tela_adhesiva'
+  },
+  uso_micropor: 'uso_micropor',
+  nebulizacion: 'nebulizacion',
+  glicemia: 'glicemia',
+  inyectable: {
+    IM: 'inyectable_im',
+    EV: 'inyectable_ev',
+    SC: 'inyectable_sc'
+  },
+  guantes_dediles: 'guantes_dediles',
+  campo_fenestrado: 'campo_fenestrado',
+  colocado_stopper: 'colocado_stopper',
+  monitor_desfibrilador: 'monitor_desfibrilador',
+  antisepticos: 'antisepticos',
+  apositos_extras: 'apositos_extras',
+  torundas_gasa_extras: 'torundas_gasa_extras',
+  gases_extra: ['gasas_extra', 'gases_extra'],
+  venda_quemado: 'venda_quemado',
+  curacion: {
+    P: 'curacion_p',
+    M: 'curacion_m',
+    G: 'curacion_g'
+  },
+  suero: 'suero',
+  aspiracion: 'aspiracion',
+  sonda: {
+    SNG: 'sonda_sng',
+    SOG: 'sonda_sog',
+    SV: 'sonda_sv'
+  },
+  compresas: {
+    P: 'compresas',
+    M: 'compresas',
+    G: 'compresas'
+  },
+  yeso: {
+    SI: ['yeso_p', 'yeso_m', 'yeso_g', 'yeso']
+  },
+  oxigeno: 'oxigeno',
+  enema: 'enema',
+  corbatas: 'corbatas',
+  algodon: 'algodon'
+}
 
 const emptyForm = () => ({
   fecha: moment().format('YYYY-MM-DD'),
@@ -500,6 +576,7 @@ export default {
       savingDoctor: false,
       patientSearchTimer: null,
       patientSearchSeq: 0,
+      arancelPrecioPorCodigo: {},
       atencionMedicaAdjustment: 0,
       syncingAtencionMedica: false,
       recognition: null,
@@ -592,14 +669,30 @@ export default {
     controlItems () {
       return controlCatalog.map(item => ({
         ...item,
+        prices: this.resolveControlPrices(item),
         options: controlOptions[item.type] || []
       }))
     },
+    controlItemsByKey () {
+      return this.controlItems.reduce((acc, item) => {
+        acc[item.key] = item
+        return acc
+      }, {})
+    },
     formularioSelectedItems () {
-      return getSelectedControlItems(this.form.formulario_detalle)
+      return this.controlItems
+        .map(item => {
+          const value = this.form.formulario_detalle[item.key]
+          const amount = this.getFormularioAmount(item.key, value)
+          const selectedValues = this.normalizeFormularioValue(value).filter(current => current && current !== 'NO')
+          return selectedValues.length
+            ? { key: item.key, label: item.label, value: selectedValues.join(', '), amount }
+            : null
+        })
+        .filter(Boolean)
     },
     formularioTotalReferencial () {
-      return getControlTotal(this.form.formulario_detalle)
+      return this.formularioSelectedItems.reduce((sum, item) => sum + Number(item.amount || 0), 0)
     }
   },
   watch: {
@@ -734,20 +827,63 @@ export default {
       const age = moment().diff(birthDate, 'years')
       this.quickPatient.edad = age >= 0 ? String(age) : ''
     },
+    setAranceles (aranceles = []) {
+      this.arancelPrecioPorCodigo = aranceles.reduce((acc, arancel) => {
+        const code = (arancel?.codigo || '').trim()
+        if (!code) return acc
+        acc[code] = Number(arancel.precio || 0)
+        return acc
+      }, {})
+    },
+    getControlArancelCodes (key, option) {
+      const config = controlArancelCodeMap[key]
+      if (!config) return []
+
+      if (typeof config === 'string') return [config]
+      if (Array.isArray(config)) return config
+
+      const byOption = config?.[option] ?? config?.default
+      if (!byOption) return []
+      return Array.isArray(byOption) ? byOption : [byOption]
+    },
+    getArancelPrice (key, option) {
+      const codes = this.getControlArancelCodes(key, option)
+      for (const code of codes) {
+        if (Object.prototype.hasOwnProperty.call(this.arancelPrecioPorCodigo, code)) {
+          return Number(this.arancelPrecioPorCodigo[code] || 0)
+        }
+      }
+      return null
+    },
+    resolveControlPrices (item) {
+      const prices = { ...(item.prices || {}) }
+      Object.keys(prices).forEach(option => {
+        const arancelPrice = this.getArancelPrice(item.key, option)
+        if (arancelPrice !== null) {
+          prices[option] = arancelPrice
+        }
+      })
+      return prices
+    },
     getFormularioAmount (key, value) {
-      return getControlAmount(key, this.normalizeFormularioValue(value))
+      const selectedValues = this.normalizeFormularioValue(value).filter(current => current && current !== 'NO')
+      if (!selectedValues.length) return 0
+      const prices = this.controlItemsByKey[key]?.prices || {}
+      return selectedValues.reduce((sum, current) => sum + Number(prices[current] || 0), 0)
     },
     loadFormData () {
       this.loading = true
       Promise.all([
         this.$axios.get('doctores'),
         this.$axios.get('pacientes', { params: { search: '', page: 1 } }),
+        this.$axios.get('aranceles'),
         this.isEdit ? this.$axios.get(`caja-recepciones/${this.$route.params.id}`) : Promise.resolve(null)
-      ]).then(([doctoresRes, pacientesRes, itemRes]) => {
+      ]).then(([doctoresRes, pacientesRes, arancelesRes, itemRes]) => {
         this.doctores = doctoresRes.data || []
         this.doctorOptions = this.doctores.map(this.mapDoctorOption)
         this.pacienteOptions = (pacientesRes.data.data || []).map(this.mapPacienteOption)
-          if (itemRes && itemRes.data) {
+        this.setAranceles(arancelesRes.data || [])
+        if (itemRes && itemRes.data) {
           this.form = {
             ...emptyForm(),
             ...itemRes.data,
