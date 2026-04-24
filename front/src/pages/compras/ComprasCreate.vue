@@ -10,7 +10,7 @@
         <q-form @submit="clickDialogCompra">
           <div class="row">
             <!-- Buscar productos -->
-            <div class="col-12 col-md-5 q-pa-xs">
+            <div class="col-12 col-md-4 q-pa-xs">
               <q-input v-model="productosSearch" outlined clearable label="Buscar producto" dense debounce="300" @update:modelValue="productosGet">
                 <template v-slot:append>
                   <q-btn flat round dense icon="search" />
@@ -55,7 +55,7 @@
               <!--              </q-markup-table>-->
               <div class="row">
                 <template v-for="producto in productos">
-                  <div class="col-6 col-md-2">
+                  <div class="col-6 col-md-3">
                     <q-card flat bordered class="cursor-pointer" @click="addProducto(producto)">
                       <q-img
                         :src="`${$url}../images/${producto.imagen}`"
@@ -79,7 +79,7 @@
             </div>
 
             <!-- Lista de productos agregados -->
-            <div class="col-12 col-md-7 q-pa-xs">
+            <div class="col-12 col-md-8 q-pa-xs">
               <div style="display: flex;align-items: center;justify-content: space-between;">
                 <span>
                   <q-btn size="xs" flat round dense icon="delete" color="red" @click="productosCompras = []" class="q-mb-sm" />
@@ -431,15 +431,15 @@ export default {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
     },
     totalCompra() {
-      // return this.productosCompras.reduce(
-      //   (acc, p) => acc + (p.cantidad * p.precio),
-      //   0
-      // );
-      let total = 0;
-      this.productosCompras.forEach((p) => {
-        total += p.cantidad * p.precio;
-      });
-      return parseFloat(total).toFixed(2);
+      const total = this.productosCompras.reduce((acc, p) => {
+        const qty = Number(p.cantidad) || 0
+        const unit = Number(p.precio) || 0
+        const rowTotal = Number.isFinite(Number(p.total))
+          ? Number(p.total)
+          : this.round2(qty * unit)
+        return acc + rowTotal
+      }, 0)
+      return this.round2(total).toFixed(2)
     },
   },
   methods: {
@@ -532,6 +532,24 @@ export default {
 
     round2(v) { return Math.round((Number(v) || 0) * 100) / 100 },
     round3(v) { return Math.round((Number(v) || 0) * 1000) / 1000 },
+    buildCompraItem(producto, cantidad = 1) {
+      const factor = 1.25
+      const qty = Number(cantidad) || 1
+      const precioLista = Number(producto?.precio) || 0
+      const precioCompra = this.round3(precioLista / factor)
+      const total = this.round2(qty * precioCompra)
+      return {
+        producto_id: producto.id,
+        cantidad: qty,
+        precio: precioCompra,
+        total,
+        lote: '',
+        fecha_vencimiento: '',
+        producto,
+        factor,
+        precio_venta: this.round2(precioCompra * factor),
+      }
+    },
     recuperarPedido() {
       // COlcoar el id del pedido
       this.$q.dialog({
@@ -565,17 +583,10 @@ export default {
             const producto = prod.producto;
             const existente = this.productosCompras.find(p => p.producto_id === producto.id);
             if (existente) {
-              existente.cantidad += 1;
+              existente.cantidad += Number(prod.cantidad) || 1
+              this.onCantidadChange(existente)
             } else {
-              this.productosCompras.push({
-                producto_id: producto.id,
-                cantidad: parseInt(prod.cantidad),
-                precio: '',
-                lote: '',
-                fecha_vencimiento: '',
-                producto,
-                factor: 1.25,
-              });
+              this.productosCompras.push(this.buildCompraItem(producto, parseInt(prod.cantidad)))
             }
           });
         }).catch((error) => {
@@ -584,10 +595,6 @@ export default {
           this.loading = false;
         });
       });
-    },
-    updatePrecioVenta(productoVenta) {
-      const precio_venta = Math.ceil(productoVenta.precio * productoVenta.factor);
-      productoVenta.precio_venta = precio_venta;
     },
     productosGet() {
       this.loading = true;
@@ -612,15 +619,7 @@ export default {
       // if (existente) {
       //   existente.cantidad += 1;
       // } else {
-      this.productosCompras.push({
-        producto_id: producto.id,
-        cantidad: 1,
-        precio: '',
-        lote: '',
-        fecha_vencimiento: '',
-        producto,
-        factor: 1.25,
-      });
+      this.productosCompras.push(this.buildCompraItem(producto));
       // }
     },
     clickDialogCompra() {

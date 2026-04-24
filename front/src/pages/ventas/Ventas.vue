@@ -22,6 +22,10 @@
                   <span>Externo</span>
                   <strong>{{ totalQrExterno.toFixed(2) }} Bs</strong>
                 </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Seguro</span>
+                  <strong>{{ totalQrSeguro.toFixed(2) }} Bs</strong>
+                </div>
               </div>
             </q-item-section>
           </q-card-section>
@@ -47,6 +51,10 @@
                 <div class="ventas-resumen-card__breakdown-item">
                   <span>Externo</span>
                   <strong>{{ totalEfectivoExterno.toFixed(2) }} Bs</strong>
+                </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Seguro</span>
+                  <strong>{{ totalEfectivoSeguro.toFixed(2) }} Bs</strong>
                 </div>
               </div>
             </q-item-section>
@@ -74,6 +82,10 @@
                   <span>Externo</span>
                   <strong>{{ totalExternos.toFixed(2) }} Bs</strong>
                 </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Seguro</span>
+                  <strong>{{ totalSeguros.toFixed(2) }} Bs</strong>
+                </div>
               </div>
             </q-item-section>
           </q-card-section>
@@ -93,6 +105,9 @@
                 <q-select v-model="user" :options="usersTodos" label="Usuario" dense outlined  emit-value map-options/>
               </div>
               <div class="col-12 col-md-2">
+                <q-select v-model="tipoVenta" :options="tiposVentaOptions" label="Tipo de venta" dense outlined emit-value map-options/>
+              </div>
+              <div class="col-12 col-md-2">
                 <q-btn color="primary" label="Buscar"  no-caps  icon="search" :loading="loading" @click="ventasGet()" />
               </div>
               <div class="col-12 col-md-2 text-right">
@@ -108,6 +123,12 @@
                       <q-icon name="file_download" />
                     </q-item-section>
                     <q-item-section>Excel interno</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo('Seguro')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel seguro</q-item-section>
                   </q-item>
                   <q-item clickable v-ripple @click="exportExcelPorTipo()" v-close-popup>
                     <q-item-section avatar>
@@ -126,6 +147,12 @@
                       <q-icon name="picture_as_pdf" />
                     </q-item-section>
                     <q-item-section>PDF externo</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo('Seguro')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF seguro</q-item-section>
                   </q-item>
                   <q-item clickable v-ripple @click="exportPdfPorTipo()" v-close-popup>
                     <q-item-section avatar>
@@ -161,8 +188,8 @@
         </tr>
       </thead>
       <tbody>
-      <template v-if="ventas.length != 0">
-        <tr v-for="(venta, index) in ventas" :key="venta.id">
+      <template v-if="ventasFiltradas.length != 0">
+        <tr v-for="(venta, index) in ventasFiltradas" :key="venta.id">
           <td>
             <q-btn-dropdown color="primary" label="Opciones" no-caps dense size="10px">
               <q-item clickable v-ripple @click="imprimir(venta)" v-close-popup>
@@ -222,7 +249,7 @@
             </div>
           </td>
           <td>
-            <q-chip :color="venta.tipo_venta === 'Internado' ? 'indigo' : 'orange'" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
+            <q-chip :color="getTipoVentaColor(venta.tipo_venta)" class="text-white" dense>{{ venta.tipo_venta }}</q-chip>
           </td>
           <td>
             <q-chip :color="venta.facturado ? 'positive' : 'grey-7'" class="text-white" dense>
@@ -993,6 +1020,7 @@ export default {
       gestiones: [],
       users: [],
       user: '',
+      tipoVenta: '',
       filter: '',
       roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
       columns: [
@@ -1254,7 +1282,7 @@ export default {
       });
     },
     getVentasExportables(tipoVenta = null) {
-      return (this.ventas || []).filter(v => {
+      return (this.ventasFiltradas || []).filter(v => {
         const esActiva = String(v.estado).toLowerCase() === 'activo';
         const coincideTipo = tipoVenta ? v.tipo_venta === tipoVenta : true;
         return esActiva && coincideTipo;
@@ -1313,6 +1341,11 @@ export default {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
     },
+    getTipoVentaColor(tipoVenta) {
+      if (tipoVenta === 'Internado') return 'indigo'
+      if (tipoVenta === 'Seguro') return 'purple'
+      return 'orange'
+    },
     usersGet() {
       this.$axios.get('users').then(res => {
         this.users = res.data
@@ -1357,6 +1390,7 @@ export default {
           fechaInicio: this.fechaInicio,
           fechaFin: this.fechaFin,
           user: this.user,
+          tipo_venta: this.tipoVenta,
           farmacia_tipo: this.farmaciaTipo
         }
       }).then(res => {
@@ -1385,15 +1419,27 @@ export default {
       // colocar a user todos
       return [{label: 'Todos', value: ''}, ...this.users.map(user => ({label: user.name, value: user.id}))]
     },
+    tiposVentaOptions() {
+      return [
+        { label: 'Todos', value: '' },
+        { label: 'Internado', value: 'Internado' },
+        { label: 'Externo', value: 'Externo' },
+        { label: 'Seguro', value: 'Seguro' }
+      ]
+    },
+    ventasFiltradas() {
+      if (!this.tipoVenta) return this.ventas
+      return this.ventas.filter(venta => venta.tipo_venta === this.tipoVenta)
+    },
     totalQr() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'QR'
           ? acc + parseFloat(venta.total || 0)
           : acc
       }, 0)
     },
     totalQrInternado() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' &&
         String(venta.tipo_pago).toUpperCase() === 'QR' &&
         venta.tipo_venta === 'Internado'
@@ -1402,7 +1448,7 @@ export default {
       }, 0)
     },
     totalQrExterno() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' &&
         String(venta.tipo_pago).toUpperCase() === 'QR' &&
         venta.tipo_venta === 'Externo'
@@ -1410,15 +1456,24 @@ export default {
           : acc
       }, 0)
     },
+    totalQrSeguro() {
+      return this.ventasFiltradas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'QR' &&
+        venta.tipo_venta === 'Seguro'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
     totalEfectivo() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'EFECTIVO'
           ? acc + parseFloat(venta.total || 0)
           : acc
       }, 0)
     },
     totalEfectivoInternado() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' &&
         String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' &&
         venta.tipo_venta === 'Internado'
@@ -1427,7 +1482,7 @@ export default {
       }, 0)
     },
     totalEfectivoExterno() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' &&
         String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' &&
         venta.tipo_venta === 'Externo'
@@ -1435,21 +1490,33 @@ export default {
           : acc
       }, 0)
     },
+    totalEfectivoSeguro() {
+      return this.ventasFiltradas.reduce((acc, venta) => {
+        return venta.estado === 'Activo' &&
+        String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' &&
+        venta.tipo_venta === 'Seguro'
+          ? acc + parseFloat(venta.total || 0)
+          : acc
+      }, 0)
+    },
     totalVentasActivas() {
-      return this.ventas.reduce((acc, venta) => {
+      return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo'
           ? acc + parseFloat(venta.total || 0)
           : acc
       }, 0)
     },
     ventasActivasCount() {
-      return this.ventas.filter(venta => venta.estado === 'Activo').length
+      return this.ventasFiltradas.filter(venta => venta.estado === 'Activo').length
     },
     totalInternos() {
-      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Internado' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+      return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Internado' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     },
     totalExternos() {
-      return this.ventas.reduce((acc, venta) => venta.tipo_venta === 'Externo' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+      return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Externo' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+    },
+    totalSeguros() {
+      return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Seguro' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     }
   }
 }

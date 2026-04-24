@@ -176,7 +176,7 @@
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta"
-                          :options="['Internado', 'Externo']"/>
+                          :options="['Internado', 'Externo', 'Seguro']"/>
               </div>
               <!-- 🔵 Doctor -->
               <div class="col-12 col-md-6 q-pa-xs">
@@ -302,9 +302,31 @@
         </q-card-section>
 
         <q-card-section>
-          <div class="q-mb-sm text-subtitle2">
-            Producto: <b>{{ $filters.textUpper(loteProducto?.nombre || '') }}</b>
-          </div>
+          <q-card flat bordered class="q-mb-sm">
+            <q-card-section class="q-pa-sm">
+              <div class="row items-center q-col-gutter-sm">
+                <div class="col-auto">
+                  <q-avatar rounded size="56px">
+                    <img :src="`${$url}../images/${loteProducto?.imagen}`" alt="producto"/>
+                  </q-avatar>
+                </div>
+                <div class="col">
+                  <div class="text-caption text-grey-7">Producto seleccionado</div>
+                  <div class="text-subtitle2 text-weight-bold">
+                    {{ $filters.textUpper(loteProducto?.nombre || '') }}
+                  </div>
+                  <div class="row q-gutter-sm q-mt-xs">
+                    <q-chip dense size="sm" color="blue-1" text-color="blue-9" icon="inventory_2">
+                      {{ lotes.length }} lote(s)
+                    </q-chip>
+                    <q-chip dense size="sm" color="teal-1" text-color="teal-9" icon="analytics">
+                      Max stock por lote: {{ maxLoteDisponible }}
+                    </q-chip>
+                  </div>
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
 
           <q-markup-table dense flat bordered wrap-cells>
             <thead>
@@ -313,6 +335,7 @@
               <th>Lote</th>
               <th>Vencimiento</th>
               <th>Disponible</th>
+              <th>Stock</th>
               <!--              <th>Precio venta</th>-->
               <th>Elegir</th>
             </tr>
