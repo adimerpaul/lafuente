@@ -16,6 +16,7 @@ const routes = [
       { path: 'compras-create', name: 'compras-create', component: () => import('pages/compras/ComprasCreate.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'productos-vencer', name: 'productos-vencer', component: () => import('pages/productos/ProductosVencer.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'productos-vencidos', name: 'productos-vencidos', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
+      { path: 'reportes/farmacia', name: 'reportes-farmacia', component: () => import('pages/reportes/ReporteFarmacia.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'institucional/productos', name: 'productos-institucional', component: () => import('pages/productos/Productos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/venta', name: 'venta-institucional', component: () => import('pages/ventas/Ventas.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/ventaNuevo', name: 'ventaNuevo-institucional', component: () => import('pages/ventas/VentaNew.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
@@ -23,6 +24,7 @@ const routes = [
       { path: 'institucional/compras-create', name: 'compras-create-institucional', component: () => import('pages/compras/ComprasCreate.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/productos-vencer', name: 'productos-vencer-institucional', component: () => import('pages/productos/ProductosVencer.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/productos-vencidos', name: 'productos-vencidos-institucional', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
+      { path: 'institucional/reportes/farmacia', name: 'reportes-farmacia-institucional', component: () => import('pages/reportes/ReporteFarmacia.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       // doctores
       { path: 'doctores', name: 'doctores', component: () => import('pages/doctores/Doctores.vue'), meta: { requiresAuth: true } },
       { path: 'aranceles', name: 'aranceles', component: () => import('pages/aranceles/Aranceles.vue'), meta: { requiresAuth: true } },

@@ -198,6 +198,14 @@ export default {
           ]
         },
         {
+          title: 'Reportes',
+          icon: 'assessment',
+          links: [
+            { title: 'Reporte farmacia', icon: 'summarize', link: '/reportes/farmacia', can: 'Reportes farmacia' },
+            { title: 'Reporte farmacia institucional', icon: 'summarize', link: '/institucional/reportes/farmacia', can: 'Reportes farmacia institucional' },
+          ]
+        },
+        {
           title: 'Operaciones',
           icon: 'swapHoriz',
           links: [

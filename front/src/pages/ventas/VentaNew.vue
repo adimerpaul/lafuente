@@ -138,7 +138,7 @@
               </q-markup-table>
 
               <q-btn
-                label="Realizar venta"
+                :label="esModoGasto ? 'Registrar gasto' : 'Realizar venta'"
                 color="positive"
                 class="full-width"
                 no-caps
@@ -156,7 +156,7 @@
     <q-dialog v-model="ventaDialog">
       <q-card style="max-width: 750px; width: 90vw">
         <q-card-section class="q-pb-none row items-center">
-          <div class="text-h6">Nueva venta</div>
+          <div class="text-h6">{{ esModoGasto ? 'Nuevo gasto' : 'Nueva venta' }}</div>
           <q-space/>
           <q-btn flat round dense icon="close" @click="ventaDialog = false"/>
         </q-card-section>
@@ -176,7 +176,7 @@
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta"
-                          :options="['Internado', 'Externo', 'Seguro']"/>
+                          :options="tiposVentaDialogOptions"/>
               </div>
               <!-- 🔵 Doctor -->
               <div class="col-12 col-md-6 q-pa-xs">
@@ -283,7 +283,7 @@
               </div>
 
               <div class="col-12 q-pa-xs">
-                <q-btn label="Realizar venta" color="positive" class="full-width" no-caps :loading="loading"
+                <q-btn :label="esModoGasto ? 'Registrar gasto' : 'Realizar venta'" color="positive" class="full-width" no-caps :loading="loading"
                        type="submit"/>
               </div>
             </div>
@@ -410,6 +410,7 @@ import moment from "moment";
 export default {
   name: "VentasNew",
   data() {
+    const esModoGasto = String(this.$route.query?.modo || '').toLowerCase() === 'gasto'
     return {
       doctores: [],
       codigoTipoDocumentoIdentidades: [
@@ -426,7 +427,7 @@ export default {
         nit: "0",
         nombre: "SN",
         codigoTipoDocumentoIdentidad: 1,
-        tipo_venta: "Internado",
+        tipo_venta: esModoGasto ? "Egreso" : "Internado",
         tipo_pago: "Efectivo",
         facturado: false,
         numero_factura: "",
@@ -484,6 +485,19 @@ export default {
   },
 
   methods: {
+    resetVentaBase() {
+      return {
+        nit: "0",
+        nombre: "SN",
+        codigoTipoDocumentoIdentidad: 1,
+        tipo_venta: this.esModoGasto ? "Egreso" : "Internado",
+        tipo_pago: "Efectivo",
+        facturado: false,
+        numero_factura: "",
+        doctor_id: null,
+        comentario: "",
+      }
+    },
     doctoresGet() {                // 🔵 obtiene doctores
       this.$axios.get('doctores')
         .then(res => {
@@ -588,8 +602,8 @@ export default {
       this.ventaDialog = true;
       // reset efectivo
       this.efectivo = '';
-      // defecto externo
-      this.venta.tipo_venta = 'Externo';
+      // defecto externo, y para modo gasto usar egreso
+      this.venta.tipo_venta = this.esModoGasto ? 'Egreso' : 'Externo';
       this.venta.fecha = moment().format('YYYY-MM-DD');
       if (!this.venta.facturado) this.venta.numero_factura = '';
     },
@@ -644,19 +658,10 @@ export default {
         farmacia_tipo: this.farmaciaTipo,
       }).then((res) => {
         this.ventaDialog = false;
-        this.$alert?.success?.("Venta realizada con éxito");
+        this.$alert?.success?.(this.esModoGasto ? "Gasto registrado con éxito" : "Venta realizada con éxito");
         this.productosVentas = [];
 
-        this.venta = {
-          nit: "0",
-          nombre: "SN",
-          codigoTipoDocumentoIdentidad: 1,
-          tipo_venta: "Internado",
-          tipo_pago: "Efectivo",
-          facturado: false,
-          numero_factura: "",
-          comentario: "",
-        };
+        this.venta = this.resetVentaBase();
         Imprimir.reciboVentaSimple(res.data);
         this.receta_id = null;
         this.$nextTick(() => this.$refs.inputBuscarProducto?.focus());
@@ -682,11 +687,17 @@ export default {
   },
 
   computed: {
+    esModoGasto() {
+      return String(this.$route.query?.modo || '').toLowerCase() === 'gasto'
+    },
     farmaciaTipo() {
       return this.$route.meta?.farmaciaTipo || 'Farmacia'
     },
     farmaciaNombre() {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
+    tiposVentaDialogOptions() {
+      return this.esModoGasto ? ['Egreso'] : ['Internado', 'Externo', 'Seguro']
     },
     totalVenta() {
       return this.productosVentas.reduce(

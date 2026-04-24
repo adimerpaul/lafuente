@@ -33,6 +33,8 @@ class PermissionSeeder extends Seeder
             'Compras nuevas',
             'Compras nuevas farmacia',
             'Compras nuevas farmacia institucional',
+            'Reportes farmacia',
+            'Reportes farmacia institucional',
             'Productos por vencer',
             'Productos por vencer farmacia',
             'Productos por vencer farmacia institucional',

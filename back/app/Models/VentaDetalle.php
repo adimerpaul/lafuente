@@ -39,4 +39,7 @@ class VentaDetalle extends Model{
     function producto(){
         return $this->belongsTo(Producto::class);
     }
+    function compraDetalle(){
+        return $this->belongsTo(CompraDetalle::class);
+    }
 }

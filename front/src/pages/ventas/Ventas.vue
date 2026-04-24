@@ -165,6 +165,9 @@
               <div class="col-12 col-md-2 text-right">
                 <q-btn color="positive" :label="`Nueva venta ${farmaciaNombre}`"  no-caps  icon="add_circle_outline" :loading="loading" :to="ventaNuevaPath" />
               </div>
+              <div class="col-12 col-md-2 text-right">
+                <q-btn color="negative" :label="`Registrar gasto ${farmaciaNombre}`" no-caps icon="remove_circle_outline" :loading="savingGasto" @click="openGastoDialog" />
+              </div>
             </div>
           </q-card-section>
         </q-card>
@@ -240,7 +243,7 @@
             <q-chip :color="venta.estado === 'Activo' ? 'positive' : 'negative'" class="text-white" dense>{{ venta.estado }}</q-chip>
           </td>
           <td class="text-bold">
-            {{ venta.total }}
+            {{ formatVentaTotal(venta) }}
             <q-chip size="10px" :color="venta.tipo_pago === 'Efectivo' ? 'green' : 'blue'" class="text-white" dense>{{ venta.tipo_pago.charAt(0) }}</q-chip>
           </td>
           <td>
@@ -999,6 +1002,33 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="gastoDialog" persistent>
+      <q-card style="max-width: 520px; width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Registrar gasto</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="gastoDialog = false" />
+        </q-card-section>
+        <q-card-section class="q-col-gutter-sm row">
+          <div class="col-12 col-md-6">
+            <q-input v-model="gastoForm.fecha" dense outlined type="date" label="Fecha" />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-select v-model="gastoForm.tipo_pago" dense outlined label="Tipo de pago" :options="['Efectivo', 'QR']" />
+          </div>
+          <div class="col-12">
+            <q-input v-model.number="gastoForm.total" dense outlined type="number" min="0.01" step="0.01" label="Monto del gasto (Bs)" />
+          </div>
+          <div class="col-12">
+            <q-input v-model="gastoForm.comentario" dense outlined autogrow type="textarea" label="Detalle del gasto" />
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat color="negative" label="Cancelar" no-caps @click="gastoDialog = false" :disable="savingGasto" />
+          <q-btn color="primary" label="Guardar gasto" no-caps @click="submitGasto" :loading="savingGasto" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <div id="myElement" class="hidden"></div>
   </q-page>
 </template>
@@ -1021,6 +1051,14 @@ export default {
       users: [],
       user: '',
       tipoVenta: '',
+      gastoDialog: false,
+      savingGasto: false,
+      gastoForm: {
+        fecha: moment().format('YYYY-MM-DD'),
+        tipo_pago: 'Efectivo',
+        total: null,
+        comentario: '',
+      },
       filter: '',
       roles: ['Doctor', 'Enfermera', 'Administrativo', 'Secretaria'],
       columns: [
@@ -1059,6 +1097,12 @@ export default {
   mounted() {
     this.ventasGet()
     this.usersGet()
+  },
+  watch: {
+    farmaciaTipo(nuevo, anterior) {
+      if (nuevo === anterior) return
+      this.ventasGet()
+    }
   },
   methods: {
     devolverProducto(ventaId, ventaDetalleId, cantidadVendido) {
@@ -1281,6 +1325,45 @@ export default {
         this.loading = false;
       });
     },
+    openGastoDialog() {
+      this.gastoForm = {
+        fecha: moment().format('YYYY-MM-DD'),
+        tipo_pago: 'Efectivo',
+        total: null,
+        comentario: '',
+      }
+      this.gastoDialog = true
+    },
+    submitGasto() {
+      const total = Number(this.gastoForm.total || 0)
+      if (total <= 0) {
+        this.$alert.error('El monto del gasto debe ser mayor a 0')
+        return
+      }
+      this.savingGasto = true
+      this.$axios.post('ventas', {
+        ci: '0',
+        nombre: 'SN',
+        codigoTipoDocumentoIdentidad: 1,
+        tipo_venta: 'Egreso',
+        tipo_pago: this.gastoForm.tipo_pago || 'Efectivo',
+        fecha: this.gastoForm.fecha || moment().format('YYYY-MM-DD'),
+        comentario: this.gastoForm.comentario || '',
+        total,
+        productos: [],
+        farmacia_tipo: this.farmaciaTipo,
+        facturado: false,
+        numero_factura: null,
+      }).then(() => {
+        this.$alert.success('Gasto registrado correctamente')
+        this.gastoDialog = false
+        this.ventasGet()
+      }).catch(error => {
+        this.$alert.error(error.response?.data?.message || 'No se pudo registrar el gasto')
+      }).finally(() => {
+        this.savingGasto = false
+      })
+    },
     getVentasExportables(tipoVenta = null) {
       return (this.ventasFiltradas || []).filter(v => {
         const esActiva = String(v.estado).toLowerCase() === 'activo';
@@ -1344,7 +1427,15 @@ export default {
     getTipoVentaColor(tipoVenta) {
       if (tipoVenta === 'Internado') return 'indigo'
       if (tipoVenta === 'Seguro') return 'purple'
+      if (tipoVenta === 'Egreso') return 'red'
       return 'orange'
+    },
+    signedVentaTotal(venta) {
+      const total = parseFloat(venta?.total || 0)
+      return venta?.tipo_venta === 'Egreso' ? -total : total
+    },
+    formatVentaTotal(venta) {
+      return this.signedVentaTotal(venta).toFixed(2)
     },
     usersGet() {
       this.$axios.get('users').then(res => {
@@ -1424,7 +1515,8 @@ export default {
         { label: 'Todos', value: '' },
         { label: 'Internado', value: 'Internado' },
         { label: 'Externo', value: 'Externo' },
-        { label: 'Seguro', value: 'Seguro' }
+        { label: 'Seguro', value: 'Seguro' },
+        { label: 'Egreso', value: 'Egreso' }
       ]
     },
     ventasFiltradas() {
@@ -1434,7 +1526,7 @@ export default {
     totalQr() {
       return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'QR'
-          ? acc + parseFloat(venta.total || 0)
+          ? acc + this.signedVentaTotal(venta)
           : acc
       }, 0)
     },
@@ -1468,7 +1560,7 @@ export default {
     totalEfectivo() {
       return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'EFECTIVO'
-          ? acc + parseFloat(venta.total || 0)
+          ? acc + this.signedVentaTotal(venta)
           : acc
       }, 0)
     },
@@ -1502,7 +1594,7 @@ export default {
     totalVentasActivas() {
       return this.ventasFiltradas.reduce((acc, venta) => {
         return venta.estado === 'Activo'
-          ? acc + parseFloat(venta.total || 0)
+          ? acc + this.signedVentaTotal(venta)
           : acc
       }, 0)
     },

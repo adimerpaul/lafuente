@@ -135,6 +135,7 @@ Route::get('receta/{id}/pdf', [App\Http\Controllers\RecetaController::class, 'ge
 
 Route::get('pacientes/{paciente}/proforma-pdf', [\App\Http\Controllers\VentaController::class, 'proformaPacientePdf']);
 Route::get('ventas/pdf', [\App\Http\Controllers\VentaController::class, 'ventasPdf']);
+Route::get('reportes/farmacia/pdf', [\App\Http\Controllers\VentaController::class, 'reporteFarmaciaPdf']);
 Route::get('formularios-control/{formularioControl}/pdf', [\App\Http\Controllers\FormularioControlController::class, 'generatePdf']);
 
 Route::get('/inventario-inicial-medicamentos/pdf', [\App\Http\Controllers\ReporteInventarioController::class, 'inventarioInicialMedicamentosPdf']);

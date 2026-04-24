@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Compra;
 use App\Models\CompraDetalle;
 use App\Models\Producto;
 use App\Models\Receta;
@@ -31,7 +32,7 @@ class VentaController extends Controller
         $fechaInicio = $request->input('fechaInicio');
         $fechaFin    = $request->input('fechaFin');
         $user        = $request->input('user');
-        $tipoVenta   = $request->input('tipoVenta');
+        $tipoVenta   = $request->input('tipoVenta', $request->input('tipo_venta'));
         $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
         $q = Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')
@@ -322,17 +323,26 @@ class VentaController extends Controller
         $totalExterno = $ventas
             ->where('tipo_venta', 'Externo')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalSeguro = $ventas
+            ->where('tipo_venta', 'Seguro')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
         $totalQrInternado = $ventas
             ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'QR' && $venta->tipo_venta === 'Internado')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
         $totalQrExterno = $ventas
             ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'QR' && $venta->tipo_venta === 'Externo')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalQrSeguro = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'QR' && $venta->tipo_venta === 'Seguro')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
         $totalEfectivoInternado = $ventas
             ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'EFECTIVO' && $venta->tipo_venta === 'Internado')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
         $totalEfectivoExterno = $ventas
             ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'EFECTIVO' && $venta->tipo_venta === 'Externo')
+            ->sum(fn($venta) => floatval($venta->total ?? 0));
+        $totalEfectivoSeguro = $ventas
+            ->filter(fn($venta) => strtoupper((string) $venta->tipo_pago) === 'EFECTIVO' && $venta->tipo_venta === 'Seguro')
             ->sum(fn($venta) => floatval($venta->total ?? 0));
 
         $hoy = now();
@@ -342,6 +352,7 @@ class VentaController extends Controller
         $titulo = match ($tipoVenta) {
             'Internado' => 'REPORTE DE VENTAS INTERNAS',
             'Externo' => 'REPORTE DE VENTAS EXTERNAS',
+            'Seguro' => 'REPORTE DE VENTAS SEGURO',
             default => 'REPORTE GENERAL DE VENTAS',
         };
 
@@ -350,10 +361,13 @@ class VentaController extends Controller
             'totalGeneral' => $totalGeneral,
             'totalInternado' => $totalInternado,
             'totalExterno' => $totalExterno,
+            'totalSeguro' => $totalSeguro,
             'totalQrInternado' => $totalQrInternado,
             'totalQrExterno' => $totalQrExterno,
+            'totalQrSeguro' => $totalQrSeguro,
             'totalEfectivoInternado' => $totalEfectivoInternado,
             'totalEfectivoExterno' => $totalEfectivoExterno,
+            'totalEfectivoSeguro' => $totalEfectivoSeguro,
             'fechaInicio' => $request->input('fechaInicio'),
             'fechaFin' => $request->input('fechaFin'),
             'userId' => $userId,
@@ -364,6 +378,72 @@ class VentaController extends Controller
         ])->setPaper('letter');
 
         return $pdf->stream('ventas_reporte.pdf');
+    }
+
+    public function reporteFarmaciaPdf(Request $request)
+    {
+        $ventas = $this->ventasIndexQuery($request)
+            ->where('estado', 'Activo')
+            ->with(['ventaDetalles.compraDetalle'])
+            ->get();
+
+        $internado = $ventas->where('tipo_venta', 'Internado')->sum(fn($v) => (float)($v->total ?? 0));
+        $interno = $ventas->where('tipo_venta', 'Interno')->sum(fn($v) => (float)($v->total ?? 0));
+        $externo = $ventas->where('tipo_venta', 'Externo')->sum(fn($v) => (float)($v->total ?? 0));
+        $seguro = $ventas->where('tipo_venta', 'Seguro')->sum(fn($v) => (float)($v->total ?? 0));
+        $egreso = $ventas->where('tipo_venta', 'Egreso')->sum(fn($v) => (float)($v->total ?? 0));
+
+        $ingresos = $internado + $interno + $externo + $seguro;
+        $fechaInicio = $request->input('fechaInicio');
+        $fechaFin = $request->input('fechaFin');
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+
+        $comprasQuery = Compra::query()
+            ->where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo);
+        if ($fechaInicio && $fechaFin) {
+            $comprasQuery->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        }
+        $comprasFarmacia = (float)$comprasQuery->sum('total');
+
+        $gastos = $egreso + $comprasFarmacia;
+        $saldoFavor = $ingresos - $gastos;
+
+        $costoSegunIngreso = 0.0;
+        foreach ($ventas as $venta) {
+            if ($venta->tipo_venta === 'Egreso') continue;
+            foreach (($venta->ventaDetalles ?? []) as $detalle) {
+                $cantidad = (float)($detalle->cantidad ?? 0);
+                $costoUnitario = (float)optional($detalle->compraDetalle)->precio;
+                $costoSegunIngreso += $cantidad * $costoUnitario;
+            }
+        }
+
+        $utilidadFarmacia = $ingresos - $costoSegunIngreso;
+        $hoy = now();
+        $titulo = 'REPORTE DE FARMACIA';
+
+        $pdf = Pdf::loadView('pdf.farmacia_reporte', [
+            'titulo' => $titulo,
+            'hoy' => $hoy,
+            'fechaInicio' => $fechaInicio,
+            'fechaFin' => $fechaFin,
+            'farmaciaTipo' => $farmaciaTipo,
+            'internado' => $internado,
+            'interno' => $interno,
+            'externo' => $externo,
+            'seguro' => $seguro,
+            'egreso' => $egreso,
+            'ingresos' => $ingresos,
+            'comprasFarmacia' => $comprasFarmacia,
+            'gastos' => $gastos,
+            'saldoFavor' => $saldoFavor,
+            'costoSegunIngreso' => $costoSegunIngreso,
+            'utilidadFarmacia' => $utilidadFarmacia,
+            'totalVentas' => $ingresos,
+        ])->setPaper('letter');
+
+        return $pdf->stream('reporte_farmacia.pdf');
     }
     public function searchCliente(Request $request)
     {
@@ -402,7 +482,12 @@ class VentaController extends Controller
                 'hora'       => date('H:i:s'),
                 'estado'     => 'Activo',
                 'tipo_comprobante' => 'Venta',
-                'tipo_venta' => ($request->input('tipo_venta')=='Interno' || $request->input('tipo_venta')=='Internado')?'Internado':'Externo',
+                'tipo_venta' => match ($request->input('tipo_venta')) {
+                    'Interno', 'Internado' => 'Internado',
+                    'Seguro' => 'Seguro',
+                    'Egreso' => 'Egreso',
+                    default => 'Externo',
+                },
                 'facturado' => filter_var($request->input('facturado', false), FILTER_VALIDATE_BOOLEAN),
             ]);
             /** @var Venta $venta */
@@ -414,8 +499,14 @@ class VentaController extends Controller
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
             $productos = (array)$request->input('productos', []);
             $total = 0.0;
+            $esEgreso = $venta->tipo_venta === 'Egreso';
 
-            foreach ($productos as $item) {
+            if ($esEgreso) {
+                $total = (float)$request->input('total', 0);
+                if ($total <= 0) {
+                    abort(422, 'El monto del egreso debe ser mayor a 0.');
+                }
+            } else foreach ($productos as $item) {
                 $productoId = (int)($item['producto_id'] ?? 0);
                 $cantidad   = (float)($item['cantidad'] ?? 0);
                 $precio     = (float)($item['precio'] ?? 0);

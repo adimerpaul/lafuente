@@ -399,6 +399,12 @@ export default {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
     }
   },
+  watch: {
+    farmaciaTipo (nuevo, anterior) {
+      if (nuevo === anterior) return
+      this.productosGet()
+    }
+  },
   methods: {
     getExportMeta (mode) {
       const existing = mode === 'existing'
