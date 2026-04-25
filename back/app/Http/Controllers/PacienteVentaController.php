@@ -9,12 +9,31 @@ use Illuminate\Http\Request;
 class PacienteVentaController extends Controller{
     function update(Request $request,$paciente_venta_id){
         $paciente_venta = PacienteVenta::find($paciente_venta_id);
+        if (!$paciente_venta) {
+            return response()->json(['message' => 'La relación paciente-venta no existe'], 404);
+        }
+
         $venta = Venta::find($paciente_venta->venta_id);
-        if(!$venta){
+        if (!$venta) {
             return response()->json(['message' => 'La venta no existe'], 404);
         }
-        $venta->pagado_interno = $request->pagado_interno;
+
+        if (!in_array($venta->tipo_venta, ['Internado', 'Interno'])) {
+            return response()->json(['message' => 'Solo se puede confirmar pagado interno en ventas de internación'], 422);
+        }
+
+        $nuevoValor = (int) $request->input('pagado_interno', 0);
+        if ($nuevoValor !== 1) {
+            return response()->json(['message' => 'El estado pagado interno solo se puede confirmar en "Sí"'], 422);
+        }
+
+        if ((int)$venta->pagado_interno === 1 && $nuevoValor === 0) {
+            return response()->json(['message' => 'Una venta ya confirmada como pagada no puede revertirse'], 422);
+        }
+
+        $venta->pagado_interno = 1;
         $venta->save();
+
         return response()->json($venta);
     }
     function store(Request $request){

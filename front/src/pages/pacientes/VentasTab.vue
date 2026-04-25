@@ -86,13 +86,11 @@
         <q-item-section side class="items-end">
           <span class="text-bold q-mb-xs">{{ pv.user?.name }}</span>
           <q-toggle
-            v-model="pv.venta.pagado_interno"
+            :model-value="Number(pv.venta.pagado_interno) === 1"
             label="Pagado Interno"
             color="positive"
-            :true-value="1"
-            :false-value="0"
-            @update:model-value="updateVenta(pv)"
-            :loading="$store.loading"
+            @update:model-value="onPagadoInternoToggle(pv, $event)"
+            :disable="Number(pv.venta.pagado_interno) === 1 || $store.loading"
           />
           <q-btn
             icon="delete"
@@ -710,11 +708,23 @@ export default {
     },
 
     // === Acciones sobre ventas ya vinculadas ===
-    updateVenta (pv) {
+    onPagadoInternoToggle (pv, checked) {
+      const yaPagado = Number(pv?.venta?.pagado_interno) === 1
+      if (yaPagado) {
+        this.$q.notify({ type: 'warning', message: 'Esta venta ya fue confirmada como pagada y no puede revertirse' })
+        return
+      }
+      if (!checked) return
+      this.$alert.dialog('¿Confirmar "Pagado Interno"? Esta acción no se podrá deshacer.').onOk(() => {
+        this.updateVenta(pv, 1)
+      })
+    },
+    updateVenta (pv, pagadoInterno = 1) {
       this.$store.loading = true;
       this.$axios.put("paciente_ventas/" + pv.id, {
-        pagado_interno: pv.venta.pagado_interno
+        pagado_interno: pagadoInterno
       }).then(() => {
+        pv.venta.pagado_interno = 1
         this.$emit("pacienteGet");
         this.$alert?.success?.("Venta actualizada correctamente");
       }).catch(error => {

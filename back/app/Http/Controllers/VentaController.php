@@ -33,6 +33,7 @@ class VentaController extends Controller
         $fechaFin    = $request->input('fechaFin');
         $user        = $request->input('user');
         $tipoVenta   = $request->input('tipoVenta', $request->input('tipo_venta'));
+        $facturado   = $request->input('facturado');
         $farmaciaTipo = $this->resolveFarmaciaTipo($request);
 
         $q = Venta::with('user', 'cliente', 'ventaDetalles.producto', 'doctor')
@@ -40,6 +41,7 @@ class VentaController extends Controller
             ->when($fechaInicio && $fechaFin, fn($qq) => $qq->whereBetween('fecha', [$fechaInicio, $fechaFin]))
             ->when($user, fn($qq) => $qq->where('user_id', $user))
             ->when($tipoVenta, fn($qq) => $qq->where('tipo_venta', $tipoVenta))
+            ->when($facturado !== null && $facturado !== '', fn($qq) => $qq->where('facturado', filter_var($facturado, FILTER_VALIDATE_BOOLEAN)))
             ->orderBy('created_at', 'desc');
 
         return $q;
@@ -347,6 +349,7 @@ class VentaController extends Controller
 
         $hoy = now();
         $tipoVenta = $request->input('tipoVenta');
+        $facturado = $request->input('facturado');
         $userId = $request->input('user');
         $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
         $titulo = match ($tipoVenta) {
@@ -355,6 +358,9 @@ class VentaController extends Controller
             'Seguro' => 'REPORTE DE VENTAS SEGURO',
             default => 'REPORTE GENERAL DE VENTAS',
         };
+        if ($facturado !== null && $facturado !== '') {
+            $titulo .= filter_var($facturado, FILTER_VALIDATE_BOOLEAN) ? ' - FACTURADAS' : ' - NO FACTURADAS';
+        }
 
         $pdf = Pdf::loadView('pdf.ventas_reporte', [
             'ventas' => $ventas,

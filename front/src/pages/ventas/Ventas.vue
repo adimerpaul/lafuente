@@ -111,7 +111,7 @@
                 <q-btn color="primary" label="Buscar"  no-caps  icon="search" :loading="loading" @click="ventasGet()" />
               </div>
               <div class="col-12 col-md-2 text-right">
-                <q-btn-dropdown color="primary" label="Exportar" no-caps  >
+                <q-btn-dropdown color="primary" label="Reportes" no-caps  >
                   <q-item clickable v-ripple @click="exportExcelPorTipo('Externo')" v-close-popup>
                     <q-item-section avatar>
                       <q-icon name="file_download" />
@@ -136,6 +136,20 @@
                     </q-item-section>
                     <q-item-section>Excel todos</q-item-section>
                   </q-item>
+                  <q-separator />
+                  <q-item clickable v-ripple @click="exportExcelPorTipo(null, true)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel facturados</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo(null, false)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel no facturados</q-item-section>
+                  </q-item>
+                  <q-separator />
                   <q-item clickable v-ripple @click="exportPdfPorTipo('Internado')" v-close-popup>
                     <q-item-section avatar>
                       <q-icon name="picture_as_pdf" />
@@ -159,6 +173,19 @@
                       <q-icon name="picture_as_pdf" />
                     </q-item-section>
                     <q-item-section>PDF todos</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item clickable v-ripple @click="exportPdfPorTipo(null, true)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF facturados</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo(null, false)" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF no facturados</q-item-section>
                   </q-item>
                 </q-btn-dropdown>
               </div>
@@ -1364,24 +1391,32 @@ export default {
         this.savingGasto = false
       })
     },
-    getVentasExportables(tipoVenta = null) {
+    facturadoLabel(facturado = null) {
+      if (facturado === true) return 'Facturados'
+      if (facturado === false) return 'NoFacturados'
+      return 'Todos'
+    },
+    getVentasExportables(tipoVenta = null, facturado = null) {
       return (this.ventasFiltradas || []).filter(v => {
         const esActiva = String(v.estado).toLowerCase() === 'activo';
         const coincideTipo = tipoVenta ? v.tipo_venta === tipoVenta : true;
-        return esActiva && coincideTipo;
+        const coincideFacturado = facturado === null ? true : !!v.facturado === facturado;
+        return esActiva && coincideTipo && coincideFacturado;
       });
     },
-    exportExcelPorTipo(tipoVenta = null) {
-      const ventasActivas = this.getVentasExportables(tipoVenta);
+    exportExcelPorTipo(tipoVenta = null, facturado = null) {
+      const ventasActivas = this.getVentasExportables(tipoVenta, facturado);
       const sufijoTipo = tipoVenta || 'Todos';
+      const sufijoFacturado = this.facturadoLabel(facturado);
 
       if (ventasActivas.length === 0) {
-        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''} para exportar` });
+        const detalleFacturado = facturado === null ? '' : facturado ? ' facturadas' : ' no facturadas'
+        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''}${detalleFacturado} para exportar` });
         return;
       }
 
       const data = [{
-        sheet: `Ventas ${sufijoTipo}`,
+        sheet: `Ventas ${sufijoTipo} ${sufijoFacturado}`,
         columns: [
           { label: "ID",        value: "id" },
           { label: "Fecha",     value: "fecha" },
@@ -1397,12 +1432,13 @@ export default {
         content: ventasActivas
       }];
 
-      Excel.export(data, `Ventas_Activas_${sufijoTipo}`);
+      Excel.export(data, `Ventas_Activas_${sufijoTipo}_${sufijoFacturado}`);
     },
-    exportPdfPorTipo(tipoVenta = null) {
-      const ventas = this.getVentasExportables(tipoVenta);
+    exportPdfPorTipo(tipoVenta = null, facturado = null) {
+      const ventas = this.getVentasExportables(tipoVenta, facturado);
       if (ventas.length === 0) {
-        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''} para exportar en PDF` });
+        const detalleFacturado = facturado === null ? '' : facturado ? ' facturadas' : ' no facturadas'
+        this.$q.notify({ type: 'warning', message: `No hay ventas activas${tipoVenta ? ` de tipo ${tipoVenta}` : ''}${detalleFacturado} para exportar en PDF` });
         return;
       }
       const params = new URLSearchParams({
@@ -1412,6 +1448,7 @@ export default {
         farmacia_tipo: this.farmaciaTipo,
       });
       if (tipoVenta) params.append('tipoVenta', tipoVenta);
+      if (facturado !== null) params.append('facturado', facturado ? '1' : '0');
 
       const url = `${this.$url}/../ventas/pdf?${params.toString()}`;
       window.open(url, '_blank');

@@ -252,7 +252,14 @@ export default {
       return this.$route.path
     },
     visibleSections () {
-      return this.menuSections.filter(section => this.groupHasAccess(section))
+      const order = ['General', 'ClÃ­nica', 'Clínica', 'Farmacia', 'Farmacia Institucional', 'Operaciones', 'Financiera', 'Reportes']
+      const orderIndex = (title) => {
+        const index = order.indexOf(title)
+        return index === -1 ? Number.MAX_SAFE_INTEGER : index
+      }
+      return this.menuSections
+        .filter(section => this.groupHasAccess(section))
+        .sort((a, b) => orderIndex(a.title) - orderIndex(b.title))
     }
   },
   methods: {

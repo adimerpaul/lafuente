@@ -201,6 +201,7 @@
 
         $tipoVenta = $venta->tipo_venta ?? '';
         if ($tipoVenta === 'Interno') $tipoVenta = 'Internado';
+        $pagadoInternado = (int)($venta->pagado_interno ?? 0) === 1 ? 'SI' : 'NO';
 
         $doctor = $venta->doctor ?? null;
 
@@ -219,6 +220,8 @@
                 @endif
                 &nbsp; | &nbsp;
                 <b>TIPO:</b> {{ $tipoVenta ?: '—' }}
+                &nbsp; | &nbsp;
+                <b>PAGADO INTERNADO:</b> {{ $pagadoInternado }}
                 &nbsp; | &nbsp;
                 <b>DOCTOR(A):</b>
                 {{ $doctor ? $doctor->nombre : '—' }}
