@@ -15,7 +15,7 @@
     >
       <template #top-right>
         <div class="row items-center q-col-gutter-sm">
-          <div class="col-auto">
+          <div class="col-auto" v-if="canModify">
             <q-btn color="primary" icon="add_circle_outline" label="Nuevo" no-caps outline @click="arancelNew" />
           </div>
           <div class="col-auto">
@@ -39,7 +39,7 @@
 
       <template #body-cell-actions="props">
         <q-td :props="props" class="text-left">
-          <q-btn-dropdown label="Opciones" no-caps size="10px" dense color="primary">
+          <q-btn-dropdown v-if="canModify" label="Opciones" no-caps size="10px" dense color="primary">
             <q-list>
               <q-item clickable v-close-popup @click="arancelEdit(props.row)">
                 <q-item-section avatar>
@@ -59,6 +59,7 @@
               </q-item>
             </q-list>
           </q-btn-dropdown>
+          <span v-else class="text-grey-7 text-caption">Ver solo</span>
         </q-td>
       </template>
 
@@ -161,17 +162,22 @@ export default {
       arancelDialog: false,
       dialogTitle: 'Nuevo',
       arancel: {},
+      canModify: false,
       columns: [
         { name: 'actions', label: 'Acciones', align: 'left' },
-        { name: 'categoria', label: 'Categoria', align: 'left', field: 'categoria', sortable: true },
         { name: 'nombre', label: 'Arancel', align: 'left', field: 'nombre', sortable: true },
-        { name: 'presentacion', label: 'Presentacion', align: 'left', field: 'presentacion', sortable: true },
         { name: 'precio', label: 'Precio', align: 'right', field: 'precio', sortable: true },
-        { name: 'activo', label: 'Estado', align: 'center', field: 'activo', sortable: true }
+        { name: 'activo', label: 'Estado', align: 'center', field: 'activo', sortable: true },
+        { name: 'categoria', label: 'Categoria', align: 'left', field: 'categoria', sortable: true },
+        { name: 'presentacion', label: 'Presentacion', align: 'left', field: 'presentacion', sortable: true }
       ]
     }
   },
   mounted () {
+    this.canModify = this.$store.user?.permissions?.includes('modificar aranceles') || false
+    if (!this.canModify) {
+      this.columns = this.columns.filter(col => col.name !== 'actions')
+    }
     this.arancelesGet()
   },
   methods: {

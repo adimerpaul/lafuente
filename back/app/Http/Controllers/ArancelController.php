@@ -27,6 +27,8 @@ class ArancelController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Arancel::class);
+
         $data = $request->validate([
             'codigo' => 'required|string|max:255|unique:aranceles,codigo',
             'categoria' => 'nullable|string|max:255',
@@ -44,6 +46,8 @@ class ArancelController extends Controller
 
     public function update(Request $request, Arancel $arancel)
     {
+        $this->authorize('update', $arancel);
+
         $data = $request->validate([
             'categoria' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
@@ -60,6 +64,8 @@ class ArancelController extends Controller
 
     public function destroy(Arancel $arancel)
     {
+        $this->authorize('delete', $arancel);
+
         $arancel->delete();
 
         return response()->json(null, 204);
