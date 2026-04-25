@@ -22,19 +22,26 @@ class PacienteVentaController extends Controller{
             return response()->json(['message' => 'Solo se puede confirmar pagado interno en ventas de internación'], 422);
         }
 
-        $nuevoValor = (int) $request->input('pagado_interno', 0);
+        $data = $request->validate([
+            'pagado_interno' => 'required|boolean',
+            'pagado_interno_fecha' => 'required|date',
+        ]);
+
+        $nuevoValor = (int) $data['pagado_interno'];
         if ($nuevoValor !== 1) {
             return response()->json(['message' => 'El estado pagado interno solo se puede confirmar en "Sí"'], 422);
         }
 
-        if ((int)$venta->pagado_interno === 1 && $nuevoValor === 0) {
+        if ((int)$venta->pagado_interno === 1) {
             return response()->json(['message' => 'Una venta ya confirmada como pagada no puede revertirse'], 422);
         }
 
         $venta->pagado_interno = 1;
+        $venta->pagado_interno_fecha = $data['pagado_interno_fecha'];
+        $venta->pagado_interno_user_id = $request->user()->id;
         $venta->save();
 
-        return response()->json($venta);
+        return response()->json($venta->load('pagadoInternoPor'));
     }
     function store(Request $request){
 //        verificar que ecista le venta

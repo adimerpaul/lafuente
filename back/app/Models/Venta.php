@@ -24,6 +24,8 @@ class Venta extends Model{
         'facturado',
         'numero_factura',
         'pagado_interno',
+        'pagado_interno_fecha',
+        'pagado_interno_user_id',
         'tipo',
         'traspaso_compra_id',
         'doctor_id',
@@ -55,5 +57,9 @@ class Venta extends Model{
     public function doctor()
     {
         return $this->belongsTo(\App\Models\Doctor::class, 'doctor_id');
+    }
+    public function pagadoInternoPor()
+    {
+        return $this->belongsTo(User::class, 'pagado_interno_user_id');
     }
 }

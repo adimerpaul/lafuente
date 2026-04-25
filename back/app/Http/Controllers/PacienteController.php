@@ -61,6 +61,7 @@ class PacienteController extends Controller{
             'diagnosticos.user',
             'pacienteVentas.user',
             'pacienteVentas.venta',
+            'pacienteVentas.venta.pagadoInternoPor',
             'cobros.user',
             'facturas.user',
             'pagos.user',

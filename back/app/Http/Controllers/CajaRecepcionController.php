@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Paciente;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CajaRecepcion;
 use Illuminate\Http\Request;
@@ -306,6 +307,103 @@ class CajaRecepcionController extends Controller
         return response()->json(null, 204);
     }
 
+    public function liquidacionPacientePdf(Request $request, Paciente $paciente)
+    {
+        $fechaInicio = $request->get('fechaInicio');
+        $fechaFin = $request->get('fechaFin');
+        $tipoImpresion = $request->get('tipo_impresion', 'todo');
+
+        $query = CajaRecepcion::with(['doctor', 'cobradoPor'])
+            ->where('paciente_id', $paciente->id)
+            ->where('estado', '!=', 'Anulado');
+
+        if ($tipoImpresion === 'pagado_luego') {
+            $query->whereNotNull('fecha_cobro')
+                ->when($fechaInicio, fn ($q) => $q->whereDate('fecha_cobro', '>=', $fechaInicio))
+                ->when($fechaFin, fn ($q) => $q->whereDate('fecha_cobro', '<=', $fechaFin));
+        } else {
+            $query->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
+                ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin));
+
+            if ($tipoImpresion === 'paga_ahora') {
+                $query->where('estado_cobro', 'Pagado');
+            }
+        }
+
+        $items = $query->orderBy('fecha')->orderBy('id')->get();
+
+        $rowsClinica = $this->buildRowsFromFields($items, [
+            'Atencion medica' => 'costo_atencion_medica',
+            'Curacion' => 'costo_curacion',
+            'Inyectable' => 'costo_inyectable',
+            'Toma de presion' => 'costo_toma_presion',
+            'Ambulancia' => 'costo_ambulancia',
+            'Uso consultorio' => 'costo_uso_consultorio',
+            'Glicemia' => 'costo_glicemia',
+            'Certificado medico' => 'costo_certificado_medico',
+            'Sutura' => 'costo_sutura',
+            'Antisepticos' => 'costo_antisepticos',
+            'Cama' => 'costo_cama',
+            'Compania noche' => 'costo_compania_noche',
+            'Flebotomia' => 'costo_flebotomia',
+            'Sonda' => 'costo_sonda',
+            'Otros costos' => 'otros_costos',
+        ]);
+
+        $totalClinica = collect($rowsClinica)->sum('monto');
+        $totalFarmacia = (float) $items->sum(fn ($item) => (float) ($item->costo_farmacia ?? 0));
+
+        $rowsFarmacia = $items
+            ->filter(fn ($item) => (float) ($item->costo_farmacia ?? 0) > 0)
+            ->map(fn ($item) => [
+                'fecha' => (string) ($item->fecha ?? ''),
+                'detalle' => trim((string) ($item->nombre_factura ?: $item->numero_ficha ?: 'Consumo farmacia')),
+                'monto' => (float) ($item->costo_farmacia ?? 0),
+            ])
+            ->values()
+            ->all();
+
+        $rowsHonorarios = $items
+            ->filter(fn ($item) => (float) ($item->egreso ?? 0) > 0)
+            ->groupBy(fn ($item) => optional($item->doctor)->nombre ?: 'Sin doctor')
+            ->map(fn ($group, $doctor) => [
+                'label' => $doctor,
+                'monto' => (float) $group->sum(fn ($item) => (float) ($item->egreso ?? 0)),
+            ])
+            ->values()
+            ->all();
+
+        $totalHonorarios = collect($rowsHonorarios)->sum('monto');
+        $totalCobrar = $totalClinica + $totalFarmacia + $totalHonorarios;
+        $totalPagaAhora = (float) $items
+            ->filter(fn ($item) => ($item->estado_cobro ?? 'Pendiente') === 'Pagado')
+            ->sum(fn ($item) => (float) ($item->recaudado_total ?? 0));
+        $totalPagaLuego = (float) $items
+            ->filter(fn ($item) => ($item->estado_cobro ?? 'Pendiente') !== 'Pagado')
+            ->sum(fn ($item) => (float) ($item->recaudado_total ?? 0));
+
+        $hoy = now();
+        $pdf = Pdf::loadView('pdf.caja_liquidacion_paciente', [
+            'paciente' => $paciente,
+            'items' => $items,
+            'rowsClinica' => $rowsClinica,
+            'rowsFarmacia' => $rowsFarmacia,
+            'rowsHonorarios' => $rowsHonorarios,
+            'totalClinica' => $totalClinica,
+            'totalFarmacia' => $totalFarmacia,
+            'totalHonorarios' => $totalHonorarios,
+            'totalCobrar' => $totalCobrar,
+            'totalPagaAhora' => $totalPagaAhora,
+            'totalPagaLuego' => $totalPagaLuego,
+            'fechaInicio' => $fechaInicio,
+            'fechaFin' => $fechaFin,
+            'tipoImpresion' => $tipoImpresion,
+            'hoy' => $hoy,
+        ])->setPaper('letter');
+
+        return $pdf->stream('liquidacion_paciente_'.$paciente->id.'.pdf');
+    }
+
     private function validatedData(Request $request): array
     {
         $request->merge([
@@ -446,5 +544,20 @@ class CajaRecepcionController extends Controller
     {
         return (float) collect(CajaRecepcion::COST_FIELDS)
             ->sum(fn ($field) => (float) ($data[$field] ?? 0));
+    }
+
+    private function buildRowsFromFields($items, array $fieldMap): array
+    {
+        return collect($fieldMap)
+            ->map(function ($field, $label) use ($items) {
+                $monto = (float) $items->sum(fn ($item) => (float) ($item->{$field} ?? 0));
+                return [
+                    'label' => $label,
+                    'monto' => $monto,
+                ];
+            })
+            ->filter(fn ($row) => $row['monto'] > 0)
+            ->values()
+            ->all();
     }
 }
