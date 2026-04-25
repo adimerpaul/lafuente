@@ -162,8 +162,7 @@ export default {
       arancelDialog: false,
       dialogTitle: 'Nuevo',
       arancel: {},
-      canModify: false,
-      columns: [
+      columnsBase: [
         { name: 'actions', label: 'Acciones', align: 'left' },
         { name: 'nombre', label: 'Arancel', align: 'left', field: 'nombre', sortable: true },
         { name: 'precio', label: 'Precio', align: 'right', field: 'precio', sortable: true },
@@ -173,11 +172,17 @@ export default {
       ]
     }
   },
-  mounted () {
-    this.canModify = this.$store.user?.permissions?.includes('Modificar aranceles') || false
-    if (!this.canModify) {
-      this.columns = this.columns.filter(col => col.name !== 'actions')
+  computed: {
+    canModify () {
+      return this.$store.permissions.some(p => p.name === 'Modificar aranceles')
+    },
+    columns () {
+      return this.canModify
+        ? this.columnsBase
+        : this.columnsBase.filter(col => col.name !== 'actions')
     }
+  },
+  mounted () {
     this.arancelesGet()
   },
   methods: {
