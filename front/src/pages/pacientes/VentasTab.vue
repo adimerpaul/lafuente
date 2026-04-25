@@ -67,9 +67,19 @@
               <span>{{ Number(pv.venta.total || 0).toFixed(2) }}</span>
               <span class="text-bold"> Bs.</span>
             </div>
-            <div>
-              <span class="text-bold">Tipo de venta: </span>
-              <span>{{ pv.venta.tipo_venta }}</span>
+            <div class="row items-center q-gutter-xs">
+              <span class="text-bold">Tipo de venta:</span>
+              <q-chip
+                dense
+                :color="ventaTipoInfo(pv.venta.tipo_venta).color"
+                :text-color="ventaTipoInfo(pv.venta.tipo_venta).textColor"
+                icon="receipt_long"
+              >
+                {{ ventaTipoInfo(pv.venta.tipo_venta).label }}
+              </q-chip>
+              <span class="text-caption text-grey-7">
+                {{ ventaTipoInfo(pv.venta.tipo_venta).hint }}
+              </span>
             </div>
             <div>
               <span class="text-bold">Productos: </span>
@@ -85,12 +95,32 @@
         </q-item-section>
         <q-item-section side class="items-end">
           <span class="text-bold q-mb-xs">{{ pv.user?.name }}</span>
-          <q-toggle
-            :model-value="Number(pv.venta.pagado_interno) === 1"
-            label="Pagado Interno"
+          <q-chip
+            dense
+            :color="Number(pv.venta.pagado_interno) === 1 ? 'positive' : 'warning'"
+            text-color="white"
+            icon="payments"
+          >
+            {{ Number(pv.venta.pagado_interno) === 1 ? 'Pagado interno' : 'Pago interno pendiente' }}
+          </q-chip>
+          <div v-if="Number(pv.venta.pagado_interno) === 1" class="text-caption text-positive q-mt-xs text-right">
+            <div>
+              Pagado el {{ formatFechaHora(pv.venta.pagado_interno_fecha) }}
+            </div>
+            <div v-if="pv.venta.pagado_interno_por">
+              Por {{ pv.venta.pagado_interno_por.name }}
+            </div>
+          </div>
+          <q-btn
+            v-if="isVentaInternado(pv.venta.tipo_venta) && Number(pv.venta.pagado_interno) !== 1"
+            flat
+            dense
+            no-caps
+            icon="payments"
             color="positive"
-            @update:model-value="onPagadoInternoToggle(pv, $event)"
-            :disable="Number(pv.venta.pagado_interno) === 1 || $store.loading"
+            label="Registrar pago interno"
+            class="q-mt-xs"
+            @click="abrirDialogPagoInterno(pv)"
           />
           <q-btn
             icon="delete"
@@ -430,11 +460,43 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="pagoInternoDialog" persistent>
+      <q-card style="min-width: 340px; max-width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Registrar pago interno</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="pagoInternoDialog = false" />
+        </q-card-section>
+        <q-card-section>
+          <div class="text-body2 q-mb-sm text-grey-8">
+            Total de venta:
+            <strong class="text-primary">{{ Number(pagoInternoItem?.venta?.total || 0).toFixed(2) }} Bs</strong>
+          </div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-sm-6">
+              <q-input v-model="pagoInternoFecha" dense outlined type="date" label="Fecha de pago" />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="pagoInternoHora" dense outlined type="time" label="Hora de pago" />
+            </div>
+          </div>
+          <div class="text-caption text-grey-7 q-mt-sm">
+            Administrador: <strong>{{ $store.user?.name || 'Usuario actual' }}</strong>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat no-caps label="Cancelar" color="negative" @click="pagoInternoDialog = false" :loading="pagoInternoLoading" />
+          <q-btn no-caps label="Confirmar pago" color="positive" icon="check" @click="confirmarPagoInterno" :loading="pagoInternoLoading" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script>
 import { Imprimir } from "src/addons/Imprimir";
+import moment from "moment";
 
 export default {
   name: "VentasTab",
@@ -483,7 +545,13 @@ export default {
       lotes: [],
       loteSelected: null,
       loteCantidad: 1,
-      loteProducto: null
+      loteProducto: null,
+
+      pagoInternoDialog: false,
+      pagoInternoItem: null,
+      pagoInternoLoading: false,
+      pagoInternoFecha: moment().format('YYYY-MM-DD'),
+      pagoInternoHora: moment().format('HH:mm')
     }
   },
   mounted () {
@@ -708,28 +776,37 @@ export default {
     },
 
     // === Acciones sobre ventas ya vinculadas ===
-    onPagadoInternoToggle (pv, checked) {
-      const yaPagado = Number(pv?.venta?.pagado_interno) === 1
-      if (yaPagado) {
-        this.$q.notify({ type: 'warning', message: 'Esta venta ya fue confirmada como pagada y no puede revertirse' })
-        return
+    abrirDialogPagoInterno (pv) {
+      if (!this.isVentaInternado(pv?.venta?.tipo_venta)) {
+        this.$q.notify({ type: 'warning', message: 'Solo ventas de internación permiten pago interno' });
+        return;
       }
-      if (!checked) return
-      this.$alert.dialog('¿Confirmar "Pagado Interno"? Esta acción no se podrá deshacer.').onOk(() => {
-        this.updateVenta(pv, 1)
-      })
+      if (Number(pv?.venta?.pagado_interno) === 1) {
+        this.$q.notify({ type: 'warning', message: 'Esta venta ya fue confirmada como pagada' });
+        return;
+      }
+
+      this.pagoInternoItem = pv;
+      this.pagoInternoFecha = moment().format('YYYY-MM-DD');
+      this.pagoInternoHora = moment().format('HH:mm');
+      this.pagoInternoDialog = true;
     },
-    updateVenta (pv, pagadoInterno = 1) {
-      this.$store.loading = true;
-      this.$axios.put("paciente_ventas/" + pv.id, {
-        pagado_interno: pagadoInterno
+    confirmarPagoInterno () {
+      if (!this.pagoInternoItem) return;
+
+      this.pagoInternoLoading = true;
+      const fechaPago = `${this.pagoInternoFecha} ${this.pagoInternoHora}:00`;
+      this.$axios.put(`paciente_ventas/${this.pagoInternoItem.id}`, {
+        pagado_interno: 1,
+        pagado_interno_fecha: fechaPago
       }).then(() => {
-        pv.venta.pagado_interno = 1
         this.$emit("pacienteGet");
-        this.$alert?.success?.("Venta actualizada correctamente");
+        this.$alert?.success?.("Pago interno registrado correctamente");
+        this.pagoInternoDialog = false;
+        this.pagoInternoItem = null;
       }).catch(error => {
-        this.$alert?.error?.(error?.response?.data?.message || 'No se pudo actualizar la venta');
-      }).finally(() => { this.$store.loading = false; });
+        this.$alert?.error?.(error?.response?.data?.message || 'No se pudo registrar el pago interno');
+      }).finally(() => { this.pagoInternoLoading = false; });
     },
     deleteVenta (pv) {
       this.$alert.dialog("¿Está seguro de quitar la venta?").onOk(() => {
@@ -742,6 +819,38 @@ export default {
           .catch(error => this.$alert?.error?.(error?.response?.data?.message || 'No se pudo quitar la venta'))
           .finally(() => { this.$store.loading = false; });
       });
+    },
+    isVentaInternado (tipoVenta) {
+      return ['Internado', 'Interno'].includes((tipoVenta || '').trim());
+    },
+    ventaTipoInfo (tipoVenta) {
+      const normalized = (tipoVenta || '').trim();
+      if (this.isVentaInternado(normalized)) {
+        return {
+          label: 'Internado',
+          hint: 'Paga luego',
+          color: 'warning',
+          textColor: 'white'
+        };
+      }
+      if (normalized === 'Externo') {
+        return {
+          label: 'Externo',
+          hint: 'Paga al momento',
+          color: 'positive',
+          textColor: 'white'
+        };
+      }
+      return {
+        label: normalized || 'Sin tipo',
+        hint: '',
+        color: 'grey-4',
+        textColor: 'grey-9'
+      };
+    },
+    formatFechaHora (fechaHora) {
+      if (!fechaHora) return '-';
+      return moment(fechaHora).format('DD/MM/YYYY HH:mm');
     }
   },
   computed: {

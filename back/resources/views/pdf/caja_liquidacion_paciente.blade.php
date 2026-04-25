@@ -6,25 +6,25 @@
     <style>
         @page { size: letter; margin: 24px; }
         * { box-sizing: border-box; font-family: DejaVu Sans, Arial, Helvetica, sans-serif; }
-        body { margin: 0; color: #1f2937; font-size: 10px; line-height: 1.05; }
+        body { margin: 0; color: #0b2540; font-size: 10px; line-height: 1.05; }
 
         .header {
             display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid #0f766e; padding-bottom: 6px; margin-bottom: 6px;
+            border-bottom: 2px solid #0b67d0; padding-bottom: 6px; margin-bottom: 6px;
         }
         .brand {
-            color: #0f766e; font-weight: 800; display: flex; align-items: center; gap: 8px;
+            color: #0b67d0; font-weight: 800; display: flex; align-items: center; gap: 8px;
         }
         .title {
-            font-size: 14px; font-weight: 900; color: #0f766e;
+            font-size: 14px; font-weight: 900; color: #0b67d0;
             text-transform: uppercase; letter-spacing: .5px; text-align: center;
         }
         .meta { font-size: 9px; text-align: right; }
-        .sheet-type { margin-top: 2px; font-size: 9px; color: #065f46; text-transform: uppercase; font-weight: 700; }
+        .sheet-type { margin-top: 2px; font-size: 9px; color: #084a9e; text-transform: uppercase; font-weight: 700; }
 
         .patient {
             display: flex; justify-content: space-between; align-items: flex-end;
-            background: #ecfdf5; border: 1px solid #a7f3d0; padding: 5px 7px;
+            background: #eef8ff; border: 1px solid #cfe7ff; padding: 5px 7px;
             margin-bottom: 6px; border-radius: 6px;
         }
         .patient b { font-weight: 800; }
@@ -34,12 +34,12 @@
             margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden;
         }
         .section-title {
-            background: #d1fae5; color: #065f46; font-size: 11px; font-weight: 900;
+            background: #e6f0ff; color: #084a9e; font-size: 11px; font-weight: 900;
             text-transform: uppercase; padding: 4px 6px; letter-spacing: .5px;
         }
         table { width: 100%; border-collapse: collapse; }
         th {
-            background: #e5e7eb; border: 1px solid #cbd5e1; padding: 3px 4px;
+            background: #f1f5f9; border: 1px solid #cbd5e1; padding: 3px 4px;
             font-size: 8px; text-align: center; font-weight: 800;
         }
         td { border: 1px solid #e5e7eb; padding: 3px 4px; font-size: 8.5px; }
@@ -47,11 +47,11 @@
         .center { text-align: center; }
 
         .total-row td {
-            background: #f0fdf4; color: #065f46; font-weight: 800; text-transform: uppercase;
+            background: #eef8ff; color: #084a9e; font-weight: 800; text-transform: uppercase;
         }
 
         .summary {
-            margin-top: 7px; border: 1px solid #a7f3d0; background: #ecfdf5; padding: 6px 8px;
+            margin-top: 7px; border: 1px solid #cfe7ff; background: #eef8ff; padding: 6px 8px;
             border-radius: 6px;
         }
         .summary-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 10px; }
@@ -59,8 +59,8 @@
 
         .grand-total {
             margin-top: 6px; display: flex; justify-content: space-between;
-            border-top: 2px solid #0f766e; padding-top: 6px;
-            font-size: 14px; font-weight: 900; color: #0f766e; text-transform: uppercase;
+            border-top: 2px solid #0b67d0; padding-top: 6px;
+            font-size: 14px; font-weight: 900; color: #0b67d0; text-transform: uppercase;
         }
     </style>
 </head>

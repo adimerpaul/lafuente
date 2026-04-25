@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Paciente;
+use App\Models\PacienteVenta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CajaRecepcion;
 use Illuminate\Http\Request;
@@ -331,6 +332,47 @@ class CajaRecepcionController extends Controller
         }
 
         $items = $query->orderBy('fecha')->orderBy('id')->get();
+
+        // Add sales (paciente_ventas) that are "internado" type (pagar luego)
+        $ventasQuery = PacienteVenta::with(['venta', 'user'])
+            ->whereHas('venta', fn ($q) => $q->where('tipo_venta', 'Internado')->where('estado', '!=', 'Anulado'))
+            ->where('paciente_id', $paciente->id);
+
+        if ($fechaInicio) {
+            $ventasQuery->whereDate('fecha', '>=', $fechaInicio);
+        }
+        if ($fechaFin) {
+            $ventasQuery->whereDate('fecha', '<=', $fechaFin);
+        }
+
+        // Only include internado sales if tipo_impresion is 'todo' or 'pagado_luego'
+        if (in_array($tipoImpresion, ['todo', 'pagado_luego'])) {
+            $ventasCollection = $ventasQuery->orderBy('fecha')->orderBy('id')->get();
+            // Convert PacienteVenta to CajaRecepcion-like structure for display
+            foreach ($ventasCollection as $pv) {
+                $venta = $pv->venta;
+                // Create a pseudo-item for the PDF
+                $item = new \stdClass();
+                $item->id = 'v_' . $pv->id;
+                $item->fecha = $pv->fecha;
+                $item->hora = $pv->hora;
+                $item->tipo_atencion = 'Farmacia (Internado)';
+                $item->numero_ficha = $venta->numero_factura ?: '—';
+                $item->nombre_factura = $venta->nombre ?? 'Venta de farmacia';
+                $item->estado_cobro = 'Pendiente'; // Internado always "pagar luego"
+                $item->fecha_cobro = null;
+                $item->cobradoPor = $pv->user;
+                $item->doctor = null;
+                $item->recaudado_total = (float) $venta->total;
+                $item->costo_farmacia = (float) $venta->total;
+                $item->egreso = 0;
+                $item->estado = 'Activo';
+                $item->is_anulado = false;
+                $items->push($item);
+            }
+            // Re-sort after adding
+            $items = $items->sortBy([['fecha', 'asc'], ['id', 'asc']])->values();
+        }
 
         $rowsClinica = $this->buildRowsFromFields($items, [
             'Atencion medica' => 'costo_atencion_medica',

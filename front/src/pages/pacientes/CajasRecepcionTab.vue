@@ -11,6 +11,16 @@
       <q-space />
       <div class="row q-col-gutter-xs items-center">
         <div class="col-auto">
+          <q-btn
+            icon="print"
+            dense
+            no-caps
+            color="primary"
+            label="Imprimir liquidación"
+            @click="abrirDialogImpresion"
+          />
+        </div>
+        <div class="col-auto">
           <q-chip dense :color="totalPagado > 0 ? 'positive' : 'grey-4'" :text-color="totalPagado > 0 ? 'white' : 'grey-8'">
             Pagado: {{ totalPagado.toFixed(2) }} Bs
           </q-chip>
@@ -140,6 +150,32 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="impresionDialog" persistent>
+      <q-card style="min-width: 360px; max-width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Imprimir hoja de liquidación</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="impresionDialog = false" />
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-sm-6">
+              <q-input v-model="impresionFechaInicio" dense outlined type="date" label="Fecha inicio" />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="impresionFechaFin" dense outlined type="date" label="Fecha fin" />
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat no-caps label="Cancelar" color="negative" @click="impresionDialog = false" />
+          <q-btn no-caps label="Todo" color="primary" icon="print" @click="imprimirLiquidacion('todo')" />
+          <q-btn no-caps label="Paga ahora" color="info" icon="print" @click="imprimirLiquidacion('paga_ahora')" />
+          <q-btn no-caps label="Pagado luego" color="secondary" icon="print" @click="imprimirLiquidacion('pagado_luego')" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -159,7 +195,10 @@ export default {
       cobrandoItem: null,
       cobrandoLoading: false,
       cobroFecha: moment().format('YYYY-MM-DD'),
-      cobroHora: moment().format('HH:mm')
+      cobroHora: moment().format('HH:mm'),
+      impresionDialog: false,
+      impresionFechaInicio: moment().format('YYYY-MM-DD'),
+      impresionFechaFin: moment().format('YYYY-MM-DD')
     }
   },
   mounted () {
@@ -200,6 +239,34 @@ export default {
       this.cobroHora = moment().format('HH:mm')
       this.cobroDialog = true
     },
+    abrirDialogImpresion () {
+      this.impresionFechaInicio = moment().format('YYYY-MM-DD')
+      this.impresionFechaFin = moment().format('YYYY-MM-DD')
+      this.impresionDialog = true
+    },
+    imprimirLiquidacion (tipo = 'todo') {
+      if (!this.paciente?.id) {
+        this.$q.notify({ type: 'negative', message: 'Paciente inválido' })
+        return
+      }
+      if (!this.impresionFechaInicio || !this.impresionFechaFin) {
+        this.$q.notify({ type: 'warning', message: 'Debe seleccionar fecha inicio y fecha fin' })
+        return
+      }
+      if (this.impresionFechaInicio > this.impresionFechaFin) {
+        this.$q.notify({ type: 'warning', message: 'La fecha inicio no puede ser mayor a la fecha fin' })
+        return
+      }
+      const params = new URLSearchParams({
+        fechaInicio: this.impresionFechaInicio,
+        fechaFin: this.impresionFechaFin,
+        tipo_impresion: tipo
+      })
+      const url = `${this.$url}/../pacientes/${this.paciente.id}/caja-liquidacion-pdf?${params.toString()}`
+      this.impresionDialog = false
+      window.open(url, '_blank')
+    },
+
     confirmarCobro () {
       if (!this.cobrandoItem) return
       this.cobrandoLoading = true
