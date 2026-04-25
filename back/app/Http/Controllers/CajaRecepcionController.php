@@ -97,6 +97,138 @@ class CajaRecepcionController extends Controller
         return $pdf->stream('caja_recepciones_reporte.pdf');
     }
 
+    public function pdfCarta(CajaRecepcion $cajaRecepcion)
+    {
+        $cajaRecepcion->load(['user', 'paciente', 'doctor']);
+
+        $pdf = Pdf::loadView('pdf.caja_recepcion_carta', [
+            'item' => $cajaRecepcion,
+            'hoy' => now(),
+        ])->setPaper('letter');
+
+        return $pdf->stream('caja_recepcion_'.$cajaRecepcion->id.'_carta.pdf');
+    }
+
+    public function pdfFormularioControl(CajaRecepcion $cajaRecepcion)
+    {
+        $cajaRecepcion->load(['user', 'paciente', 'doctor']);
+        $detalle = is_array($cajaRecepcion->formulario_detalle) ? $cajaRecepcion->formulario_detalle : [];
+
+        $rows = [
+            [
+                'left' => ['label' => 'Caja Vaselinada', 'key' => 'caja_vaselina', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Antisépticos', 'key' => 'antisepticos', 'options' => ['SI', 'CANTIDAD', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Caja de Curación', 'key' => 'caja_curacion', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Apósitos extras', 'key' => 'apositos_extras', 'options' => ['CANTIDAD']],
+            ],
+            [
+                'left' => ['label' => 'Caja de Sutura', 'key' => 'caja_sutura', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Torundas de gasa extras', 'key' => 'torundas_gasa_extras', 'options' => ['CANTIDAD']],
+            ],
+            [
+                'left' => ['label' => 'Caja de Retiro de Útero', 'key' => 'caja_retiro_uterino', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Gasas Extra', 'key' => 'gases_extra', 'options' => ['CANTIDAD']],
+            ],
+            [
+                'left' => ['label' => 'Caja de Retiro de Puntos', 'key' => 'caja_retiro_puntos', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Venda de Quemado', 'key' => 'venda_quemado', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Sutura', 'key' => 'sutura', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Curación', 'key' => 'curacion', 'options' => ['P', 'M', 'G']],
+            ],
+            [
+                'left' => ['label' => 'Uso de Tela Adhesiva', 'key' => 'uso_tela_adhesiva', 'options' => ['P', 'M', 'G']],
+                'right' => ['label' => 'Suero', 'key' => 'suero', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Uso de Micropor', 'key' => 'uso_micropor', 'options' => ['SI', 'CANTIDAD', 'NO']],
+                'right' => ['label' => 'Aspiración', 'key' => 'aspiracion', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Nebulización', 'key' => 'nebulizacion', 'options' => ['SI', 'NO']],
+                'right' => ['label' => 'Sonda', 'key' => 'sonda', 'options' => ['SNG', 'SOG', 'SV']],
+            ],
+            [
+                'left' => ['label' => 'Glicemia', 'key' => 'glicemia', 'options' => ['SI', 'NO']],
+                'right' => ['label' => 'Compresas', 'key' => 'compresas', 'options' => ['P', 'M', 'G']],
+            ],
+            [
+                'left' => ['label' => 'Inyectable', 'key' => 'inyectable', 'options' => ['IM', 'EV', 'SC']],
+                'right' => ['label' => 'Yeso', 'key' => 'yeso', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Guantes (Dediles)', 'key' => 'guantes_dediles', 'options' => ['SI', 'CANTIDAD', 'NO']],
+                'right' => ['label' => 'Oxígeno', 'key' => 'oxigeno', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Campo Fenestrado', 'key' => 'campo_fenestrado', 'options' => ['SI', 'NO']],
+                'right' => ['label' => 'Enema', 'key' => 'enema', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Colocado de Stopper', 'key' => 'colocado_stopper', 'options' => ['SI', 'NO']],
+                'right' => ['label' => 'Corbatas', 'key' => 'corbatas', 'options' => ['SI', 'NO']],
+            ],
+            [
+                'left' => ['label' => 'Monitor - Desfibrilador', 'key' => 'monitor_desfibrilador', 'options' => ['SI', 'NO']],
+                'right' => ['label' => 'Algodón', 'key' => 'algodon', 'options' => ['SI', 'NO']],
+            ],
+        ];
+
+        $prices = [
+            'caja_vaselina' => ['P' => 10, 'M' => 15, 'G' => 20],
+            'caja_curacion' => ['P' => 8, 'M' => 12, 'G' => 16],
+            'caja_sutura' => ['P' => 18, 'M' => 24, 'G' => 30],
+            'caja_retiro_uterino' => ['P' => 10, 'M' => 14, 'G' => 18],
+            'caja_retiro_puntos' => ['P' => 10, 'M' => 14, 'G' => 18],
+            'sutura' => ['P' => 15, 'M' => 20, 'G' => 25],
+            'uso_tela_adhesiva' => ['P' => 5, 'M' => 7, 'G' => 10],
+            'uso_micropor' => ['SI' => 6],
+            'nebulizacion' => ['SI' => 20],
+            'glicemia' => ['SI' => 15],
+            'inyectable' => ['IM' => 10, 'EV' => 15, 'SC' => 8],
+            'guantes_dediles' => ['SI' => 5],
+            'campo_fenestrado' => ['SI' => 10],
+            'colocado_stopper' => ['SI' => 8],
+            'monitor_desfibrilador' => ['SI' => 25],
+            'antisepticos' => ['SI' => 8],
+            'apositos_extras' => ['SI' => 7],
+            'torundas_gasa_extras' => ['SI' => 7],
+            'gases_extra' => ['SI' => 7],
+            'venda_quemado' => ['SI' => 15],
+            'curacion' => ['P' => 15, 'M' => 20, 'G' => 30],
+            'suero' => ['SI' => 25],
+            'aspiracion' => ['SI' => 20],
+            'sonda' => ['SNG' => 18, 'SOG' => 18, 'SV' => 15],
+            'compresas' => ['P' => 10, 'M' => 15, 'G' => 20],
+            'yeso' => ['SI' => 35],
+            'oxigeno' => ['SI' => 20],
+            'enema' => ['SI' => 18],
+            'corbatas' => ['SI' => 10],
+            'algodon' => ['SI' => 5],
+        ];
+
+        $totalReferencial = 0.0;
+        foreach ($detalle as $key => $rawValue) {
+            $values = is_array($rawValue) ? $rawValue : (($rawValue === null || $rawValue === '') ? [] : [$rawValue]);
+            foreach ($values as $selected) {
+                $totalReferencial += (float)($prices[$key][$selected] ?? 0);
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.caja_recepcion_formulario_control', [
+            'item' => $cajaRecepcion,
+            'rows' => $rows,
+            'detalle' => $detalle,
+            'totalReferencial' => $totalReferencial,
+            'hoy' => now(),
+        ])->setPaper('letter');
+
+        return $pdf->stream('caja_recepcion_'.$cajaRecepcion->id.'_formulario_control.pdf');
+    }
+
     public function show(CajaRecepcion $cajaRecepcion)
     {
         return CajaRecepcion::with(['user', 'paciente', 'doctor'])->findOrFail($cajaRecepcion->id);

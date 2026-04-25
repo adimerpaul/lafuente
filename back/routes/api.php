@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 //})->middleware('auth:sanctum');
 Route::post('/login', [App\Http\Controllers\UserController::class, 'login']);
 Route::get('/caja-recepciones/pdf', [App\Http\Controllers\CajaRecepcionController::class, 'pdf']);
+Route::get('/caja-recepciones/{cajaRecepcion}/pdf-carta', [App\Http\Controllers\CajaRecepcionController::class, 'pdfCarta']);
+Route::get('/caja-recepciones/{cajaRecepcion}/pdf-formulario-control', [App\Http\Controllers\CajaRecepcionController::class, 'pdfFormularioControl']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
     Route::get('/me', [App\Http\Controllers\UserController::class, 'me']);

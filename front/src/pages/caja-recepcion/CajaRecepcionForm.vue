@@ -88,6 +88,11 @@
             </div>
           </div>
 
+          <div class="text-right q-mb-sm">
+            <q-btn color="negative" label="Cancelar" no-caps @click="$router.push({ name: 'caja-recepciones' })" :loading="saving" />
+            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" />
+          </div>
+
           <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-8">
             <q-tab name="datos" icon="assignment" label="Datos" no-caps />
             <q-tab name="formulario" icon="assignment_turned_in" label="Formulario" no-caps />
@@ -297,20 +302,37 @@
                 <div v-if="showQr" class="col-12 col-md-4">
                   <q-input v-model.number="form.qr" dense outlined type="number" min="0" step="0.01" label="Monto QR" />
                 </div>
-                <div v-if="showEfectivo" class="col-12 col-md-4">
-                  <q-input v-model.number="form.efectivo" dense outlined type="number" min="0" step="0.01" label="Monto efectivo" />
-                </div>
                 <div class="col-12 col-md-4">
-                  <q-input
-                    v-model.number="form.egreso"
-                    dense
-                    outlined
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    label="Egreso doctor"
-                    hint="Monto descontado o pagado al doctor"
-                  />
+                  <q-card flat bordered class="q-pa-sm bg-grey-1">
+                    <div class="text-caption text-weight-medium q-mb-xs">Porcentaje del doctor</div>
+                    <q-slider
+                      v-model="doctorPagoPorcentaje"
+                      :min="10"
+                      :max="50"
+                      :step="5"
+                      label
+                      label-always
+                      color="negative"
+                      :label-value="`${doctorPagoPorcentaje}%`"
+                    />
+                    <div class="row items-center justify-between q-mt-xs">
+                      <div class="text-caption">Egreso doctor</div>
+                      <div class="text-weight-bold text-negative">{{ money(form.egreso) }}</div>
+                    </div>
+                    <q-input
+                      v-model.number="form.egreso"
+                      dense
+                      outlined
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      label="Editar egreso doctor"
+                      class="q-mt-sm"
+                    />
+                    <div class="text-caption text-grey-7">
+                      Calculado sobre atencion medica: {{ money(form.costo_atencion_medica) }}
+                    </div>
+                  </q-card>
                 </div>
                 <div class="col-12">
                   <q-input v-model="form.observaciones" dense outlined type="textarea" autogrow label="Observaciones" />
@@ -538,9 +560,11 @@ export default {
         { label: 'Mixto', value: 'mixto' },
         { label: 'Pendiente', value: 'pendiente' }
       ],
+      doctorPagoPorcentaje: 10,
       costFields: [
         { key: 'costo_atencion_medica', label: 'Atencion medica', icon: 'medical_services', iconColor: 'light-blue-7', cardClass: 'cost-card--sky' },
         { key: 'costo_curacion', label: 'Curacion', icon: 'healing', iconColor: 'green-6', cardClass: 'cost-card--mint' },
+        { key: 'costo_sutura', label: 'Sutura', icon: 'content_cut', iconColor: 'red-5', cardClass: 'cost-card--rose' },
         { key: 'costo_inyectable', label: 'Inyectables', icon: 'vaccines', iconColor: 'pink-5', cardClass: 'cost-card--rose' },
         { key: 'costo_toma_presion', label: 'Toma de presion', icon: 'monitor_heart', iconColor: 'deep-purple-4', cardClass: 'cost-card--violet' },
         { key: 'costo_ambulancia', label: 'Ambulancia', icon: 'emergency', iconColor: 'orange-6', cardClass: 'cost-card--amber' },
@@ -549,7 +573,6 @@ export default {
         { key: 'costo_uso_consultorio', label: 'Uso consultorio', icon: 'door_front', iconColor: 'brown-5', cardClass: 'cost-card--sand' },
         { key: 'costo_glicemia', label: 'Glicemia', icon: 'water_drop', iconColor: 'cyan-6', cardClass: 'cost-card--aqua' },
         { key: 'costo_certificado_medico', label: 'Certificado medico', icon: 'description', iconColor: 'blue-grey-5', cardClass: 'cost-card--silver' },
-        { key: 'costo_sutura', label: 'Sutura', icon: 'content_cut', iconColor: 'red-5', cardClass: 'cost-card--rose' },
         { key: 'costo_antisepticos', label: 'Antisepticos', icon: 'sanitizer', iconColor: 'teal-5', cardClass: 'cost-card--mint' },
         { key: 'costo_cama', label: 'Cama', icon: 'bed', iconColor: 'indigo-5', cardClass: 'cost-card--sky' },
         { key: 'costo_compania_noche', label: 'Compania noche', icon: 'night_shelter', iconColor: 'deep-purple-5', cardClass: 'cost-card--violet' },
@@ -570,6 +593,11 @@ export default {
     },
     pagadoAhora () {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
+    },
+    doctorEgresoCalculado () {
+      const base = Number(this.form.costo_atencion_medica || 0)
+      const porcentaje = Number(this.doctorPagoPorcentaje || 0)
+      return Math.max((base * porcentaje) / 100, 0)
     },
     saldoFinal () {
       return Number(this.form.efectivo || 0) - Number(this.form.egreso || 0)
@@ -624,12 +652,19 @@ export default {
     formularioTotalReferencial () {
       this.syncAtencionMedicaCost()
     },
+    doctorPagoPorcentaje () {
+      this.syncDoctorEgreso()
+    },
+    'form.egreso' () {
+      this.syncDoctorPercentage()
+    },
     metodoPago () {
       this.syncPaymentAmounts()
     },
     'form.costo_atencion_medica' (value) {
       if (this.syncingAtencionMedica) return
       this.atencionMedicaAdjustment = Number(value || 0) - Number(this.formularioTotalReferencial || 0)
+      this.syncDoctorEgreso()
     },
     'form.qr' () {
       if (this.metodoPago === 'mixto' || this.metodoPago === 'qr') {
@@ -694,6 +729,17 @@ export default {
         this.syncingAtencionMedica = false
       })
     },
+    syncDoctorPercentage () {
+      const base = Number(this.form.costo_atencion_medica || 0)
+      if (base <= 0) return
+
+      const percent = Math.round((Number(this.form.egreso || 0) / base) * 100)
+      const safePercent = Math.min(50, Math.max(10, percent || 10))
+
+      if (safePercent !== Number(this.doctorPagoPorcentaje || 0)) {
+        this.doctorPagoPorcentaje = safePercent
+      }
+    },
     syncPaymentAmounts () {
       const total = Number(this.recaudadoTotal || 0)
       const qr = Number(this.form.qr || 0)
@@ -721,6 +767,18 @@ export default {
 
       this.form.qr = 0
       this.form.efectivo = total
+    },
+    syncDoctorEgreso () {
+      const safePercent = Math.min(50, Math.max(10, Number(this.doctorPagoPorcentaje || 10)))
+      if (safePercent !== Number(this.doctorPagoPorcentaje || 0)) {
+        this.doctorPagoPorcentaje = safePercent
+        return
+      }
+      const base = Number(this.form.costo_atencion_medica || 0)
+      const nextValue = Math.max((base * safePercent) / 100, 0)
+      if (Number(this.form.egreso || 0) !== nextValue) {
+        this.form.egreso = nextValue
+      }
     },
     normalizeFormularioValue (value) {
       if (Array.isArray(value)) return value
@@ -807,6 +865,10 @@ export default {
           }
           this.atencionMedicaAdjustment = Number(this.form.costo_atencion_medica || 0) - Number(this.formularioTotalReferencial || 0)
           this.syncAtencionMedicaCost()
+          this.doctorPagoPorcentaje = Number(this.form.costo_atencion_medica || 0) > 0
+            ? Math.min(50, Math.max(10, Math.round((Number(this.form.egreso || 0) / Number(this.form.costo_atencion_medica || 1)) * 100)))
+            : 10
+          this.syncDoctorEgreso()
           this.metodoPago = this.detectMetodoPago()
           this.syncPaymentAmounts()
           const paciente = itemRes.data.paciente
@@ -819,6 +881,8 @@ export default {
         } else {
           this.atencionMedicaAdjustment = 0
           this.syncAtencionMedicaCost()
+          this.doctorPagoPorcentaje = 10
+          this.syncDoctorEgreso()
           this.syncPaymentAmounts()
         }
       }).catch(err => {
@@ -979,6 +1043,7 @@ export default {
       this.costFields.forEach(field => {
         payload[field.key] = Number(payload[field.key] || 0)
       })
+      payload.egreso = Number(this.form.egreso || 0)
       if (this.metodoPago === 'pendiente') {
         payload.qr = 0
         payload.efectivo = 0

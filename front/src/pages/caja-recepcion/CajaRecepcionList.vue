@@ -130,6 +130,18 @@
               <q-item-section avatar><q-icon name="edit" /></q-item-section>
               <q-item-section>Editar</q-item-section>
             </q-item>
+            <q-item clickable v-close-popup @click="printTicket(item)">
+              <q-item-section avatar><q-icon name="print" /></q-item-section>
+              <q-item-section>Imprimir ticket</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="printCarta(item)">
+              <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
+              <q-item-section>Imprimir carta</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="printFormularioControl(item)">
+              <q-item-section avatar><q-icon name="description" /></q-item-section>
+              <q-item-section>Formulario de control</q-item-section>
+            </q-item>
             <q-item v-if="!item.is_anulado" clickable v-close-popup @click="anularItem(item.id)">
               <q-item-section avatar><q-icon name="block" /></q-item-section>
               <q-item-section>Anular</q-item-section>
@@ -175,11 +187,13 @@
       </tbody>
     </q-markup-table>
   </q-page>
+  <div id="myElement" class="hidden"></div>
 </template>
 
 <script>
 import moment from 'moment'
 import { Excel } from 'src/addons/Excel'
+import { Imprimir } from 'src/addons/Imprimir'
 
 export default {
   name: 'CajaRecepcionListPage',
@@ -290,6 +304,17 @@ export default {
       })
 
       const url = `${this.$url}/../caja-recepciones/pdf?${params.toString()}`
+      window.open(url, '_blank')
+    },
+    printTicket (item) {
+      Imprimir.imprimirCaja(item)
+    },
+    printCarta (item) {
+      const url = `${this.$url}/../caja-recepciones/${item.id}/pdf-carta`
+      window.open(url, '_blank')
+    },
+    printFormularioControl (item) {
+      const url = `${this.$url}/../caja-recepciones/${item.id}/pdf-formulario-control`
       window.open(url, '_blank')
     }
   }

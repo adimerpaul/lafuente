@@ -43,7 +43,65 @@ export class Imprimir {
     return (milesTexto + ' ' + restoTexto).trim();
   }
   static imprimirCaja (caja) {
+    try {
+      const env = useCounterStore().env || {}
+      const F2 = (n) => Number(n || 0).toFixed(2)
+      const S = (value, fallback = '—') => (value ?? fallback).toString()
+      const comentario = (caja?.observaciones ?? '').toString().trim()
 
+      const styles = `
+      @page { margin: 6mm; }
+      .imprimir-scope { font-family: "Courier New", Courier, monospace; font-size:10px; }
+      .imprimir-scope .ticket { width:300px; margin:0 auto; }
+      .imprimir-scope .center { text-align:center; }
+      .imprimir-scope .right { text-align:right; }
+      .imprimir-scope .bold { font-weight:700; }
+      .imprimir-scope .small { font-size:9px; line-height:1.2; }
+      .imprimir-scope hr { border:0; border-top:1px dashed #000; margin:6px 0; }
+      .imprimir-scope table { width:100%; border-collapse:collapse; }
+      .imprimir-scope td { padding:2px 0; vertical-align:top; }
+      `
+
+      const html = `
+      <div class="imprimir-scope">
+        <div class="ticket">
+          <div class="center bold" style="font-size:12px;">RECIBO CAJA RECEPCIÓN</div>
+          <div class="center small">
+            ${S(env.razon, 'CLÍNICA LA FUENTE')}<br>
+            ${S(env.direccion, '')}<br>
+            Tel. ${S(env.telefono, '')}
+          </div>
+          <hr>
+          <table>
+            <tr><td class="bold">Registro:</td><td>#${S(caja?.id)}</td></tr>
+            <tr><td class="bold">Fecha/Hora:</td><td>${S(caja?.fecha)} ${S(caja?.hora, '')}</td></tr>
+            <tr><td class="bold">Paciente:</td><td>${S(caja?.paciente?.nombre_completo, 'SN')}</td></tr>
+            <tr><td class="bold">Ficha:</td><td>${S(caja?.numero_ficha, '-')}</td></tr>
+            <tr><td class="bold">Encargado:</td><td>${S(caja?.user?.name, '-')}</td></tr>
+            <tr><td class="bold">Documento:</td><td>${S(caja?.documento_label, '-')}</td></tr>
+          </table>
+          <hr>
+          <table>
+            <tr><td>Recaudado</td><td class="right bold">${F2(caja?.recaudado_total)} Bs</td></tr>
+            <tr><td>QR</td><td class="right">${F2(caja?.qr)} Bs</td></tr>
+            <tr><td>Efectivo</td><td class="right">${F2(caja?.efectivo)} Bs</td></tr>
+            <tr><td>Egreso</td><td class="right">${F2(caja?.egreso)} Bs</td></tr>
+            <tr><td>Farmacia</td><td class="right">${F2(caja?.costo_farmacia)} Bs</td></tr>
+            <tr><td class="bold">Saldo final</td><td class="right bold">${F2(caja?.saldo_final)} Bs</td></tr>
+          </table>
+          ${comentario ? `<hr><div><span class="bold">Obs:</span> ${comentario}</div>` : ''}
+        </div>
+      </div>`
+
+      const mount = document.getElementById('myElement')
+      if (!mount) return
+      mount.innerHTML = html
+      const node = mount.querySelector('.imprimir-scope')
+      const d = new Printd()
+      d.print(node, styles)
+    } catch (e) {
+      console.error('imprimirCaja error:', e)
+    }
   }
   static async factura(venta) {
     return new Promise(async (resolve, reject) => {
