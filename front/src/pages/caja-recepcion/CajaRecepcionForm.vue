@@ -278,6 +278,24 @@
                         <template #prepend>
                           <q-icon :name="field.icon" :color="field.iconColor" />
                         </template>
+                        <template #append>
+                          <q-btn
+                            flat
+                            round
+                            dense
+                            icon="add_circle"
+                            color="primary"
+                            @click.stop="openObservacionDialog(field.key)"
+                          >
+                            <q-badge
+                              v-if="getObservacionCount(field.key) > 0"
+                              floating
+                              rounded
+                              color="positive"
+                              :label="String(getObservacionCount(field.key))"
+                            />
+                          </q-btn>
+                        </template>
                       </q-input>
                     </q-card-section>
                   </q-card>
@@ -367,6 +385,153 @@
         </q-form>
       </q-card-section>
     </q-card>
+
+    <q-dialog v-model="observacionDialog" persistent>
+      <q-card style="min-width: 680px; max-width: 96vw;">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-subtitle1 text-weight-medium">
+            Observaciones de {{ selectedCostFieldLabel }}
+          </div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="closeObservacionDialog" />
+        </q-card-section>
+
+        <q-card-section>
+          <q-form @submit="saveObservacion">
+            <q-input
+              v-model="observacionForm.observacion"
+              dense
+              outlined
+              autogrow
+              type="textarea"
+              label="Observacion / detalle"
+              :disable="savingObservacion || form.is_anulado"
+            />
+
+            <div class="row q-col-gutter-sm q-mt-sm">
+              <div class="col-auto">
+                <q-btn
+                  no-caps
+                  color="primary"
+                  icon="photo_camera"
+                  label="Tomar foto"
+                  :disable="savingObservacion || form.is_anulado"
+                  @click="openObservacionCamera"
+                />
+              </div>
+              <div class="col-auto">
+                <q-btn
+                  no-caps
+                  color="secondary"
+                  icon="upload"
+                  label="Subir imagen"
+                  :disable="savingObservacion || form.is_anulado"
+                  @click="openObservacionGallery"
+                />
+              </div>
+              <div class="col">
+                <div class="text-caption text-grey-8">
+                  Registrado por: {{ currentUserName }} | Hora actual: {{ nowLabel }}
+                </div>
+                <div class="text-caption text-grey-6">
+                  Puedes guardar solo texto o texto + imagen.
+                </div>
+              </div>
+            </div>
+
+            <input
+              ref="observacionCameraInput"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style="display:none"
+              @change="onObservacionFileSelected"
+            />
+            <input
+              ref="observacionGalleryInput"
+              type="file"
+              accept="image/*"
+              style="display:none"
+              @change="onObservacionFileSelected"
+            />
+
+            <q-card v-if="observacionForm.fotoPreview" flat bordered class="q-mt-sm">
+              <q-card-section class="q-pa-sm">
+                <div class="text-caption text-grey-8 q-mb-xs">Imagen seleccionada</div>
+                <q-img :src="observacionForm.fotoPreview" style="max-height: 220px" fit="contain" />
+                <div class="text-right q-mt-sm">
+                  <q-btn
+                    flat
+                    no-caps
+                    color="negative"
+                    icon="delete"
+                    label="Quitar imagen"
+                    :disable="savingObservacion || form.is_anulado"
+                    @click="clearObservacionPhoto"
+                  />
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <div class="text-right q-mt-md">
+              <q-btn flat no-caps label="Cancelar" :disable="savingObservacion" @click="closeObservacionDialog" />
+              <q-btn
+                class="q-ml-sm"
+                color="primary"
+                no-caps
+                label="Guardar observacion"
+                type="submit"
+                :loading="savingObservacion"
+                :disable="form.is_anulado"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <div class="text-subtitle2 q-mb-sm">Historial</div>
+          <q-inner-loading :showing="loadingObservaciones" />
+          <div v-if="!loadingObservaciones && !selectedCostObservaciones.length" class="text-grey-7 text-caption">
+            Sin observaciones para este costo.
+          </div>
+          <div v-else class="column q-gutter-sm">
+            <q-card v-for="item in selectedCostObservaciones" :key="item.uid" flat bordered>
+              <q-card-section class="q-pa-sm">
+                <div class="row items-start">
+                  <div class="col">
+                    <div class="text-caption text-grey-8">
+                      {{ item.user_name || '-' }} | {{ formatObservacionDate(item.created_at) }}
+                      <span v-if="item.is_pending" class="text-orange-8"> | Pendiente de guardar</span>
+                    </div>
+                    <div v-if="item.observacion" class="q-mt-xs">{{ item.observacion }}</div>
+                    <q-img
+                      v-if="item.foto_url || item.fotoPreview"
+                      :src="item.foto_url || item.fotoPreview"
+                      class="q-mt-sm"
+                      style="max-height: 220px"
+                      fit="contain"
+                    />
+                  </div>
+                  <div class="col-auto">
+                    <q-btn
+                      flat
+                      round
+                      dense
+                      color="negative"
+                      icon="delete"
+                      :disable="deletingObservacion || form.is_anulado"
+                      @click="deleteObservacion(item)"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
     <q-dialog v-model="patientDialog" persistent>
       <q-card style="min-width: 420px; max-width: 95vw;">
@@ -542,6 +707,12 @@ const emptyForm = () => ({
   otros_costos: 0
 })
 
+const createEmptyObservacionForm = () => ({
+  observacion: '',
+  foto: null,
+  fotoPreview: ''
+})
+
 export default {
   name: 'CajaRecepcionFormPage',
   data () {
@@ -553,6 +724,10 @@ export default {
       anularDialog: false,
       savingPatient: false,
       savingDoctor: false,
+      savingObservacion: false,
+      deletingObservacion: false,
+      loadingObservaciones: false,
+      observacionesLoaded: false,
       patientSearchTimer: null,
       patientSearchSeq: 0,
       arancelPrecioPorCodigo: {},
@@ -561,6 +736,11 @@ export default {
       recognition: null,
       activeRecognitionTarget: null,
       activeQuickPatientField: null,
+      observacionDialog: false,
+      selectedCostField: null,
+      observacionForm: createEmptyObservacionForm(),
+      observacionesByTipo: {},
+      pendingObservaciones: [],
       form: emptyForm(),
       doctores: [],
       pacienteOptions: [],
@@ -678,6 +858,22 @@ export default {
     },
     formularioTotalReferencial () {
       return this.formularioSelectedItems.reduce((sum, item) => sum + Number(item.amount || 0), 0)
+    },
+    selectedCostFieldLabel () {
+      if (!this.selectedCostField) return 'costo'
+      return this.costFields.find(field => field.key === this.selectedCostField)?.label || this.selectedCostField
+    },
+    selectedCostObservaciones () {
+      if (!this.selectedCostField) return []
+      const saved = this.observacionesByTipo[this.selectedCostField] || []
+      const pending = this.pendingObservaciones.filter(item => item.tipo === this.selectedCostField)
+      return [...pending, ...saved]
+    },
+    currentUserName () {
+      return this.$store?.user?.name || 'Usuario actual'
+    },
+    nowLabel () {
+      return moment().format('DD/MM/YYYY HH:mm')
     }
   },
   watch: {
@@ -742,6 +938,10 @@ export default {
 
     this.loadFormData()
   },
+  beforeUnmount () {
+    this.revokePreviewUrl(this.observacionForm.fotoPreview)
+    this.pendingObservaciones.forEach(item => this.revokePreviewUrl(item.fotoPreview))
+  },
   methods: {
     required (value) {
       return !!value || 'Campo requerido'
@@ -755,6 +955,205 @@ export default {
     },
     updateCostValue (key, value) {
       this.form[key] = value === '' || value === null ? '' : Number(value)
+    },
+    getObservacionCount (tipo) {
+      const savedCount = (this.observacionesByTipo[tipo] || []).length
+      const pendingCount = this.pendingObservaciones.filter(item => item.tipo === tipo).length
+      return savedCount + pendingCount
+    },
+    revokePreviewUrl (url) {
+      if (!url || typeof url !== 'string' || !url.startsWith('blob:')) return
+      URL.revokeObjectURL(url)
+    },
+    resetObservacionForm () {
+      this.revokePreviewUrl(this.observacionForm.fotoPreview)
+      this.observacionForm = createEmptyObservacionForm()
+      if (this.$refs.observacionCameraInput) this.$refs.observacionCameraInput.value = ''
+      if (this.$refs.observacionGalleryInput) this.$refs.observacionGalleryInput.value = ''
+    },
+    openObservacionDialog (costField) {
+      this.selectedCostField = costField
+      this.resetObservacionForm()
+      this.observacionDialog = true
+      if (this.isEdit && !this.observacionesLoaded) {
+        this.loadObservaciones()
+      }
+    },
+    closeObservacionDialog () {
+      this.observacionDialog = false
+      this.selectedCostField = null
+      this.resetObservacionForm()
+    },
+    openObservacionCamera () {
+      if (!this.$refs.observacionCameraInput) return
+      this.$refs.observacionCameraInput.value = ''
+      this.$refs.observacionCameraInput.click()
+    },
+    openObservacionGallery () {
+      if (!this.$refs.observacionGalleryInput) return
+      this.$refs.observacionGalleryInput.value = ''
+      this.$refs.observacionGalleryInput.click()
+    },
+    onObservacionFileSelected (event) {
+      const file = event?.target?.files?.[0]
+      if (!file) return
+      this.revokePreviewUrl(this.observacionForm.fotoPreview)
+      this.observacionForm.foto = file
+      this.observacionForm.fotoPreview = URL.createObjectURL(file)
+    },
+    clearObservacionPhoto () {
+      this.revokePreviewUrl(this.observacionForm.fotoPreview)
+      this.observacionForm.foto = null
+      this.observacionForm.fotoPreview = ''
+    },
+    formatObservacionDate (value) {
+      if (!value) return '-'
+      return moment(value).format('DD/MM/YYYY HH:mm:ss')
+    },
+    normalizeObservacionesByTipo (items = []) {
+      return (items || []).reduce((acc, item) => {
+        const tipo = item.tipo
+        if (!tipo) return acc
+        if (!acc[tipo]) acc[tipo] = []
+        acc[tipo].push({
+          ...item,
+          uid: `db-${item.id}`
+        })
+        return acc
+      }, {})
+    },
+    async loadObservaciones () {
+      if (!this.isEdit || !this.$route.params.id) return
+      this.loadingObservaciones = true
+      try {
+        const res = await this.$axios.get(`caja-recepciones/${this.$route.params.id}/observaciones`)
+        this.observacionesByTipo = this.normalizeObservacionesByTipo(res.data || [])
+        this.observacionesLoaded = true
+      } catch (err) {
+        this.$alert.error(err.response?.data?.message || 'No se pudieron cargar las observaciones')
+      } finally {
+        this.loadingObservaciones = false
+      }
+    },
+    buildObservacionFormData (item) {
+      const formData = new FormData()
+      formData.append('tipo', item.tipo)
+      if (item.observacion) {
+        formData.append('observacion', item.observacion)
+      }
+      if (item.foto) {
+        formData.append('foto', item.foto)
+      }
+      return formData
+    },
+    async saveObservacion () {
+      if (!this.selectedCostField) return
+      const observacion = (this.observacionForm.observacion || '').trim()
+      const foto = this.observacionForm.foto
+      if (!observacion && !foto) {
+        this.$alert.error('Registra una observacion o una imagen')
+        return
+      }
+
+      const payload = {
+        tipo: this.selectedCostField,
+        observacion,
+        foto
+      }
+
+      this.savingObservacion = true
+      try {
+        if (this.isEdit) {
+          const formData = this.buildObservacionFormData(payload)
+          const res = await this.$axios.post(
+            `caja-recepciones/${this.$route.params.id}/observaciones`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          )
+          const tipo = res.data?.tipo || this.selectedCostField
+          const current = this.observacionesByTipo[tipo] || []
+          this.observacionesByTipo = {
+            ...this.observacionesByTipo,
+            [tipo]: [{ ...res.data, uid: `db-${res.data.id}` }, ...current]
+          }
+        } else {
+          const tempId = `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`
+          this.pendingObservaciones.unshift({
+            uid: tempId,
+            id: tempId,
+            tipo: this.selectedCostField,
+            observacion,
+            foto,
+            fotoPreview: this.observacionForm.fotoPreview || '',
+            user_name: this.currentUserName,
+            created_at: moment().toISOString(),
+            is_pending: true
+          })
+        }
+
+        if (this.isEdit) {
+          this.resetObservacionForm()
+        } else {
+          this.observacionForm = createEmptyObservacionForm()
+        }
+        this.$alert.success('Observacion registrada')
+      } catch (err) {
+        this.$alert.error(err.response?.data?.message || 'No se pudo registrar la observacion')
+      } finally {
+        this.savingObservacion = false
+      }
+    },
+    async deleteObservacion (item) {
+      if (!item) return
+      if (item.is_pending || String(item.id || '').startsWith('tmp-')) {
+        this.pendingObservaciones = this.pendingObservaciones.filter(obs => obs.uid !== item.uid)
+        this.revokePreviewUrl(item.fotoPreview)
+        return
+      }
+
+      if (!this.isEdit || !this.$route.params.id || !item.id) return
+
+      this.deletingObservacion = true
+      try {
+        await this.$axios.delete(`caja-recepciones/${this.$route.params.id}/observaciones/${item.id}`)
+        const tipo = item.tipo
+        const current = this.observacionesByTipo[tipo] || []
+        this.observacionesByTipo = {
+          ...this.observacionesByTipo,
+          [tipo]: current.filter(obs => obs.id !== item.id)
+        }
+        this.$alert.success('Observacion eliminada')
+      } catch (err) {
+        this.$alert.error(err.response?.data?.message || 'No se pudo eliminar la observacion')
+      } finally {
+        this.deletingObservacion = false
+      }
+    },
+    async persistPendingObservaciones (cajaId) {
+      if (!cajaId || !this.pendingObservaciones.length) return
+      const failed = []
+
+      for (const item of this.pendingObservaciones) {
+        const formData = this.buildObservacionFormData(item)
+        try {
+          await this.$axios.post(
+            `caja-recepciones/${cajaId}/observaciones`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          )
+          this.revokePreviewUrl(item.fotoPreview)
+        } catch (error) {
+          failed.push(item)
+        }
+      }
+
+      this.pendingObservaciones = failed
+      this.observacionesByTipo = {}
+      this.observacionesLoaded = false
+
+      if (failed.length) {
+        throw new Error(`Se guardo la caja, pero ${failed.length} observacion(es) no se pudieron subir`)
+      }
     },
     syncAtencionMedicaCost () {
       this.syncingAtencionMedica = true
@@ -1105,21 +1504,31 @@ export default {
         })
         .finally(() => { this.anulando = false })
     },
-    save () {
+    async save () {
       this.saving = true
       const payload = this.buildPayload()
-      const request = this.isEdit
-        ? this.$axios.put(`caja-recepciones/${this.$route.params.id}`, payload)
-        : this.$axios.post('caja-recepciones', payload)
+      let cajaId = this.isEdit ? this.$route.params.id : null
 
-      request.then(() => {
+      try {
+        const res = this.isEdit
+          ? await this.$axios.put(`caja-recepciones/${this.$route.params.id}`, payload)
+          : await this.$axios.post('caja-recepciones', payload)
+
+        if (!this.isEdit) {
+          cajaId = res?.data?.id
+        }
+
+        await this.persistPendingObservaciones(cajaId)
         this.$alert.success(this.isEdit ? 'Caja de recepcion actualizada' : 'Caja de recepcion creada')
         this.$router.push({ name: 'caja-recepciones' })
-      }).catch(err => {
-        this.$alert.error(err.response?.data?.message || 'No se pudo guardar la caja de recepcion')
-      }).finally(() => {
+      } catch (err) {
+        if (cajaId && !this.isEdit) {
+          this.$router.replace({ name: 'caja-recepciones-editar', params: { id: cajaId } })
+        }
+        this.$alert.error(err.response?.data?.message || err.message || 'No se pudo guardar la caja de recepcion')
+      } finally {
         this.saving = false
-      })
+      }
     }
   }
 }

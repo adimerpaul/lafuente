@@ -146,6 +146,11 @@ class CajaRecepcion extends Model implements Auditable
         return $this->belongsTo(User::class, 'cobrado_por_user_id');
     }
 
+    public function observaciones()
+    {
+        return $this->hasMany(CajaObservacion::class);
+    }
+
     public function getDocumentoLabelAttribute(): string
     {
         return (int) $this->tipo_documento === 1 ? 'Factura' : 'Recibo';
