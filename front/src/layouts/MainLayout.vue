@@ -202,6 +202,7 @@ export default {
           icon: 'assessment',
           links: [
             { title: 'Reporte farmacia', icon: 'summarize', link: '/reportes/farmacia', can: 'Reportes farmacia' },
+            { title: 'Altas y Bajas pacientes', icon: 'medical_information', link: '/reportes/pacientes', can: 'Pacientes' },
             { title: 'Reporte farmacia institucional', icon: 'summarize', link: '/institucional/reportes/farmacia', can: 'Reportes farmacia institucional' },
           ]
         },
@@ -233,6 +234,7 @@ export default {
             // { title: 'Formulario nuevo', icon: 'post_add', link: '/formularios-control/nuevo', can: ['Formulario control nuevo', 'Formularios control'] },
             { title: 'Caja recepción', icon: 'point_of_sale', link: '/caja-recepciones', can: 'Caja recepcion' },
             { title: 'Crear caja recepción', icon: 'receipt_long', link: '/caja-recepciones/nuevo', can: 'Caja recepcion crear' },
+            { title: 'Cobros retrasados', icon: 'schedule', link: '/cobros-retrasados', can: 'Cobros retrasados' },
           ]
         }
       ],

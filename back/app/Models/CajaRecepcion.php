@@ -58,6 +58,9 @@ class CajaRecepcion extends Model implements Auditable
         'qr',
         'efectivo',
         'egreso',
+        'estado_cobro',
+        'fecha_cobro',
+        'cobrado_por_user_id',
         'recaudado_total',
         'costo_atencion_medica',
         'costo_curacion',
@@ -136,6 +139,11 @@ class CajaRecepcion extends Model implements Auditable
     public function doctor()
     {
         return $this->belongsTo(Doctor::class);
+    }
+
+    public function cobradoPor()
+    {
+        return $this->belongsTo(User::class, 'cobrado_por_user_id');
     }
 
     public function getDocumentoLabelAttribute(): string

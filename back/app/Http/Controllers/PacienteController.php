@@ -145,6 +145,89 @@ class PacienteController extends Controller{
 
         return $pdf->stream('pacientes_reporte.pdf');
     }
+    function reporteAltasBajas(Request $request){
+        $fechaInicio = $request->input('fecha_inicio');
+        $fechaFin    = $request->input('fecha_fin');
+
+        $altasQuery = Paciente::with(['registroUser', 'altaUser'])
+            ->where('tipo_paciente', 'Interno')
+            ->where('estado_internacion', 'Alta');
+
+        if ($fechaInicio && $fechaFin) {
+            $altasQuery->whereBetween('fecha_alta', [
+                $fechaInicio . ' 00:00:00',
+                $fechaFin . ' 23:59:59',
+            ]);
+        }
+
+        $altas = $altasQuery->orderByDesc('fecha_alta')->orderBy('apellido')->get();
+
+        $bajasQuery = Paciente::withTrashed()
+            ->with(['registroUser'])
+            ->whereNotNull('deleted_at');
+
+        if ($fechaInicio && $fechaFin) {
+            $bajasQuery->whereBetween('deleted_at', [
+                $fechaInicio . ' 00:00:00',
+                $fechaFin . ' 23:59:59',
+            ]);
+        }
+
+        $bajas = $bajasQuery->orderByDesc('deleted_at')->orderBy('apellido')->get()->makeVisible('deleted_at');
+
+        return response()->json(['altas' => $altas, 'bajas' => $bajas]);
+    }
+    function reporteAltasBajasPdf(Request $request){
+        $fechaInicio = $request->input('fecha_inicio');
+        $fechaFin = $request->input('fecha_fin');
+
+        $altasQuery = Paciente::with(['registroUser', 'altaUser'])
+            ->where('tipo_paciente', 'Interno')
+            ->where('estado_internacion', 'Alta');
+
+        if ($fechaInicio && $fechaFin) {
+            $altasQuery->whereBetween('fecha_alta', [
+                $fechaInicio . ' 00:00:00',
+                $fechaFin . ' 23:59:59',
+            ]);
+        }
+
+        $altas = $altasQuery->orderByDesc('fecha_alta')->orderBy('apellido')->get();
+
+        $bajasQuery = Paciente::withTrashed()
+            ->with(['registroUser'])
+            ->whereNotNull('deleted_at');
+
+        if ($fechaInicio && $fechaFin) {
+            $bajasQuery->whereBetween('deleted_at', [
+                $fechaInicio . ' 00:00:00',
+                $fechaFin . ' 23:59:59',
+            ]);
+        }
+
+        $bajas = $bajasQuery->orderByDesc('deleted_at')->orderBy('apellido')->get();
+
+        $pdf = Pdf::loadView('pdf.pacientes_altas_bajas', [
+            'altas'        => $altas,
+            'bajas'        => $bajas,
+            'fechaInicio'  => $fechaInicio,
+            'fechaFin'     => $fechaFin,
+            'generadoEn'   => now(),
+        ])->setPaper('letter', 'landscape');
+
+        return $pdf->stream('reporte_altas_bajas.pdf');
+    }
+    function exportarInternoAlta(){
+        $pacientes = Paciente::with(['altaUser'])
+            ->where('tipo_paciente', 'Interno')
+            ->where('estado_internacion', 'Alta')
+            ->orderByDesc('fecha_alta')
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->get(['id','nombre','apellido','identificacion','edad','sexo','estado_civil','direccion','telefono','fecha_alta','alta_user_id']);
+
+        return response()->json($pacientes);
+    }
     function destroy(Paciente $paciente){
         $paciente->delete();
         return response()->json($paciente);

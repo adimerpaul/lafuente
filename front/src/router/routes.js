@@ -17,6 +17,7 @@ const routes = [
       { path: 'productos-vencer', name: 'productos-vencer', component: () => import('pages/productos/ProductosVencer.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'productos-vencidos', name: 'productos-vencidos', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'reportes/farmacia', name: 'reportes-farmacia', component: () => import('pages/reportes/ReporteFarmacia.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
+      { path: 'reportes/pacientes', name: 'reportes-pacientes', component: () => import('pages/reportes/ReportePacientes.vue'), meta: { requiresAuth: true } },
       { path: 'institucional/productos', name: 'productos-institucional', component: () => import('pages/productos/Productos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/venta', name: 'venta-institucional', component: () => import('pages/ventas/Ventas.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/ventaNuevo', name: 'ventaNuevo-institucional', component: () => import('pages/ventas/VentaNew.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
@@ -34,6 +35,7 @@ const routes = [
       { path: 'caja-recepciones', name: 'caja-recepciones', component: () => import('pages/caja-recepcion/CajaRecepcionList.vue'), meta: { requiresAuth: true } },
       { path: 'caja-recepciones/nuevo', name: 'caja-recepciones-nuevo', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
       { path: 'caja-recepciones/:id', name: 'caja-recepciones-editar', component: () => import('pages/caja-recepcion/CajaRecepcionForm.vue'), meta: { requiresAuth: true } },
+      { path: 'cobros-retrasados', name: 'cobros-retrasados', component: () => import('pages/caja-recepcion/CobrosRetrasados.vue'), meta: { requiresAuth: true } },
       { path: 'traspaso', name: 'traspaso', component: () => import('pages/Traspaso.vue'), meta: { requiresAuth: true } },
       { path: 'historial-traspasos', name: 'historial-traspasos', component: () => import('pages/HistorialTraspasos.vue'), meta: { requiresAuth: true } },
       {

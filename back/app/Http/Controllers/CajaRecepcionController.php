@@ -14,12 +14,18 @@ class CajaRecepcionController extends Controller
         $fechaInicio = $request->get('fechaInicio');
         $fechaFin = $request->get('fechaFin');
         $userId = $request->get('user_id');
+        $pacienteId = $request->get('paciente_id');
+        $cobrosRetrasados = $request->boolean('cobros_retrasados');
+        $cobradoPorUserId = $request->get('cobrado_por_user_id');
         $search = trim((string) $request->get('search', ''));
 
-        return CajaRecepcion::with(['user', 'paciente', 'doctor'])
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
+            ->when($pacienteId, fn ($q) => $q->where('paciente_id', $pacienteId))
+            ->when($cobrosRetrasados, fn ($q) => $q->where('estado_cobro', 'Pendiente'))
+            ->when($cobradoPorUserId, fn ($q) => $q->where('cobrado_por_user_id', $cobradoPorUserId))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($subQuery) use ($search) {
                     $subQuery->where('numero_ficha', 'like', "%{$search}%")
@@ -38,46 +44,50 @@ class CajaRecepcionController extends Controller
 
     public function index(Request $request)
     {
-        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
+        $items       = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
         $activeItems = $items->where('estado', '!=', 'Anulado');
+        $paidItems   = $activeItems->where('estado_cobro', 'Pagado');
 
         $resumen = [
-            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
-            'total_ingresos' => (float) $activeItems->sum('recaudado_total'),
-            'total_egresos' => (float) $activeItems->sum('egreso'),
-            'total_qr' => (float) $activeItems->sum('qr'),
-            'total_efectivo' => (float) $activeItems->sum('efectivo'),
-            'total_efectivo_caja' => (float) $activeItems->sum('efectivo')
-                - (float) $activeItems->sum('egreso'),
-            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
-            'total_final' => (float) $activeItems->sum('efectivo')
-                - (float) $activeItems->sum('egreso'),
+            'total_recaudado'     => (float) $paidItems->sum('recaudado_total'),
+            'total_ingresos'      => (float) $paidItems->sum('recaudado_total'),
+            'total_egresos'       => (float) $paidItems->sum('egreso'),
+            'total_qr'            => (float) $paidItems->sum('qr'),
+            'total_efectivo'      => (float) $paidItems->sum('efectivo'),
+            'total_efectivo_caja' => (float) $paidItems->sum('efectivo')
+                                   - (float) $paidItems->sum('egreso'),
+            'total_farmacia'      => (float) $paidItems->sum('costo_farmacia'),
+            'total_final'         => (float) $paidItems->sum('efectivo')
+                                   - (float) $paidItems->sum('egreso'),
+            'total_pendiente'     => (float) $activeItems->where('estado_cobro', '!=', 'Pagado')->sum('recaudado_total'),
         ];
 
         return response()->json([
-            'data' => $items,
+            'data'    => $items,
             'summary' => $resumen,
         ]);
     }
 
     public function pdf(Request $request)
     {
-        $items = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
+        $items       = $this->queryIndex($request)->orderByDesc('fecha')->orderByDesc('id')->get();
         $activeItems = $items->where('estado', '!=', 'Anulado');
+        $paidItems   = $activeItems->where('estado_cobro', 'Pagado');
 
         $summary = [
-            'total_recaudado' => (float) $activeItems->sum('recaudado_total'),
-            'total_egresos' => (float) $activeItems->sum('egreso'),
-            'total_farmacia' => (float) $activeItems->sum('costo_farmacia'),
-            'saldo' => (float) $activeItems->sum('recaudado_total')
-                - (float) $activeItems->sum('egreso')
-                - (float) $activeItems->sum('costo_farmacia'),
-            'total_qr' => (float) $activeItems->sum('qr'),
-            'total_efectivo' => (float) $activeItems->sum('efectivo'),
-            'saldo_final_efectivo' => ((float) $activeItems->sum('recaudado_total')
-                    - (float) $activeItems->sum('egreso')
-                    - (float) $activeItems->sum('costo_farmacia'))
-                - (float) $activeItems->sum('qr'),
+            'total_recaudado'     => (float) $paidItems->sum('recaudado_total'),
+            'total_egresos'       => (float) $paidItems->sum('egreso'),
+            'total_farmacia'      => (float) $paidItems->sum('costo_farmacia'),
+            'saldo'               => (float) $paidItems->sum('recaudado_total')
+                                   - (float) $paidItems->sum('egreso')
+                                   - (float) $paidItems->sum('costo_farmacia'),
+            'total_qr'            => (float) $paidItems->sum('qr'),
+            'total_efectivo'      => (float) $paidItems->sum('efectivo'),
+            'saldo_final_efectivo'=> ((float) $paidItems->sum('recaudado_total')
+                                   - (float) $paidItems->sum('egreso')
+                                   - (float) $paidItems->sum('costo_farmacia'))
+                                   - (float) $paidItems->sum('qr'),
+            'total_pendiente'     => (float) $activeItems->where('estado_cobro', '!=', 'Pagado')->sum('recaudado_total'),
         ];
 
         $hoy = now();
@@ -231,7 +241,7 @@ class CajaRecepcionController extends Controller
 
     public function show(CajaRecepcion $cajaRecepcion)
     {
-        return CajaRecepcion::with(['user', 'paciente', 'doctor'])->findOrFail($cajaRecepcion->id);
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor'])->findOrFail($cajaRecepcion->id);
     }
 
     public function store(Request $request)
@@ -245,7 +255,7 @@ class CajaRecepcionController extends Controller
 
         $cajaRecepcion = CajaRecepcion::create($data);
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor']), 201);
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']), 201);
     }
 
     public function update(Request $request, CajaRecepcion $cajaRecepcion)
@@ -258,7 +268,33 @@ class CajaRecepcionController extends Controller
 
         $cajaRecepcion->update($data);
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor']));
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
+    }
+
+    public function anular(CajaRecepcion $cajaRecepcion)
+    {
+        if ($cajaRecepcion->is_anulado) {
+            return response()->json(['message' => 'Este registro ya fue anulado.'], 422);
+        }
+
+        $cajaRecepcion->update(['estado' => 'Anulado']);
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
+    }
+
+    public function cobrar(Request $request, CajaRecepcion $cajaRecepcion)
+    {
+        $data = $request->validate([
+            'fecha_cobro' => 'required|date',
+            'cobrado_por_user_id' => 'required|exists:users,id',
+        ]);
+
+        $cajaRecepcion->update([
+            'fecha_cobro' => $data['fecha_cobro'],
+            'cobrado_por_user_id' => $data['cobrado_por_user_id'],
+        ]);
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
     }
 
     public function destroy(CajaRecepcion $cajaRecepcion)
@@ -356,6 +392,9 @@ class CajaRecepcionController extends Controller
             'qr' => 'nullable|numeric|min:0',
             'efectivo' => 'nullable|numeric|min:0',
             'egreso' => 'nullable|numeric|min:0',
+            'estado_cobro' => 'nullable|in:Pendiente,Pagado',
+            'fecha_cobro' => 'nullable|date',
+            'cobrado_por_user_id' => 'nullable|exists:users,id',
             'costo_atencion_medica' => 'nullable|numeric|min:0',
             'costo_curacion' => 'nullable|numeric|min:0',
             'costo_inyectable' => 'nullable|numeric|min:0',

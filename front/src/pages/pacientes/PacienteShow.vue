@@ -43,6 +43,12 @@
                 <q-tab name="Ventas" :class="{'bg-green text-white': tab === 'Ventas'}">
                   <q-btn flat dense icon="shopping_cart" label="Ventas" no-caps />
                 </q-tab>
+                <q-tab name="cajas_recepcion" :class="{'bg-indigo text-white': tab === 'cajas_recepcion'}">
+                  <q-btn flat dense icon="point_of_sale" label="Caja" no-caps />
+                </q-tab>
+                <q-tab name="fotos" :class="{'bg-brown text-white': tab === 'fotos'}">
+                  <q-btn flat dense icon="photo_library" label="Fotos" no-caps />
+                </q-tab>
                 <q-tab name="recetas" :class="{'bg-teal text-white': tab === 'recetas'}">
                   <q-btn flat dense icon="receipt_long" label="Recetas" no-caps />
                 </q-tab>
@@ -83,6 +89,12 @@
                 </q-tab-panel>
                 <q-tab-panel name="Ventas">
                   <VentasTab :paciente="paciente" @pacienteGet="pacienteGet" />
+                </q-tab-panel>
+                <q-tab-panel name="cajas_recepcion">
+                  <CajasRecepcionTab :paciente="paciente" />
+                </q-tab-panel>
+                <q-tab-panel name="fotos">
+                  <FotosTab :paciente="paciente" />
                 </q-tab-panel>
                 <q-tab-panel name="cuentas por cobrar">
                   <CobrosTab :paciente="paciente" @pacienteGet="pacienteGet" />
@@ -127,15 +139,19 @@ import HabitosTab from "pages/pacientes/HabitosTab.vue";
 import DiagnosticosTab from "pages/pacientes/DiagnosticosTab.vue";
 import RecetasTab from "pages/pacientes/RecetasTab.vue";
 import VentasTab from "pages/pacientes/VentasTab.vue";
+import CajasRecepcionTab from "pages/pacientes/CajasRecepcionTab.vue";
 import CobrosTab from "pages/pacientes/CobrosTab.vue";
 import FacturasTab from "pages/pacientes/FacturaTab.vue";
 import PagosTab from "pages/pacientes/PagoTab.vue";
+import FotosTab from "pages/pacientes/FotosTab.vue";
 export default {
   name: 'PacienteNewPage',
   components: {
+    FotosTab,
     PagosTab,
     FacturasTab,
     CobrosTab,
+    CajasRecepcionTab,
     VentasTab, RecetasTab, DiagnosticosTab, HabitosTab, AntecedentesTab, SignosTab, HistorialTab, PacienteTab},
   data() {
     return {

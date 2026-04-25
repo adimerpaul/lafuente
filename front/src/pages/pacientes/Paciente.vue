@@ -47,7 +47,26 @@
             <div class="col-12 col-md-2">
               <div class="row q-gutter-sm justify-end">
                 <q-btn color="primary" label="Filtrar" no-caps icon="filter_alt" :loading="loading" @click="onFilterChange" />
-                <q-btn color="secondary" label="Reporte" no-caps icon="picture_as_pdf" :loading="reportLoading" @click="generarReporte" />
+                <q-btn-dropdown color="secondary" label="Reporte" no-caps icon="assessment" :loading="reportLoading || exportLoading">
+                  <q-list>
+                    <q-item clickable v-close-popup @click="generarReporte">
+                      <q-item-section avatar>
+                        <q-icon name="picture_as_pdf" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Reporte PDF</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item clickable v-close-popup @click="exportarInternoAltaExcel">
+                      <q-item-section avatar>
+                        <q-icon name="fa-solid fa-file-excel" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>Exportar Interno Alta (Excel)</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-btn-dropdown>
               </div>
             </div>
           </div>
@@ -102,6 +121,7 @@
 
 <script>
 import moment from 'moment'
+import { Excel } from 'src/addons/Excel'
 
 export default {
   name: 'PacientesPage',
@@ -110,6 +130,7 @@ export default {
       pacientes: [],
       loading: false,
       reportLoading: false,
+      exportLoading: false,
       filter: '',
       estadoInternacion: '',
       fechaAltaInicio: '',
@@ -184,6 +205,41 @@ export default {
       if (estado === 'Internado') return 'indigo'
       if (estado === 'Alta') return 'positive'
       return 'grey-7'
+    },
+    exportarInternoAltaExcel() {
+      this.exportLoading = true
+      this.$axios.get('pacientes/exportar/interno-alta').then(res => {
+        const rows = res.data.map(p => ({
+          nombre_completo: `${p.nombre} ${p.apellido}`,
+          identificacion: p.identificacion || '',
+          edad: p.edad || '',
+          sexo: p.sexo || '',
+          estado_civil: p.estado_civil || '',
+          direccion: p.direccion || '',
+          telefono: p.telefono || '',
+          fecha_alta: p.fecha_alta ? p.fecha_alta.substring(0, 16).replace('T', ' ') : '',
+          alta_por: p.alta_user?.name || '',
+        }))
+        Excel.export([{
+          sheet: 'Interno Alta',
+          columns: [
+            { label: 'Nombre completo', value: 'nombre_completo' },
+            { label: 'Identificación', value: 'identificacion' },
+            { label: 'Edad', value: 'edad' },
+            { label: 'Sexo', value: 'sexo' },
+            { label: 'Estado civil', value: 'estado_civil' },
+            { label: 'Dirección', value: 'direccion' },
+            { label: 'Teléfono', value: 'telefono' },
+            { label: 'Fecha alta', value: 'fecha_alta' },
+            { label: 'Alta por', value: 'alta_por' },
+          ],
+          content: rows,
+        }], 'pacientes_interno_alta')
+      }).catch(error => {
+        this.$alert.error(error.response?.data?.message || 'No se pudo exportar')
+      }).finally(() => {
+        this.exportLoading = false
+      })
     },
     generarReporte() {
       this.reportLoading = true

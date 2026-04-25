@@ -7,11 +7,26 @@
           <div class="text-caption">Registro rapido y ordenado para atencion de recepcion</div>
         </div>
         <q-space />
+        <q-btn
+          v-if="isEdit && !form.is_anulado"
+          flat
+          no-caps
+          icon="cancel"
+          label="Anular"
+          color="white"
+          class="q-mr-sm"
+          :loading="anulando"
+          @click="anularDialog = true"
+        />
         <q-btn flat round dense icon="arrow_back" color="white" @click="$router.push({ name: 'caja-recepciones' })" />
       </q-card-section>
 
+      <q-banner v-if="form.is_anulado" class="bg-negative text-white text-center text-weight-bold">
+        <q-icon name="cancel" class="q-mr-xs" /> Este registro fue ANULADO y no puede editarse.
+      </q-banner>
+
       <q-card-section class="q-pa-sm">
-        <q-form @submit="save">
+        <q-form @submit="save" :disable="form.is_anulado">
           <div class="row q-col-gutter-sm q-mb-sm">
             <div class="col-12 col-md-2">
               <q-card flat bordered>
@@ -75,7 +90,7 @@
                 emit-value
                 map-options
                 clearable
-                input-debounce="300"
+                input-debounce="600"
                 :options="pacienteOptions"
                 label="Paciente"
                 :rules="[required]"
@@ -144,16 +159,6 @@
 
                 <div class="col-12 col-md-3">
                   <q-input v-model="form.numero_ficha" dense outlined label="Numero de ficha" />
-                </div>
-                <div class="col-12 col-md-3">
-                  <q-toggle
-                    v-model="pagoAhoraToggle"
-                    checked-icon="payments"
-                    unchecked-icon="schedule"
-                    color="positive"
-                    keep-color
-                    :label="pagoAhoraToggle ? 'Paga ahora' : 'Paga luego'"
-                  />
                 </div>
                 <div class="col-12 col-md-6">
                   <q-select
@@ -301,6 +306,18 @@
                 </div>
                 <div v-if="showQr" class="col-12 col-md-4">
                   <q-input v-model.number="form.qr" dense outlined type="number" min="0" step="0.01" label="Monto QR" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <q-toggle
+                    v-model="form.estado_cobro"
+                    true-value="Pagado"
+                    false-value="Pendiente"
+                    checked-icon="payments"
+                    unchecked-icon="schedule"
+                    :color="form.estado_cobro === 'Pagado' ? 'positive' : 'grey-5'"
+                    keep-color
+                    :label="form.estado_cobro === 'Pagado' ? 'Paga ahora' : 'Paga luego'"
+                  />
                 </div>
                 <div class="col-12 col-md-4">
                   <q-card flat bordered class="q-pa-sm bg-grey-1">
@@ -457,6 +474,21 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="anularDialog" persistent>
+      <q-card style="min-width: 320px; max-width: 95vw">
+        <q-card-section class="row items-center">
+          <q-avatar icon="cancel" color="negative" text-color="white" />
+          <span class="q-ml-sm text-h6">Anular registro</span>
+        </q-card-section>
+        <q-card-section class="q-pt-none text-grey-8">
+          Esta acción <strong>no se puede deshacer</strong>. El registro quedará marcado como anulado y no podrá editarse.
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" no-caps @click="anularDialog = false" :disable="anulando" />
+          <q-btn color="negative" label="Sí, anular" no-caps icon="cancel" :loading="anulando" @click="anular" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -488,6 +520,7 @@ const emptyForm = () => ({
   qr: 0,
   efectivo: 0,
   egreso: 0,
+  estado_cobro: 'Pagado',
   costo_atencion_medica: 0,
   costo_curacion: 0,
   costo_inyectable: 0,
@@ -516,6 +549,8 @@ export default {
       tab: 'datos',
       loading: false,
       saving: false,
+      anulando: false,
+      anularDialog: false,
       savingPatient: false,
       savingDoctor: false,
       patientSearchTimer: null,
@@ -1056,6 +1091,19 @@ export default {
         payload.nombre_factura = null
       }
       return payload
+    },
+    anular () {
+      this.anulando = true
+      this.$axios.put(`caja-recepciones/${this.$route.params.id}/anular`)
+        .then(res => {
+          this.form = { ...this.form, ...res.data }
+          this.anularDialog = false
+          this.$alert.success('Registro anulado correctamente')
+        })
+        .catch(err => {
+          this.$alert.error(err.response?.data?.message || 'No se pudo anular el registro')
+        })
+        .finally(() => { this.anulando = false })
     },
     save () {
       this.saving = true

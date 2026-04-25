@@ -158,60 +158,56 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="dialogPermisos" position="top">
-      <q-card style="min-width: 600px; max-width: 800px;">
-        <q-card-section class="q-pb-none row items-center bg-primary text-white">
-          <div class="text-h6">🔐 Permisos de {{ user.name }}</div>
-          <q-space />
-          <q-btn icon="close" flat round dense @click="dialogPermisos = false" />
-        </q-card-section>
-        
-        <q-separator />
-        
-        <q-card-section class="q-pt-md">
-          <div class="row items-center q-mb-md">
-            <q-input
-              v-model="permisosFilterText"
-              placeholder="Buscar permisos..."
-              dense
-              outlined
-              class="col"
-            >
-              <template v-slot:prepend>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-            <q-chip
-              class="q-ml-md"
-              :label="`${user.permissionsSelected.length} / ${permisos.length}`"
-              color="info"
-              text-color="white"
-            />
+    <q-dialog v-model="dialogPermisos" position="top" :maximized="$q.screen.xs">
+      <q-card style="width: 95vw; max-width: 800px;">
+        <q-card-section class="q-pb-none row items-center bg-primary text-white q-pa-sm">
+          <div>
+            <div class="text-subtitle1 text-weight-bold">Permisos</div>
+            <div class="text-caption">{{ user.name }}</div>
           </div>
+          <q-space />
+          <q-chip dense color="white" text-color="primary" :label="`${(user.permissionsSelected || []).length} / ${permisos.length}`" />
+          <q-btn icon="close" flat round dense @click="dialogPermisos = false" class="q-ml-xs" />
+        </q-card-section>
 
+        <q-separator />
+
+        <q-card-section class="q-pt-sm q-pb-xs q-px-sm">
+          <q-input
+            v-model="permisosFilterText"
+            placeholder="Buscar permisos..."
+            dense
+            outlined
+          >
+            <template v-slot:prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-section class="q-pt-xs q-px-sm">
           <div class="permission-categories">
-            <div v-for="category in permissionCategories" :key="category.name" class="category-section q-mb-lg">
-              <div class="category-header q-mb-md">
-                <q-icon :name="category.icon" size="24px" :color="category.color" class="q-mr-sm" />
-                <span class="text-subtitle2 text-weight-bold">{{ category.name }}</span>
+            <div v-for="category in permissionCategories" :key="category.name" class="category-section q-mb-sm">
+              <div class="category-header q-mb-xs">
+                <q-icon :name="category.icon" size="20px" :color="category.color" />
+                <span class="text-body2 text-weight-bold q-ml-xs">{{ category.name }}</span>
                 <q-chip
-                  dense
-                  size="sm"
+                  dense size="sm"
                   :label="`${countCategorySelected(category.name)} / ${category.permisos.length}`"
-                  class="q-ml-md"
+                  class="q-ml-sm"
                   :color="countCategorySelected(category.name) > 0 ? 'positive' : 'grey-3'"
                   :text-color="countCategorySelected(category.name) > 0 ? 'white' : 'grey-7'"
                 />
               </div>
               <div class="permission-grid">
                 <div
-                  v-for="(permiso, index) in category.permisos.filter(p => p.name.toLowerCase().includes(permisosFilterText.toLowerCase()))"
+                  v-for="permiso in category.permisos.filter(p => p.name.toLowerCase().includes(permisosFilterText.toLowerCase()))"
                   :key="permiso.id"
                   class="permission-card"
                 >
                   <q-checkbox
-                    :model-value="user.permissionsSelected.includes(permiso.name)"
-                    :label="`${index + 1}. ${permiso.name}`"
+                    :model-value="(user.permissionsSelected || []).includes(permiso.name)"
+                    :label="permiso.name"
                     dense
                     color="primary"
                     class="full-width"
@@ -225,9 +221,9 @@
 
         <q-separator />
 
-        <q-card-section class="text-right">
-          <q-btn label="Cancelar" color="negative" flat @click="dialogPermisos = false" class="q-mr-sm" />
-          <q-btn label="Guardar permisos" color="primary" @click="guardarPermisos" :loading="loading" />
+        <q-card-section class="row justify-end q-pa-sm q-gutter-sm">
+          <q-btn label="Cancelar" color="negative" flat no-caps @click="dialogPermisos = false" />
+          <q-btn label="Guardar" color="primary" no-caps icon="save" @click="guardarPermisos" :loading="loading" />
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -556,11 +552,9 @@ export default {
 
 .permission-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 4px 12px;
-  max-height: 52vh;
-  overflow-y: auto;
-  padding-top: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px 8px;
+  padding-top: 4px;
 }
 
 .permission-item {
@@ -568,9 +562,9 @@ export default {
 }
 
 .permission-categories {
-  max-height: 65vh;
+  max-height: 60vh;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 4px;
 }
 
 .permission-categories::-webkit-scrollbar {
@@ -593,14 +587,13 @@ export default {
 
 .category-section {
   background: #f9f9f9;
-  border-left: 4px solid #e0e0e0;
-  padding: 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  border-left: 3px solid #e0e0e0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
 }
 
 .category-section:hover {
-  background: #f0f8ff;
   border-left-color: #1976d2;
 }
 
@@ -624,9 +617,4 @@ export default {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.permission-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 12px;
-}
 </style>

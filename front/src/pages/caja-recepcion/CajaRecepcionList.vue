@@ -98,6 +98,9 @@
           <div class="col-12 col-md-3">
             <q-chip dense color="indigo-1" text-color="indigo-9">Efectivo en caja: {{ money(summary.total_efectivo_caja) }}</q-chip>
           </div>
+          <div class="col-12 col-md-3" v-if="summary.total_pendiente > 0">
+            <q-chip dense color="orange-2" text-color="orange-9" icon="schedule">Pendiente de cobro: {{ money(summary.total_pendiente) }}</q-chip>
+          </div>
         </div>
       </q-card-section>
     </q-card>
@@ -107,6 +110,7 @@
       <tr class="bg-primary text-white">
         <th>Acciones</th>
         <th>Estado</th>
+        <th>Cobro</th>
         <th>Fecha y hora</th>
         <th>Paciente</th>
         <th>Ficha</th>
@@ -158,6 +162,15 @@
           </q-chip>
         </td>
         <td>
+          <q-chip
+            dense
+            :color="item.estado_cobro === 'Pagado' ? 'positive' : 'grey-4'"
+            :text-color="item.estado_cobro === 'Pagado' ? 'white' : 'grey-8'"
+          >
+            {{ item.estado_cobro || 'Pendiente' }}
+          </q-chip>
+        </td>
+        <td>
           <div>{{ item.fecha }}</div>
           <div class="text-caption">{{ item.hora || '-' }}</div>
         </td>
@@ -182,7 +195,7 @@
         <td class="text-right text-weight-bold">{{ money(item.saldo_final) }}</td>
       </tr>
       <tr v-if="!items.length">
-        <td colspan="15" class="text-center text-grey">No hay registros para el rango seleccionado</td>
+        <td colspan="16" class="text-center text-grey">No hay registros para el rango seleccionado</td>
       </tr>
       </tbody>
     </q-markup-table>
@@ -210,7 +223,8 @@ export default {
         total_efectivo: 0,
         total_efectivo_caja: 0,
         total_farmacia: 0,
-        total_final: 0
+        total_final: 0,
+        total_pendiente: 0
       },
       filters: {
         fechaInicio: moment().format('YYYY-MM-DD'),

@@ -33,6 +33,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/pacientes/{paciente}/alta', [App\Http\Controllers\PacienteController::class, 'darAlta']);
     Route::delete('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'destroy']);
     Route::get('/pacientes-reporte/pdf', [App\Http\Controllers\PacienteController::class, 'reportePdf']);
+    Route::get('/pacientes/exportar/interno-alta', [App\Http\Controllers\PacienteController::class, 'exportarInternoAlta']);
+    Route::get('/pacientes-reporte/altas-bajas', [App\Http\Controllers\PacienteController::class, 'reporteAltasBajas']);
+    Route::get('/pacientes-reporte/altas-bajas-pdf', [App\Http\Controllers\PacienteController::class, 'reporteAltasBajasPdf']);
+    Route::get('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'index']);
+    Route::post('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'store']);
+    Route::delete('/paciente-fotos/{pacienteFoto}', [App\Http\Controllers\PacienteFotoController::class, 'destroy']);
 
     Route::post('/historial_medicos', [App\Http\Controllers\HistorialMedicoController::class, 'store']);
 
@@ -120,6 +126,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'show']);
     Route::post('/caja-recepciones', [App\Http\Controllers\CajaRecepcionController::class, 'store']);
     Route::put('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'update']);
+    Route::post('/caja-recepciones/{cajaRecepcion}/cobrar', [App\Http\Controllers\CajaRecepcionController::class, 'cobrar']);
+    Route::put('/caja-recepciones/{cajaRecepcion}/anular', [App\Http\Controllers\CajaRecepcionController::class, 'anular']);
     Route::delete('/caja-recepciones/{cajaRecepcion}', [App\Http\Controllers\CajaRecepcionController::class, 'destroy']);
     Route::post('/ventasDevolverProducto', [App\Http\Controllers\VentaController::class, 'ventasDevolverProducto']);
 
