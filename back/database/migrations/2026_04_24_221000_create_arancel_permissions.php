@@ -9,11 +9,11 @@ class CreateArancelPermissions extends Migration
 {
     public function up()
     {
-        Permission::findOrCreate('modificar aranceles', 'api');
+        Permission::findOrCreate('Modificar aranceles', 'web');
     }
 
     public function down()
     {
-        Permission::where('name', 'modificar aranceles')->delete();
+        Permission::where('name', 'Modificar aranceles')->delete();
     }
 }

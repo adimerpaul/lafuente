@@ -174,7 +174,7 @@ export default {
     }
   },
   mounted () {
-    this.canModify = this.$store.user?.permissions?.includes('modificar aranceles') || false
+    this.canModify = this.$store.user?.permissions?.includes('Modificar aranceles') || false
     if (!this.canModify) {
       this.columns = this.columns.filter(col => col.name !== 'actions')
     }
