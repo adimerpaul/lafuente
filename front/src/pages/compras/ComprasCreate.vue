@@ -97,8 +97,6 @@
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Factor</th>
-                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Precio unitario 1.25</th>
-                  <th class="pm-none" style="max-width: 70px;line-height: 0.9">Total</th>
                   <th class="pm-none" style="max-width: 60px;line-height: 0.9">Precio venta</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Lote</th>
                   <th class="pm-none" style="max-width: 70px;line-height: 0.9">Fecha vencimiento</th>
@@ -169,15 +167,9 @@
                       @input="onFactorChange(producto)"
                     />
                   </td>
-                  <td class="text-right pm-none text-bold">
-                    {{ parseFloat(producto.precio * producto.factor).toFixed(2) }}
-                  </td>
-                  <td class="text-right pm-none">
-                    {{ parseFloat(producto.cantidad * producto.precio * producto.factor).toFixed(2) }}
-                  </td>
                   <td class="pm-none">
                     <input v-model="producto.precio_venta" type="number" style="width: 55px;color: red;font-weight: bold"
-                           step="0.01"/>
+                           step="1"/>
                   </td>
                   <td class="pm-none">
                     <input v-model="producto.lote" type="text" style="width: 70px;" />
@@ -525,29 +517,25 @@ export default {
     updatePrecioVenta(row) {
       const unit = Number(row.precio) || 0
       const factor = Number(row.factor) || 0
-      // tu lógica original con ceil, o usa redondeo a 2 decimales
-      // row.precio_venta = Math.ceil(unit * factor)
-      row.precio_venta = this.round2(unit * factor)
+      row.precio_venta = this.roundBoliviano(unit * factor)
     },
 
     round2(v) { return Math.round((Number(v) || 0) * 100) / 100 },
     round3(v) { return Math.round((Number(v) || 0) * 1000) / 1000 },
+    roundBoliviano(v) { return Math.round(Number(v) || 0) },
     buildCompraItem(producto, cantidad = 1) {
       const factor = 1.25
       const qty = Number(cantidad) || 1
-      const precioLista = Number(producto?.precio) || 0
-      const precioCompra = this.round3(precioLista / factor)
-      const total = this.round2(qty * precioCompra)
       return {
         producto_id: producto.id,
         cantidad: qty,
-        precio: precioCompra,
-        total,
+        precio: '',
+        total: '',
         lote: '',
         fecha_vencimiento: '',
         producto,
         factor,
-        precio_venta: this.round2(precioCompra * factor),
+        precio_venta: '',
       }
     },
     recuperarPedido() {
