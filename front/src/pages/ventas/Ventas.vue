@@ -1,105 +1,51 @@
 <template>
   <q-page class="q-pa-xs">
     <div class="row">
-      <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat class="ventas-resumen-card ventas-resumen-card--qr text-white">
-          <q-card-section class="row items-center no-wrap">
-            <q-item-section avatar>
-              <div class="ventas-resumen-card__icon">
-                <q-icon name="qr_code_2" size="34px" color="white" />
-              </div>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white text-weight-medium">Ventas con QR</q-item-label>
-              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalQr.toFixed(2) }} Bs</q-item-label>
-              <q-item-label caption class="text-blue-1">Monto calculado en ventas activas pagadas por QR</q-item-label>
-              <div class="ventas-resumen-card__breakdown">
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Internado</span>
-                  <strong>{{ totalQrInternado.toFixed(2) }} Bs</strong>
+      <div
+        v-for="card in tipoCards"
+        :key="card.key"
+        class="col-12 col-sm-6 col-md-3 q-pa-xs"
+      >
+        <q-card flat class="tipo-card text-white" :style="{ background: card.gradient }">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center no-wrap q-mb-sm">
+              <q-icon :name="card.icon" size="20px" class="q-mr-sm tipo-card__icon-inline" />
+              <span class="tipo-card__label">{{ card.label }}</span>
+            </div>
+            <div class="tipo-card__total">
+              {{ card.total.toFixed(2) }}
+              <span class="tipo-card__bs">Bs</span>
+            </div>
+            <div class="row justify-end q-mt-xs">
+              <q-btn
+                flat dense no-caps
+                class="tipo-card__mas-btn"
+                @click="toggleCard(card.key)"
+              >
+                {{ expandedCards[card.key] ? 'menos' : 'más' }}
+                <q-icon
+                  :name="expandedCards[card.key] ? 'expand_less' : 'expand_more'"
+                  size="15px"
+                  class="q-ml-xs"
+                />
+              </q-btn>
+            </div>
+            <q-slide-transition>
+              <div v-show="expandedCards[card.key]" class="tipo-card__breakdown">
+                <div class="tipo-card__breakdown-row">
+                  <div class="tipo-card__breakdown-label">
+                    <q-icon name="qr_code_2" size="13px" class="q-mr-xs" />QR
+                  </div>
+                  <strong>{{ card.qr.toFixed(2) }} Bs</strong>
                 </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Externo</span>
-                  <strong>{{ totalQrExterno.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Seguro</span>
-                  <strong>{{ totalQrSeguro.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Recepción</span>
-                  <strong>{{ totalQrRecepcion.toFixed(2) }} Bs</strong>
-                </div>
-              </div>
-            </q-item-section>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat class="ventas-resumen-card ventas-resumen-card--cash text-white">
-          <q-card-section class="row items-center no-wrap">
-            <q-item-section avatar>
-              <div class="ventas-resumen-card__icon">
-                <q-icon name="payments" size="34px" color="white" />
-              </div>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white text-weight-medium">Ventas en Efectivo</q-item-label>
-              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalEfectivo.toFixed(2) }} Bs</q-item-label>
-              <q-item-label caption class="text-orange-1">Monto calculado en ventas activas cobradas en efectivo</q-item-label>
-              <div class="ventas-resumen-card__breakdown">
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Internado</span>
-                  <strong>{{ totalEfectivoInternado.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Externo</span>
-                  <strong>{{ totalEfectivoExterno.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Seguro</span>
-                  <strong>{{ totalEfectivoSeguro.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Recepción</span>
-                  <strong>{{ totalEfectivoRecepcion.toFixed(2) }} Bs</strong>
+                <div class="tipo-card__breakdown-row">
+                  <div class="tipo-card__breakdown-label">
+                    <q-icon name="payments" size="13px" class="q-mr-xs" />Efectivo
+                  </div>
+                  <strong>{{ card.efectivo.toFixed(2) }} Bs</strong>
                 </div>
               </div>
-            </q-item-section>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-4 q-pa-xs">
-        <q-card flat class="ventas-resumen-card ventas-resumen-card--total text-white">
-          <q-card-section class="row items-center no-wrap">
-            <q-item-section avatar>
-              <div class="ventas-resumen-card__icon">
-                <q-icon name="account_balance_wallet" size="34px" color="white" />
-              </div>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white text-weight-medium">Total Ventas Activas</q-item-label>
-              <q-item-label class="text-white text-h4 text-weight-bold">{{ totalVentasActivas.toFixed(2) }} Bs</q-item-label>
-              <q-item-label caption class="text-green-1">{{ ventasActivasCount }} ventas activas en el rango seleccionado</q-item-label>
-              <div class="ventas-resumen-card__breakdown">
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Internado</span>
-                  <strong>{{ totalInternos.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Externo</span>
-                  <strong>{{ totalExternos.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Seguro</span>
-                  <strong>{{ totalSeguros.toFixed(2) }} Bs</strong>
-                </div>
-                <div class="ventas-resumen-card__breakdown-item">
-                  <span>Recepción</span>
-                  <strong>{{ totalRecepciones.toFixed(2) }} Bs</strong>
-                </div>
-              </div>
-            </q-item-section>
+            </q-slide-transition>
           </q-card-section>
         </q-card>
       </div>
@@ -1102,6 +1048,7 @@ export default {
       users: [],
       user: '',
       tipoVenta: '',
+      expandedCards: { internado: false, externo: false, seguro: false, recepcion: false },
       gastoDialog: false,
       savingGasto: false,
       gastoForm: {
@@ -1536,6 +1483,9 @@ export default {
         })
       })
     },
+    toggleCard(key) {
+      this.expandedCards[key] = !this.expandedCards[key]
+    },
     ventasGet() {
       this.loading = true
       this.$axios.get('ventas',{
@@ -1676,6 +1626,30 @@ export default {
     totalRecepciones() {
       return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Recepción' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
     },
+    tipoCards() {
+      return [
+        {
+          key: 'internado', label: 'Internado', icon: 'hotel',
+          gradient: 'linear-gradient(135deg,#312e81 0%,#4f46e5 100%)',
+          total: this.totalInternos, qr: this.totalQrInternado, efectivo: this.totalEfectivoInternado,
+        },
+        {
+          key: 'externo', label: 'Externo', icon: 'person',
+          gradient: 'linear-gradient(135deg,#b45309 0%,#f97316 100%)',
+          total: this.totalExternos, qr: this.totalQrExterno, efectivo: this.totalEfectivoExterno,
+        },
+        {
+          key: 'seguro', label: 'Seguro', icon: 'health_and_safety',
+          gradient: 'linear-gradient(135deg,#581c87 0%,#9333ea 100%)',
+          total: this.totalSeguros, qr: this.totalQrSeguro, efectivo: this.totalEfectivoSeguro,
+        },
+        {
+          key: 'recepcion', label: 'Recepción', icon: 'support_agent',
+          gradient: 'linear-gradient(135deg,#115e59 0%,#0d9488 100%)',
+          total: this.totalRecepciones, qr: this.totalQrRecepcion, efectivo: this.totalEfectivoRecepcion,
+        },
+      ]
+    },
     totalQrRecepcion() {
       return this.ventasFiltradas.reduce((acc, venta) =>
         venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'QR' && venta.tipo_venta === 'Recepción'
@@ -1690,55 +1664,13 @@ export default {
 }
 </script>
 <style scoped>
-.ventas-resumen-card {
-  border-radius: 22px;
-  overflow: hidden;
-  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
-}
-
-.ventas-resumen-card--qr {
-  background: linear-gradient(135deg, #0f4c81 0%, #2563eb 100%);
-}
-
-.ventas-resumen-card--cash {
-  background: linear-gradient(135deg, #b45309 0%, #f97316 100%);
-}
-
-.ventas-resumen-card--total {
-  background: linear-gradient(135deg, #0f766e 0%, #22c55e 100%);
-}
-
-.ventas-resumen-card__icon {
-  width: 62px;
-  height: 62px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(8px);
-}
-
-.ventas-resumen-card__breakdown {
-  margin-top: 10px;
-  display: grid;
-  gap: 6px;
-}
-
-.ventas-resumen-card__breakdown-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  font-size: 12px;
-}
-
-.ventas-resumen-card__breakdown-item span {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.ventas-resumen-card__breakdown-item strong {
-  font-weight: 700;
-}
+.tipo-card { border-radius: 18px; overflow: hidden; box-shadow: 0 10px 28px rgba(15,23,42,0.18); height: 100%; }
+.tipo-card__label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; opacity: 0.9; }
+.tipo-card__total { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+.tipo-card__bs { font-size: 14px; font-weight: 500; opacity: 0.8; margin-left: 2px; }
+.tipo-card__mas-btn { color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: rgba(255,255,255,0.15); }
+.tipo-card__breakdown { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tipo-card__breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.13); font-size: 12px; }
+.tipo-card__breakdown-label { display: flex; align-items: center; opacity: 0.85; }
+.tipo-card__breakdown-row strong { font-weight: 700; }
 </style>

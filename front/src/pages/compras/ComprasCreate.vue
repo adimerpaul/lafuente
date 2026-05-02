@@ -522,7 +522,7 @@ export default {
 
     round2(v) { return Math.round((Number(v) || 0) * 100) / 100 },
     round3(v) { return Math.round((Number(v) || 0) * 1000) / 1000 },
-    roundBoliviano(v) { return Math.round(Number(v) || 0) },
+    roundBoliviano(v) { return Math.round((Number(v) || 0) * 2) / 2 },
     buildCompraItem(producto, cantidad = 1) {
       const factor = 1.25
       const qty = Number(cantidad) || 1
