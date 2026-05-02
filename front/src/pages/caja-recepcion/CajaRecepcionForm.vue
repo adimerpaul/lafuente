@@ -110,8 +110,8 @@
 
           <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-8">
             <q-tab name="datos" icon="assignment" label="Datos" no-caps />
-            <q-tab name="formulario" icon="assignment_turned_in" label="Formulario" no-caps />
             <q-tab name="costos" icon="payments" label="Costos" no-caps />
+            <q-tab name="formulario" icon="assignment_turned_in" label="Formulario" no-caps />
             <q-tab name="pagos" icon="point_of_sale" label="Pago y cierre" no-caps />
           </q-tabs>
           <q-separator />
