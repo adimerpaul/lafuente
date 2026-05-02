@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\PacienteVenta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CajaRecepcion;
+use App\Models\CajaRecepcionCosto;
 use Illuminate\Http\Request;
 
 class CajaRecepcionController extends Controller
@@ -243,7 +244,7 @@ class CajaRecepcionController extends Controller
 
     public function show(CajaRecepcion $cajaRecepcion)
     {
-        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor'])->findOrFail($cajaRecepcion->id);
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems'])->findOrFail($cajaRecepcion->id);
     }
 
     public function store(Request $request)
@@ -253,11 +254,21 @@ class CajaRecepcionController extends Controller
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
         $data['estado'] = 'Activo';
-        $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
+
+        $costosDetalle = $request->input('costos_detalle', null);
+        if ($costosDetalle !== null) {
+            $data['recaudado_total'] = collect($costosDetalle)->sum('monto');
+        } else {
+            $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
+        }
 
         $cajaRecepcion = CajaRecepcion::create($data);
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']), 201);
+        if ($costosDetalle !== null) {
+            $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
+        }
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']), 201);
     }
 
     public function update(Request $request, CajaRecepcion $cajaRecepcion)
@@ -266,11 +277,37 @@ class CajaRecepcionController extends Controller
         $data['user_id'] = $request->user()->id;
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
-        $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
+
+        $costosDetalle = $request->input('costos_detalle', null);
+        if ($costosDetalle !== null) {
+            $data['recaudado_total'] = collect($costosDetalle)->sum('monto');
+        } else {
+            $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
+        }
 
         $cajaRecepcion->update($data);
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
+        if ($costosDetalle !== null) {
+            $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
+        }
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']));
+    }
+
+    private function saveCostosDetalle(CajaRecepcion $cajaRecepcion, array $costosDetalle): void
+    {
+        $cajaRecepcion->costoItems()->delete();
+        foreach ($costosDetalle as $item) {
+            if (($item['monto'] ?? 0) <= 0) {
+                continue;
+            }
+            $cajaRecepcion->costoItems()->create([
+                'costo_id'   => $item['costo_id'] ?? null,
+                'nombre'     => $item['nombre'] ?? '',
+                'monto'      => (float) ($item['monto'] ?? 0),
+                'arancel_ids' => $item['arancel_ids'] ?? [],
+            ]);
+        }
     }
 
     public function anular(CajaRecepcion $cajaRecepcion)

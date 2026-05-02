@@ -29,6 +29,7 @@ const routes = [
       // doctores
       { path: 'doctores', name: 'doctores', component: () => import('pages/doctores/Doctores.vue'), meta: { requiresAuth: true } },
       { path: 'aranceles', name: 'aranceles', component: () => import('pages/aranceles/Aranceles.vue'), meta: { requiresAuth: true } },
+      { path: 'costos', name: 'costos', component: () => import('pages/costos/Costos.vue'), meta: { requiresAuth: true } },
       { path: 'formularios-control', name: 'formularios-control', component: () => import('pages/formularios-control/FormulariosControl.vue'), meta: { requiresAuth: true } },
       { path: 'formularios-control/nuevo', name: 'formularios-control-nuevo', component: () => import('pages/formularios-control/FormularioControlForm.vue'), meta: { requiresAuth: true } },
       { path: 'formularios-control/:id', name: 'formularios-control-editar', component: () => import('pages/formularios-control/FormularioControlForm.vue'), meta: { requiresAuth: true } },

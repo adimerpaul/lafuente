@@ -1,0 +1,18 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Spatie\Permission\Models\Permission;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Permission::firstOrCreate(['name' => 'Costos', 'guard_name' => 'web']);
+    }
+
+    public function down(): void
+    {
+        Permission::where('name', 'Costos')->delete();
+    }
+};

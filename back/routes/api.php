@@ -120,6 +120,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/aranceles', [App\Http\Controllers\ArancelController::class, 'store']);
     Route::put('/aranceles/{arancel}', [App\Http\Controllers\ArancelController::class, 'update']);
     Route::delete('/aranceles/{arancel}', [App\Http\Controllers\ArancelController::class, 'destroy']);
+
+    Route::get('/costos', [App\Http\Controllers\CostoController::class, 'index']);
+    Route::post('/costos', [App\Http\Controllers\CostoController::class, 'store']);
+    Route::put('/costos/{costo}', [App\Http\Controllers\CostoController::class, 'update']);
+    Route::delete('/costos/{costo}', [App\Http\Controllers\CostoController::class, 'destroy']);
     Route::get('/formularios-control', [App\Http\Controllers\FormularioControlController::class, 'index']);
     Route::get('/formularios-control/{formularioControl}', [App\Http\Controllers\FormularioControlController::class, 'show']);
     Route::post('/formularios-control', [App\Http\Controllers\FormularioControlController::class, 'store']);

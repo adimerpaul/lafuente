@@ -261,38 +261,51 @@
             </q-tab-panel>
 
             <q-tab-panel name="costos" class="q-pa-sm">
-              <div class="row q-col-gutter-sm">
-                <div v-for="field in costFields" :key="field.key" class="col-12 col-sm-6 col-md-3 col-xl-2">
-                  <q-card flat bordered class="cost-card" :class="field.cardClass">
+              <div v-if="loadingCostos" class="flex flex-center q-py-lg">
+                <q-spinner color="teal" size="40px" />
+              </div>
+              <div v-else-if="!costosCatalogo.length" class="text-center text-grey-6 q-py-lg">
+                No hay costos configurados. Ve a <strong>Financiera → Costos</strong> para crearlos.
+              </div>
+              <div v-else class="row q-col-gutter-sm">
+                <div
+                  v-for="costo in costosCatalogo"
+                  :key="costo.id"
+                  class="col-12 col-sm-6 col-md-4 col-xl-3"
+                >
+                  <q-card flat bordered class="costo-item-card">
                     <q-card-section class="q-pa-sm">
+                      <div class="row items-center no-wrap q-mb-xs">
+                        <div class="costo-item-icon q-mr-sm" :style="{ background: costo._hex }">
+                          <q-icon :name="costo.icono || 'payments'" color="white" size="xs" />
+                        </div>
+                        <div class="col text-caption text-weight-bold ellipsis">{{ costo.nombre }}</div>
+                        <div class="text-caption text-grey-6 q-ml-xs">{{ costo.categoria }}</div>
+                      </div>
                       <q-input
-                        :model-value="displayCostValue(field.key)"
+                        :model-value="costoValueDisplay(costo.id)"
                         dense
                         outlined
                         type="number"
                         min="0"
-                        step="0.01"
-                        :label="field.label"
-                        @update:model-value="updateCostValue(field.key, $event)"
+                        step="0.5"
+                        label="Monto (Bs)"
+                        @update:model-value="setCostoMonto(costo.id, $event)"
                       >
                         <template #prepend>
-                          <q-icon :name="field.icon" :color="field.iconColor" />
+                          <span class="text-caption text-grey-7">Bs</span>
                         </template>
                         <template #append>
                           <q-btn
-                            flat
-                            round
-                            dense
-                            icon="add_circle"
-                            color="primary"
-                            @click.stop="openObservacionDialog(field.key)"
+                            v-if="costo.aranceles && costo.aranceles.length"
+                            flat round dense icon="add_circle"
+                            color="teal-7"
+                            @click.stop="openArancelDialog(costo)"
                           >
                             <q-badge
-                              v-if="getObservacionCount(field.key) > 0"
-                              floating
-                              rounded
-                              color="positive"
-                              :label="String(getObservacionCount(field.key))"
+                              v-if="costoArancelCount(costo.id) > 0"
+                              floating rounded color="positive"
+                              :label="String(costoArancelCount(costo.id))"
                             />
                           </q-btn>
                         </template>
@@ -301,10 +314,10 @@
                   </q-card>
                 </div>
                 <div class="col-12 col-md-6">
-                  <q-input v-model="form.laboratorio_nombre" dense outlined label="A que laboratorio se lo llevo" />
+                  <q-input v-model="form.laboratorio_nombre" dense outlined label="A qué laboratorio se lo llevó" />
                 </div>
                 <div class="col-12 col-md-6">
-                  <q-input v-model="form.medico_ecografia" dense outlined label="Quien hizo la ecografia" />
+                  <q-input v-model="form.medico_ecografia" dense outlined label="Quién hizo la ecografía" />
                 </div>
               </div>
             </q-tab-panel>
@@ -365,7 +378,7 @@
                       class="q-mt-sm"
                     />
                     <div class="text-caption text-grey-7">
-                      Calculado sobre atencion medica: {{ money(form.costo_atencion_medica) }}
+                      Calculado sobre total recaudado: {{ money(recaudadoTotal) }}
                     </div>
                   </q-card>
                 </div>
@@ -639,6 +652,53 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="arancelDialog" persistent>
+      <q-card style="min-width: 420px; max-width: 92vw;">
+        <q-card-section class="row items-center q-pb-none" :style="{ background: arancelDialogCosto?._hex || '#009688' }">
+          <q-icon :name="arancelDialogCosto?.icono || 'payments'" color="white" class="q-mr-sm" />
+          <div class="text-subtitle1 text-white text-weight-bold">{{ arancelDialogCosto?.nombre }}</div>
+          <q-space />
+          <q-btn flat round dense icon="close" color="white" @click="arancelDialog = false" />
+        </q-card-section>
+        <q-card-section>
+          <div class="text-caption text-grey-7 q-mb-sm">Selecciona los aranceles aplicados para calcular el monto:</div>
+          <div class="column q-gutter-xs">
+            <q-card
+              v-for="ar in (arancelDialogCosto?.aranceles || [])"
+              :key="ar.id"
+              flat bordered
+              class="arancel-check-row cursor-pointer"
+              :class="{ 'arancel-check-row--selected': isArancelSelected(ar.id) }"
+              @click="toggleArancel(ar.id)"
+            >
+              <q-card-section class="q-pa-sm row items-center">
+                <q-checkbox
+                  :model-value="isArancelSelected(ar.id)"
+                  @update:model-value="toggleArancel(ar.id)"
+                  dense color="teal-7"
+                  @click.stop
+                />
+                <div class="col q-ml-sm">
+                  <div class="text-body2 text-weight-medium">{{ ar.nombre }}</div>
+                  <div v-if="ar.presentacion" class="text-caption text-grey-6">{{ ar.presentacion }}</div>
+                </div>
+                <div class="text-body2 text-weight-bold text-teal-8">{{ ar.precio }} Bs</div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="row items-center justify-between q-mt-md">
+            <div class="text-caption text-grey-7">
+              Total seleccionado: <strong class="text-teal-8">{{ arancelSelectionTotal }} Bs</strong>
+            </div>
+            <div>
+              <q-btn flat label="Cancelar" no-caps @click="arancelDialog = false" />
+              <q-btn color="teal-7" label="Aplicar" no-caps icon="check" class="q-ml-sm" @click="applyArancelSelection" />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="anularDialog" persistent>
       <q-card style="min-width: 320px; max-width: 95vw">
         <q-card-section class="row items-center">
@@ -666,6 +726,14 @@ import {
   getControlArancelCodes
 } from '../formularios-control/controlCatalog'
 
+const QUASAR_HEX = {
+  'indigo': '#3f51b5', 'pink-6': '#e91e63', 'teal-7': '#00796b',
+  'blue-7': '#1976d2', 'purple-6': '#9c27b0', 'brown-6': '#795548',
+  'green-7': '#388e3c', 'deep-purple-6': '#673ab7', 'orange-7': '#f57c00',
+  'cyan-7': '#0097a7', 'red-6': '#e53935', 'grey-7': '#616161',
+  'primary': '#1976d2', 'teal-8': '#00695c',
+}
+
 const emptyForm = () => ({
   fecha: moment().format('YYYY-MM-DD'),
   hora: moment().format('HH:mm'),
@@ -686,25 +754,6 @@ const emptyForm = () => ({
   efectivo: 0,
   egreso: 0,
   estado_cobro: 'Pagado',
-  costo_atencion_medica: 0,
-  costo_curacion: 0,
-  costo_inyectable: 0,
-  costo_toma_presion: 0,
-  costo_ambulancia: 0,
-  costo_laboratorio: 0,
-  costo_ecografia: 0,
-  costo_uso_consultorio: 0,
-  costo_glicemia: 0,
-  costo_certificado_medico: 0,
-  costo_sutura: 0,
-  costo_antisepticos: 0,
-  costo_cama: 0,
-  costo_compania_noche: 0,
-  costo_uso_ecografia: 0,
-  costo_flebotomia: 0,
-  costo_sonda: 0,
-  costo_farmacia: 0,
-  otros_costos: 0
 })
 
 const createEmptyObservacionForm = () => ({
@@ -731,9 +780,13 @@ export default {
       patientSearchTimer: null,
       patientSearchSeq: 0,
       arancelPrecioPorCodigo: {},
-      atencionMedicaAdjustment: 0,
-      syncingAtencionMedica: false,
       recognition: null,
+      costosCatalogo: [],
+      loadingCostos: false,
+      costosValues: {},
+      arancelDialog: false,
+      arancelDialogCosto: null,
+      arancelDialogSelection: {},
       activeRecognitionTarget: null,
       activeQuickPatientField: null,
       observacionDialog: false,
@@ -776,27 +829,6 @@ export default {
         { label: 'Pendiente', value: 'pendiente' }
       ],
       doctorPagoPorcentaje: 10,
-      costFields: [
-        { key: 'costo_atencion_medica', label: 'Atencion medica', icon: 'medical_services', iconColor: 'light-blue-7', cardClass: 'cost-card--sky' },
-        { key: 'costo_curacion', label: 'Curacion', icon: 'healing', iconColor: 'green-6', cardClass: 'cost-card--mint' },
-        { key: 'costo_sutura', label: 'Sutura', icon: 'content_cut', iconColor: 'red-5', cardClass: 'cost-card--rose' },
-        { key: 'costo_inyectable', label: 'Inyectables', icon: 'vaccines', iconColor: 'pink-5', cardClass: 'cost-card--rose' },
-        { key: 'costo_toma_presion', label: 'Toma de presion', icon: 'monitor_heart', iconColor: 'deep-purple-4', cardClass: 'cost-card--violet' },
-        { key: 'costo_ambulancia', label: 'Ambulancia', icon: 'emergency', iconColor: 'orange-6', cardClass: 'cost-card--amber' },
-        { key: 'costo_laboratorio', label: 'Laboratorio', icon: 'science', iconColor: 'blue-6', cardClass: 'cost-card--blue' },
-        { key: 'costo_ecografia', label: 'Ecografia', icon: 'pregnant_woman', iconColor: 'purple-5', cardClass: 'cost-card--purple' },
-        { key: 'costo_uso_consultorio', label: 'Uso consultorio', icon: 'door_front', iconColor: 'brown-5', cardClass: 'cost-card--sand' },
-        { key: 'costo_glicemia', label: 'Glicemia', icon: 'water_drop', iconColor: 'cyan-6', cardClass: 'cost-card--aqua' },
-        { key: 'costo_certificado_medico', label: 'Certificado medico', icon: 'description', iconColor: 'blue-grey-5', cardClass: 'cost-card--silver' },
-        { key: 'costo_antisepticos', label: 'Antisepticos', icon: 'sanitizer', iconColor: 'teal-5', cardClass: 'cost-card--mint' },
-        { key: 'costo_cama', label: 'Cama', icon: 'bed', iconColor: 'indigo-5', cardClass: 'cost-card--sky' },
-        { key: 'costo_compania_noche', label: 'Compania noche', icon: 'night_shelter', iconColor: 'deep-purple-5', cardClass: 'cost-card--violet' },
-        { key: 'costo_uso_ecografia', label: 'Uso ecografia', icon: 'devices', iconColor: 'light-blue-7', cardClass: 'cost-card--blue' },
-        { key: 'costo_flebotomia', label: 'Flebotomia', icon: 'bloodtype', iconColor: 'red-4', cardClass: 'cost-card--aqua' },
-        { key: 'costo_sonda', label: 'Sonda', icon: 'medication_liquid', iconColor: 'amber-7', cardClass: 'cost-card--sand' },
-        { key: 'costo_farmacia', label: 'Farmacia', icon: 'local_pharmacy', iconColor: 'light-green-6', cardClass: 'cost-card--mint' },
-        { key: 'otros_costos', label: 'Otros costos', icon: 'add_card', iconColor: 'grey-7', cardClass: 'cost-card--silver' }
-      ]
     }
   },
   computed: {
@@ -804,13 +836,19 @@ export default {
       return !!this.$route.params.id
     },
     recaudadoTotal () {
-      return this.costFields.reduce((sum, field) => sum + Number(this.form[field.key] || 0), 0)
+      return Object.values(this.costosValues).reduce((sum, v) => sum + Number(v.monto || 0), 0)
+    },
+    arancelSelectionTotal () {
+      if (!this.arancelDialogCosto) return 0
+      return (this.arancelDialogCosto.aranceles || [])
+        .filter(ar => this.arancelDialogSelection[ar.id])
+        .reduce((sum, ar) => sum + Number(ar.precio || 0), 0)
     },
     pagadoAhora () {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
     },
     doctorEgresoCalculado () {
-      const base = Number(this.form.costo_atencion_medica || 0)
+      const base = this.recaudadoTotal
       const porcentaje = Number(this.doctorPagoPorcentaje || 0)
       return Math.max((base * porcentaje) / 100, 0)
     },
@@ -860,8 +898,7 @@ export default {
       return this.formularioSelectedItems.reduce((sum, item) => sum + Number(item.amount || 0), 0)
     },
     selectedCostFieldLabel () {
-      if (!this.selectedCostField) return 'costo'
-      return this.costFields.find(field => field.key === this.selectedCostField)?.label || this.selectedCostField
+      return this.selectedCostField || 'costo'
     },
     selectedCostObservaciones () {
       if (!this.selectedCostField) return []
@@ -880,9 +917,6 @@ export default {
     recaudadoTotal () {
       this.syncPaymentAmounts()
     },
-    formularioTotalReferencial () {
-      this.syncAtencionMedicaCost()
-    },
     doctorPagoPorcentaje () {
       this.syncDoctorEgreso()
     },
@@ -891,11 +925,6 @@ export default {
     },
     metodoPago () {
       this.syncPaymentAmounts()
-    },
-    'form.costo_atencion_medica' (value) {
-      if (this.syncingAtencionMedica) return
-      this.atencionMedicaAdjustment = Number(value || 0) - Number(this.formularioTotalReferencial || 0)
-      this.syncDoctorEgreso()
     },
     'form.qr' () {
       if (this.metodoPago === 'mixto' || this.metodoPago === 'qr') {
@@ -949,12 +978,77 @@ export default {
     money (value) {
       return `${Number(value || 0).toFixed(2)} Bs`
     },
-    displayCostValue (key) {
-      const value = this.form[key]
-      return Number(value || 0) === 0 ? '' : value
+    setCostosCatalogo (costos) {
+      this.costosCatalogo = costos.map(c => ({
+        ...c,
+        _hex: QUASAR_HEX[c.color] || c.color || '#009688',
+      }))
+      const newValues = {}
+      costos.forEach(c => {
+        newValues[c.id] = this.costosValues[c.id] || { monto: 0, arancel_ids: [] }
+      })
+      this.costosValues = newValues
     },
-    updateCostValue (key, value) {
-      this.form[key] = value === '' || value === null ? '' : Number(value)
+    loadCostosValues (costoItems) {
+      const values = {}
+      ;(costoItems || []).forEach(item => {
+        if (item.costo_id) {
+          values[item.costo_id] = { monto: item.monto || 0, arancel_ids: item.arancel_ids || [] }
+        }
+      })
+      this.costosCatalogo.forEach(c => {
+        if (!values[c.id]) values[c.id] = { monto: 0, arancel_ids: [] }
+      })
+      this.costosValues = values
+    },
+    costoValueDisplay (costoId) {
+      const v = this.costosValues[costoId]
+      const n = Number(v?.monto || 0)
+      return n === 0 ? '' : n
+    },
+    setCostoMonto (costoId, value) {
+      const current = this.costosValues[costoId] || { monto: 0, arancel_ids: [] }
+      this.costosValues = {
+        ...this.costosValues,
+        [costoId]: { ...current, monto: value === '' || value === null ? 0 : Number(value) }
+      }
+    },
+    costoArancelCount (costoId) {
+      return (this.costosValues[costoId]?.arancel_ids || []).length
+    },
+    openArancelDialog (costo) {
+      this.arancelDialogCosto = costo
+      const current = this.costosValues[costo.id]?.arancel_ids || []
+      const sel = {}
+      ;(costo.aranceles || []).forEach(ar => {
+        sel[ar.id] = current.includes(ar.id)
+      })
+      this.arancelDialogSelection = sel
+      this.arancelDialog = true
+    },
+    isArancelSelected (arId) {
+      return !!this.arancelDialogSelection[arId]
+    },
+    toggleArancel (arId) {
+      this.arancelDialogSelection = {
+        ...this.arancelDialogSelection,
+        [arId]: !this.arancelDialogSelection[arId]
+      }
+    },
+    applyArancelSelection () {
+      if (!this.arancelDialogCosto) return
+      const costoId = this.arancelDialogCosto.id
+      const selectedIds = Object.entries(this.arancelDialogSelection)
+        .filter(([, v]) => v)
+        .map(([id]) => parseInt(id))
+      const total = (this.arancelDialogCosto.aranceles || [])
+        .filter(ar => this.arancelDialogSelection[ar.id])
+        .reduce((sum, ar) => sum + Number(ar.precio || 0), 0)
+      this.costosValues = {
+        ...this.costosValues,
+        [costoId]: { monto: total, arancel_ids: selectedIds }
+      }
+      this.arancelDialog = false
     },
     getObservacionCount (tipo) {
       const savedCount = (this.observacionesByTipo[tipo] || []).length
@@ -1155,16 +1249,8 @@ export default {
         throw new Error(`Se guardo la caja, pero ${failed.length} observacion(es) no se pudieron subir`)
       }
     },
-    syncAtencionMedicaCost () {
-      this.syncingAtencionMedica = true
-      const nextValue = Number(this.formularioTotalReferencial || 0) + Number(this.atencionMedicaAdjustment || 0)
-      this.form.costo_atencion_medica = Math.max(nextValue, 0)
-      this.$nextTick(() => {
-        this.syncingAtencionMedica = false
-      })
-    },
     syncDoctorPercentage () {
-      const base = Number(this.form.costo_atencion_medica || 0)
+      const base = this.recaudadoTotal
       if (base <= 0) return
 
       const percent = Math.round((Number(this.form.egreso || 0) / base) * 100)
@@ -1208,7 +1294,7 @@ export default {
         this.doctorPagoPorcentaje = safePercent
         return
       }
-      const base = Number(this.form.costo_atencion_medica || 0)
+      const base = this.recaudadoTotal
       const nextValue = Math.max((base * safePercent) / 100, 0)
       if (Number(this.form.egreso || 0) !== nextValue) {
         this.form.egreso = nextValue
@@ -1276,16 +1362,20 @@ export default {
     },
     loadFormData () {
       this.loading = true
+      this.loadingCostos = true
       Promise.all([
         this.$axios.get('doctores'),
         this.$axios.get('pacientes', { params: { search: '', page: 1 } }),
         this.$axios.get('aranceles'),
+        this.$axios.get('costos', { params: { activo: true } }),
         this.isEdit ? this.$axios.get(`caja-recepciones/${this.$route.params.id}`) : Promise.resolve(null)
-      ]).then(([doctoresRes, pacientesRes, arancelesRes, itemRes]) => {
+      ]).then(([doctoresRes, pacientesRes, arancelesRes, costosRes, itemRes]) => {
         this.doctores = doctoresRes.data || []
         this.doctorOptions = this.doctores.map(this.mapDoctorOption)
         this.pacienteOptions = (pacientesRes.data.data || []).map(this.mapPacienteOption)
         this.setAranceles(arancelesRes.data || [])
+        this.setCostosCatalogo(costosRes.data || [])
+
         if (itemRes && itemRes.data) {
           this.form = {
             ...emptyForm(),
@@ -1297,10 +1387,11 @@ export default {
               ...(itemRes.data.formulario_detalle || {})
             }
           }
-          this.atencionMedicaAdjustment = Number(this.form.costo_atencion_medica || 0) - Number(this.formularioTotalReferencial || 0)
-          this.syncAtencionMedicaCost()
-          this.doctorPagoPorcentaje = Number(this.form.costo_atencion_medica || 0) > 0
-            ? Math.min(50, Math.max(10, Math.round((Number(this.form.egreso || 0) / Number(this.form.costo_atencion_medica || 1)) * 100)))
+          this.loadCostosValues(itemRes.data.costo_items || [])
+          const base = Number(this.form.egreso || 0)
+          const atencionBase = this.recaudadoTotal
+          this.doctorPagoPorcentaje = atencionBase > 0
+            ? Math.min(50, Math.max(10, Math.round((base / atencionBase) * 100)))
             : 10
           this.syncDoctorEgreso()
           this.metodoPago = this.detectMetodoPago()
@@ -1313,8 +1404,6 @@ export default {
             }
           }
         } else {
-          this.atencionMedicaAdjustment = 0
-          this.syncAtencionMedicaCost()
           this.doctorPagoPorcentaje = 10
           this.syncDoctorEgreso()
           this.syncPaymentAmounts()
@@ -1323,6 +1412,7 @@ export default {
         this.$alert.error(err.response?.data?.message || 'No se pudo cargar la pantalla de caja')
       }).finally(() => {
         this.loading = false
+        this.loadingCostos = false
       })
     },
     detectMetodoPago () {
@@ -1474,9 +1564,6 @@ export default {
     },
     buildPayload () {
       const payload = { ...this.form }
-      this.costFields.forEach(field => {
-        payload[field.key] = Number(payload[field.key] || 0)
-      })
       payload.egreso = Number(this.form.egreso || 0)
       if (this.metodoPago === 'pendiente') {
         payload.qr = 0
@@ -1489,6 +1576,17 @@ export default {
       if (Number(payload.punto) !== 1) {
         payload.nombre_factura = null
       }
+      payload.costos_detalle = Object.entries(this.costosValues)
+        .filter(([, v]) => Number(v.monto || 0) > 0)
+        .map(([costo_id, v]) => {
+          const costo = this.costosCatalogo.find(c => String(c.id) === String(costo_id))
+          return {
+            costo_id: parseInt(costo_id),
+            nombre: costo?.nombre || '',
+            monto: Number(v.monto || 0),
+            arancel_ids: v.arancel_ids || [],
+          }
+        })
       return payload
     },
     anular () {
@@ -1626,4 +1724,14 @@ export default {
     font-size: 10px;
   }
 }
+
+.costo-item-card { border-radius: 10px; height: 100%; }
+.costo-item-card :deep(.q-field__control) { background: transparent; }
+.costo-item-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.arancel-check-row { border-radius: 8px; transition: background 0.15s; }
+.arancel-check-row:hover { background: #f0fdfa; }
+.arancel-check-row--selected { background: #e0f2f1; border-color: #4db6ac !important; }
 </style>
