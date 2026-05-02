@@ -275,12 +275,28 @@
                 >
                   <q-card flat bordered class="costo-item-card">
                     <q-card-section class="q-pa-sm">
-                      <div class="row items-center no-wrap q-mb-xs">
+                      <div class="row items-center no-wrap q-mb-sm">
                         <div class="costo-item-icon q-mr-sm" :style="{ background: costo._hex }">
                           <q-icon :name="costo.icono || 'payments'" color="white" size="xs" />
                         </div>
                         <div class="col text-caption text-weight-bold ellipsis">{{ costo.nombre }}</div>
-                        <div class="text-caption text-grey-6 q-ml-xs">{{ costo.categoria }}</div>
+                        <q-btn
+                          dense
+                          no-caps
+                          unelevated
+                          icon="fact_check"
+                          label=""
+                          color="teal-7"
+                          class="q-ml-xs"
+                          @click.stop="openArancelDialog(costo)"
+                        >
+                          <q-tooltip>{{ costo.aranceles && costo.aranceles.length ? 'Marcar aranceles' : 'Sin aranceles configurados' }}</q-tooltip>
+                          <q-badge
+                            v-if="costoArancelCount(costo.id) > 0"
+                            floating rounded color="positive"
+                            :label="String(costoArancelCount(costo.id))"
+                          />
+                        </q-btn>
                       </div>
                       <q-input
                         :model-value="costoValueDisplay(costo.id)"
@@ -294,20 +310,6 @@
                       >
                         <template #prepend>
                           <span class="text-caption text-grey-7">Bs</span>
-                        </template>
-                        <template #append>
-                          <q-btn
-                            v-if="costo.aranceles && costo.aranceles.length"
-                            flat round dense icon="add_circle"
-                            color="teal-7"
-                            @click.stop="openArancelDialog(costo)"
-                          >
-                            <q-badge
-                              v-if="costoArancelCount(costo.id) > 0"
-                              floating rounded color="positive"
-                              :label="String(costoArancelCount(costo.id))"
-                            />
-                          </q-btn>
                         </template>
                       </q-input>
                     </q-card-section>
@@ -352,16 +354,15 @@
                 </div>
                 <div class="col-12 col-md-4">
                   <q-card flat bordered class="q-pa-sm bg-grey-1">
-                    <div class="text-caption text-weight-medium q-mb-xs">Porcentaje del doctor</div>
-                    <q-slider
+                    <div class="text-caption text-weight-medium q-mb-xs">Pago del doctor</div>
+                    <q-option-group
                       v-model="doctorPagoPorcentaje"
-                      :min="10"
-                      :max="50"
-                      :step="5"
-                      label
-                      label-always
+                      :options="doctorPagoPorcentajeOptions"
+                      type="radio"
+                      inline
+                      dense
                       color="negative"
-                      :label-value="`${doctorPagoPorcentaje}%`"
+                      class="doctor-percent-options"
                     />
                     <div class="row items-center justify-between q-mt-xs">
                       <div class="text-caption">Egreso doctor</div>
@@ -373,12 +374,13 @@
                       outlined
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       label="Editar egreso doctor"
                       class="q-mt-sm"
+                      @update:model-value="setDoctorEgresoManual"
                     />
                     <div class="text-caption text-grey-7">
-                      Calculado sobre total recaudado: {{ money(recaudadoTotal) }}
+                      {{ doctorPagoPorcentaje }}% de {{ money(recaudadoTotal) }} = {{ money(doctorEgresoCalculado) }}
                     </div>
                   </q-card>
                 </div>
@@ -662,6 +664,9 @@
         </q-card-section>
         <q-card-section>
           <div class="text-caption text-grey-7 q-mb-sm">Selecciona los aranceles aplicados para calcular el monto:</div>
+          <div v-if="!(arancelDialogCosto?.aranceles || []).length" class="text-grey-6 text-center q-py-md">
+            Este costo todavia no tiene aranceles relacionados.
+          </div>
           <div class="column q-gutter-xs">
             <q-card
               v-for="ar in (arancelDialogCosto?.aranceles || [])"
@@ -731,6 +736,9 @@ const QUASAR_HEX = {
   'blue-7': '#1976d2', 'purple-6': '#9c27b0', 'brown-6': '#795548',
   'green-7': '#388e3c', 'deep-purple-6': '#673ab7', 'orange-7': '#f57c00',
   'cyan-7': '#0097a7', 'red-6': '#e53935', 'grey-7': '#616161',
+  'pink-7': '#c2185b', 'brown-7': '#5d4037', 'purple-8': '#6a1b9a',
+  'deep-purple-7': '#512da8', 'orange-9': '#e65100', 'blue-9': '#1565c0',
+  'light-green-8': '#558b2f', 'grey-8': '#424242',
   'primary': '#1976d2', 'teal-8': '#00695c',
 }
 
@@ -828,7 +836,11 @@ export default {
         { label: 'Mixto', value: 'mixto' },
         { label: 'Pendiente', value: 'pendiente' }
       ],
-      doctorPagoPorcentaje: 10,
+      doctorPagoPorcentaje: 15,
+      doctorPagoPorcentajeOptions: [15, 20, 25, 30, 35].map(value => ({
+        label: `${value}%`,
+        value
+      })),
     }
   },
   computed: {
@@ -850,7 +862,7 @@ export default {
     doctorEgresoCalculado () {
       const base = this.recaudadoTotal
       const porcentaje = Number(this.doctorPagoPorcentaje || 0)
-      return Math.max((base * porcentaje) / 100, 0)
+      return Math.round(Math.max((base * porcentaje) / 100, 0))
     },
     saldoFinal () {
       return Number(this.form.efectivo || 0) - Number(this.form.egreso || 0)
@@ -919,9 +931,6 @@ export default {
     },
     doctorPagoPorcentaje () {
       this.syncDoctorEgreso()
-    },
-    'form.egreso' () {
-      this.syncDoctorPercentage()
     },
     metodoPago () {
       this.syncPaymentAmounts()
@@ -1249,15 +1258,21 @@ export default {
         throw new Error(`Se guardo la caja, pero ${failed.length} observacion(es) no se pudieron subir`)
       }
     },
-    syncDoctorPercentage () {
+    closestDoctorPercentage (egreso) {
       const base = this.recaudadoTotal
-      if (base <= 0) return
+      if (base <= 0) return 15
 
-      const percent = Math.round((Number(this.form.egreso || 0) / base) * 100)
-      const safePercent = Math.min(50, Math.max(10, percent || 10))
-
-      if (safePercent !== Number(this.doctorPagoPorcentaje || 0)) {
-        this.doctorPagoPorcentaje = safePercent
+      const percent = Math.round((Number(egreso || 0) / base) * 100)
+      return this.doctorPagoPorcentajeOptions.reduce((closest, option) => {
+        return Math.abs(option.value - percent) < Math.abs(closest - percent)
+          ? option.value
+          : closest
+      }, 15)
+    },
+    setDoctorEgresoManual (value) {
+      const nextValue = Math.max(Math.round(Number(value || 0)), 0)
+      if (Number(this.form.egreso || 0) !== nextValue) {
+        this.form.egreso = nextValue
       }
     },
     syncPaymentAmounts () {
@@ -1289,13 +1304,15 @@ export default {
       this.form.efectivo = total
     },
     syncDoctorEgreso () {
-      const safePercent = Math.min(50, Math.max(10, Number(this.doctorPagoPorcentaje || 10)))
+      const allowed = this.doctorPagoPorcentajeOptions.map(option => option.value)
+      const safePercent = allowed.includes(Number(this.doctorPagoPorcentaje))
+        ? Number(this.doctorPagoPorcentaje)
+        : 15
       if (safePercent !== Number(this.doctorPagoPorcentaje || 0)) {
         this.doctorPagoPorcentaje = safePercent
         return
       }
-      const base = this.recaudadoTotal
-      const nextValue = Math.max((base * safePercent) / 100, 0)
+      const nextValue = Math.round(Math.max((this.recaudadoTotal * safePercent) / 100, 0))
       if (Number(this.form.egreso || 0) !== nextValue) {
         this.form.egreso = nextValue
       }
@@ -1388,12 +1405,8 @@ export default {
             }
           }
           this.loadCostosValues(itemRes.data.costo_items || [])
-          const base = Number(this.form.egreso || 0)
-          const atencionBase = this.recaudadoTotal
-          this.doctorPagoPorcentaje = atencionBase > 0
-            ? Math.min(50, Math.max(10, Math.round((base / atencionBase) * 100)))
-            : 10
-          this.syncDoctorEgreso()
+          this.form.egreso = Math.round(Number(this.form.egreso || 0))
+          this.doctorPagoPorcentaje = this.closestDoctorPercentage(this.form.egreso)
           this.metodoPago = this.detectMetodoPago()
           this.syncPaymentAmounts()
           const paciente = itemRes.data.paciente
@@ -1404,7 +1417,7 @@ export default {
             }
           }
         } else {
-          this.doctorPagoPorcentaje = 10
+          this.doctorPagoPorcentaje = 15
           this.syncDoctorEgreso()
           this.syncPaymentAmounts()
         }
@@ -1734,4 +1747,14 @@ export default {
 .arancel-check-row { border-radius: 8px; transition: background 0.15s; }
 .arancel-check-row:hover { background: #f0fdfa; }
 .arancel-check-row--selected { background: #e0f2f1; border-color: #4db6ac !important; }
+.doctor-percent-options {
+  gap: 6px 10px;
+}
+.doctor-percent-options :deep(.q-radio) {
+  margin-right: 0;
+}
+.doctor-percent-options :deep(.q-radio__label) {
+  font-size: 12px;
+  font-weight: 600;
+}
 </style>

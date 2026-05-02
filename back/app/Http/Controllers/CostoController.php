@@ -13,7 +13,6 @@ class CostoController extends Controller
 
         return Costo::with('aranceles')
             ->when($onlyActive, fn ($q) => $q->where('activo', true))
-            ->orderBy('categoria')
             ->orderBy('orden')
             ->orderBy('nombre')
             ->get();
@@ -23,7 +22,6 @@ class CostoController extends Controller
     {
         $data = $request->validate([
             'nombre'     => 'required|string|max:255',
-            'categoria'  => 'nullable|string|max:255',
             'icono'      => 'nullable|string|max:100',
             'color'      => 'nullable|string|max:100',
             'activo'     => 'nullable|boolean',
@@ -45,7 +43,6 @@ class CostoController extends Controller
     {
         $data = $request->validate([
             'nombre'     => 'required|string|max:255',
-            'categoria'  => 'nullable|string|max:255',
             'icono'      => 'nullable|string|max:100',
             'color'      => 'nullable|string|max:100',
             'activo'     => 'nullable|boolean',

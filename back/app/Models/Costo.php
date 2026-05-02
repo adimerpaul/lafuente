@@ -13,7 +13,6 @@ class Costo extends Model
 
     protected $fillable = [
         'nombre',
-        'categoria',
         'icono',
         'color',
         'activo',
