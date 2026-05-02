@@ -527,6 +527,34 @@ export default {
         this.existenciaFecha = this.fechaHoy
       }
     },
+    buildInventarioExcel (rows, fileName) {
+      let totalCompra = 0
+      let totalVenta = 0
+      rows.forEach((r) => {
+        totalCompra += r.precio_compra * r.cantidad
+        totalVenta  += r.precio * r.cantidad
+      })
+
+      const content = [
+        ...rows,
+        { nombre: '', unidad: '', precio_compra: null, precio: null, cantidad: null, stock_minimo: null, stock_maximo: null },
+        { nombre: 'TOTAL', unidad: '', precio_compra: Math.round(totalCompra * 100) / 100, precio: Math.round(totalVenta * 100) / 100, cantidad: null, stock_minimo: null, stock_maximo: null },
+      ]
+
+      Excel.export([{
+        sheet: 'Inventario',
+        columns: [
+          { label: 'Producto', value: 'nombre', wch: 30 },
+          { label: 'Unidad', value: 'unidad', wch: 10 },
+          { label: 'P.Compra', value: 'precio_compra', wch: 11 },
+          { label: 'P.Venta', value: 'precio', wch: 10 },
+          { label: 'Exist.', value: 'cantidad', wch: 9 },
+          { label: 'St.Min', value: 'stock_minimo', wch: 8 },
+          { label: 'St.Max', value: 'stock_maximo', wch: 8 },
+        ],
+        content,
+      }], fileName)
+    },
     async exportExcel (mode) {
       const meta = this.getExportMeta(mode)
       const rows = []
@@ -537,7 +565,6 @@ export default {
           items.forEach((item) => {
             rows.push({
               nombre: item.nombre,
-              descripcion: item.descripcion,
               unidad: item.unidad,
               precio_compra: Number(item.precio_compra || 0),
               precio: Number(item.precio || 0),
@@ -548,20 +575,7 @@ export default {
           })
         })
 
-        Excel.export([{
-          sheet: 'Inventario',
-          columns: [
-            { label: 'Nombre', value: 'nombre', wch: 28 },
-            { label: 'Descripcion', value: 'descripcion', wch: 30 },
-            { label: 'Unidad', value: 'unidad', wch: 12 },
-            { label: 'P. Compra', value: 'precio_compra', wch: 12 },
-            { label: 'Precio', value: 'precio', wch: 10 },
-            { label: 'Existencia', value: 'cantidad', wch: 11 },
-            { label: 'Stock Min', value: 'stock_minimo', wch: 10 },
-            { label: 'Stock Max', value: 'stock_maximo', wch: 10 },
-          ],
-          content: rows
-        }], meta.fileName)
+        this.buildInventarioExcel(rows, meta.fileName)
       } catch (error) {
         this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
       } finally {
@@ -581,7 +595,6 @@ export default {
           items.forEach((item) => {
             rows.push({
               nombre: item.nombre,
-              descripcion: item.descripcion,
               unidad: item.unidad,
               precio_compra: Number(item.precio_compra || 0),
               precio: Number(item.precio || 0),
@@ -592,20 +605,7 @@ export default {
           })
         })
 
-        Excel.export([{
-          sheet: 'Inventario',
-          columns: [
-            { label: 'Nombre', value: 'nombre', wch: 28 },
-            { label: 'Descripcion', value: 'descripcion', wch: 30 },
-            { label: 'Unidad', value: 'unidad', wch: 12 },
-            { label: 'P. Compra', value: 'precio_compra', wch: 12 },
-            { label: 'Precio', value: 'precio', wch: 10 },
-            { label: 'Existencia', value: 'cantidad', wch: 11 },
-            { label: 'Stock Min', value: 'stock_minimo', wch: 10 },
-            { label: 'Stock Max', value: 'stock_maximo', wch: 10 },
-          ],
-          content: rows
-        }], meta.fileName)
+        this.buildInventarioExcel(rows, meta.fileName)
       } catch (error) {
         this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
       } finally {
