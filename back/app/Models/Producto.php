@@ -13,6 +13,7 @@ class Producto extends Model{
         'descripcion',
         'unidad',
         'precio',
+        'precio_compra',
         'stock',
         'stock_minimo',
         'stock_maximo',

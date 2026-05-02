@@ -163,6 +163,7 @@
                   {{ producto.unidad }}
                 </div>
               </td>
+              <td>{{ producto.precio_compra }}</td>
               <td>
                 <input
                   v-model.number="producto.precio"
@@ -371,6 +372,7 @@ export default {
         { name: 'nombre', label: 'Nombre', align: 'left', field: 'nombre' },
         { name: 'descripcion', label: 'Descripcion', align: 'left', field: 'descripcion' },
         { name: 'unidad', label: 'Unidad', align: 'left', field: 'unidad' },
+        { name: 'precio_compra', label: 'P. Compra', align: 'left', field: 'precio_compra' },
         { name: 'precio', label: 'Precio', align: 'left', field: 'precio' },
         { name: 'stock', label: 'Stock', align: 'left', field: 'stock' },
         { name: 'stock_minimo', label: 'Stock minimo', align: 'left', field: 'stock_minimo' },
@@ -537,6 +539,7 @@ export default {
               nombre: item.nombre,
               descripcion: item.descripcion,
               unidad: item.unidad,
+              precio_compra: Number(item.precio_compra || 0),
               precio: Number(item.precio || 0),
               cantidad: Number(item.cantidad || 0),
               stock_minimo: item.stock_minimo,
@@ -548,13 +551,14 @@ export default {
         Excel.export([{
           sheet: 'Inventario',
           columns: [
-            { label: 'Nombre', value: 'nombre' },
-            { label: 'Descripcion', value: 'descripcion' },
-            { label: 'Unidad', value: 'unidad' },
-            { label: 'Precio', value: 'precio' },
-            { label: 'Existencia', value: 'cantidad' },
-            { label: 'Stock minimo', value: 'stock_minimo' },
-            { label: 'Stock maximo', value: 'stock_maximo' },
+            { label: 'Nombre', value: 'nombre', wch: 28 },
+            { label: 'Descripcion', value: 'descripcion', wch: 30 },
+            { label: 'Unidad', value: 'unidad', wch: 12 },
+            { label: 'P. Compra', value: 'precio_compra', wch: 12 },
+            { label: 'Precio', value: 'precio', wch: 10 },
+            { label: 'Existencia', value: 'cantidad', wch: 11 },
+            { label: 'Stock Min', value: 'stock_minimo', wch: 10 },
+            { label: 'Stock Max', value: 'stock_maximo', wch: 10 },
           ],
           content: rows
         }], meta.fileName)
@@ -579,6 +583,7 @@ export default {
               nombre: item.nombre,
               descripcion: item.descripcion,
               unidad: item.unidad,
+              precio_compra: Number(item.precio_compra || 0),
               precio: Number(item.precio || 0),
               cantidad: Number(item.cantidad || 0),
               stock_minimo: item.stock_minimo,
@@ -590,13 +595,14 @@ export default {
         Excel.export([{
           sheet: 'Inventario',
           columns: [
-            { label: 'Nombre', value: 'nombre' },
-            { label: 'Descripcion', value: 'descripcion' },
-            { label: 'Unidad', value: 'unidad' },
-            { label: 'Precio', value: 'precio' },
-            { label: 'Existencia', value: 'cantidad' },
-            { label: 'Stock minimo', value: 'stock_minimo' },
-            { label: 'Stock maximo', value: 'stock_maximo' },
+            { label: 'Nombre', value: 'nombre', wch: 28 },
+            { label: 'Descripcion', value: 'descripcion', wch: 30 },
+            { label: 'Unidad', value: 'unidad', wch: 12 },
+            { label: 'P. Compra', value: 'precio_compra', wch: 12 },
+            { label: 'Precio', value: 'precio', wch: 10 },
+            { label: 'Existencia', value: 'cantidad', wch: 11 },
+            { label: 'Stock Min', value: 'stock_minimo', wch: 10 },
+            { label: 'Stock Max', value: 'stock_maximo', wch: 10 },
           ],
           content: rows
         }], meta.fileName)

@@ -199,6 +199,7 @@ class CompraController extends Controller{
                 }
 
                 $producto->precio = $p['precio_venta'];
+                $producto->precio_compra = $p['precio'];
                 $producto->save();
             }
 
