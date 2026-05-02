@@ -492,6 +492,7 @@ class VentaController extends Controller
                     'Interno', 'Internado' => 'Internado',
                     'Seguro' => 'Seguro',
                     'Egreso' => 'Egreso',
+                    'Recepción', 'Recepcion' => 'Recepción',
                     default => 'Externo',
                 },
                 'facturado' => filter_var($request->input('facturado', false), FILTER_VALIDATE_BOOLEAN),

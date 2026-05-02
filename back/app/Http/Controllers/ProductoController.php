@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductosExcelExport;
 use App\Models\Producto;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -318,5 +319,84 @@ class ProductoController extends Controller{
     function destroy(Producto $producto){
         $producto->delete();
         return response()->json(['success' => true]);
+    }
+
+    public function totales(Request $request)
+    {
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+        $search       = trim((string) $request->input('search', ''));
+
+        $query = DB::table('compra_detalles as cd')
+            ->join('productos as p', 'p.id', '=', 'cd.producto_id')
+            ->where('cd.estado', 'Activo')
+            ->where('cd.cantidad_venta', '>', 0)
+            ->whereNull('cd.deleted_at')
+            ->whereNull('p.deleted_at')
+            ->where('p.farmacia_tipo', $farmaciaTipo)
+            ->selectRaw('
+                SUM(COALESCE(p.precio_compra, 0) * cd.cantidad_venta) as total_compra,
+                SUM(COALESCE(p.precio, 0)        * cd.cantidad_venta) as total_venta
+            ');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('p.nombre', 'like', "%{$search}%")
+                  ->orWhere('p.descripcion', 'like', "%{$search}%");
+            });
+        }
+
+        $row = $query->first();
+
+        $totalCompra = (float) ($row->total_compra ?? 0);
+        $totalVenta  = (float) ($row->total_venta  ?? 0);
+
+        return response()->json([
+            'total_compra' => round($totalCompra, 2),
+            'total_venta'  => round($totalVenta,  2),
+            'ganancia'     => round($totalVenta - $totalCompra, 2),
+        ]);
+    }
+
+    public function exportExcelInventario(Request $request)
+    {
+        $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+        $farmaciaTipo   = $this->resolveFarmaciaTipo($request);
+
+        $query = $this->baseProductosQuery(null, $farmaciaTipo);
+
+        if ($soloExistentes) {
+            $query->having('cantidad', '>', 0)->orderByDesc('cantidad')->orderBy('productos.nombre');
+        } else {
+            $query->orderBy('productos.nombre');
+        }
+
+        $rows     = $query->get()->toArray();
+        $title    = $soloExistentes ? 'Inventario — Solo Existencias' : 'Inventario Completo de Productos';
+        $fileName = $soloExistentes ? 'inventario_existencias_' . now()->format('Ymd') : 'inventario_completo_' . now()->format('Ymd');
+
+        return (new ProductosExcelExport($rows, $title, $farmaciaTipo, $fileName))->download();
+    }
+
+    public function exportExcelExistenciaFecha(Request $request)
+    {
+        $fecha          = $this->resolveFechaExistencia($request);
+        $soloExistentes = filter_var($request->input('existentes', false), FILTER_VALIDATE_BOOL);
+        $farmaciaTipo   = $this->resolveFarmaciaTipo($request);
+
+        $query = $this->baseProductosExistenciaFechaQuery($fecha, null, $farmaciaTipo);
+
+        if ($soloExistentes) {
+            $query->having('cantidad', '>', 0)->orderByDesc('cantidad')->orderBy('productos.nombre');
+        } else {
+            $query->orderBy('productos.nombre');
+        }
+
+        $rows     = $query->get()->toArray();
+        $fechaFmt = Carbon::parse($fecha)->format('d/m/Y');
+        $title    = $soloExistentes ? "Existencia al {$fechaFmt} — Solo con Stock" : "Existencia al {$fechaFmt}";
+        $safe     = str_replace('-', '', $fecha);
+        $fileName = $soloExistentes ? "existencia_{$safe}_con_stock" : "existencia_{$safe}_todo";
+
+        return (new ProductosExcelExport($rows, $title, $farmaciaTipo, $fileName))->download();
     }
 }

@@ -26,6 +26,10 @@
                   <span>Seguro</span>
                   <strong>{{ totalQrSeguro.toFixed(2) }} Bs</strong>
                 </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Recepción</span>
+                  <strong>{{ totalQrRecepcion.toFixed(2) }} Bs</strong>
+                </div>
               </div>
             </q-item-section>
           </q-card-section>
@@ -56,6 +60,10 @@
                   <span>Seguro</span>
                   <strong>{{ totalEfectivoSeguro.toFixed(2) }} Bs</strong>
                 </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Recepción</span>
+                  <strong>{{ totalEfectivoRecepcion.toFixed(2) }} Bs</strong>
+                </div>
               </div>
             </q-item-section>
           </q-card-section>
@@ -85,6 +93,10 @@
                 <div class="ventas-resumen-card__breakdown-item">
                   <span>Seguro</span>
                   <strong>{{ totalSeguros.toFixed(2) }} Bs</strong>
+                </div>
+                <div class="ventas-resumen-card__breakdown-item">
+                  <span>Recepción</span>
+                  <strong>{{ totalRecepciones.toFixed(2) }} Bs</strong>
                 </div>
               </div>
             </q-item-section>
@@ -130,6 +142,12 @@
                     </q-item-section>
                     <q-item-section>Excel seguro</q-item-section>
                   </q-item>
+                  <q-item clickable v-ripple @click="exportExcelPorTipo('Recepción')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="file_download" />
+                    </q-item-section>
+                    <q-item-section>Excel recepción</q-item-section>
+                  </q-item>
                   <q-item clickable v-ripple @click="exportExcelPorTipo()" v-close-popup>
                     <q-item-section avatar>
                       <q-icon name="file_download" />
@@ -167,6 +185,12 @@
                       <q-icon name="picture_as_pdf" />
                     </q-item-section>
                     <q-item-section>PDF seguro</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple @click="exportPdfPorTipo('Recepción')" v-close-popup>
+                    <q-item-section avatar>
+                      <q-icon name="picture_as_pdf" />
+                    </q-item-section>
+                    <q-item-section>PDF recepción</q-item-section>
                   </q-item>
                   <q-item clickable v-ripple @click="exportPdfPorTipo()" v-close-popup>
                     <q-item-section avatar>
@@ -1465,6 +1489,7 @@ export default {
       if (tipoVenta === 'Internado') return 'indigo'
       if (tipoVenta === 'Seguro') return 'purple'
       if (tipoVenta === 'Egreso') return 'red'
+      if (tipoVenta === 'Recepción') return 'teal'
       return 'orange'
     },
     signedVentaTotal(venta) {
@@ -1553,6 +1578,7 @@ export default {
         { label: 'Internado', value: 'Internado' },
         { label: 'Externo', value: 'Externo' },
         { label: 'Seguro', value: 'Seguro' },
+        { label: 'Recepción', value: 'Recepción' },
         { label: 'Egreso', value: 'Egreso' }
       ]
     },
@@ -1646,6 +1672,19 @@ export default {
     },
     totalSeguros() {
       return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Seguro' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+    },
+    totalRecepciones() {
+      return this.ventasFiltradas.reduce((acc, venta) => venta.tipo_venta === 'Recepción' && venta.estado === 'Activo' ? acc + parseFloat(venta.total) : acc, 0)
+    },
+    totalQrRecepcion() {
+      return this.ventasFiltradas.reduce((acc, venta) =>
+        venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'QR' && venta.tipo_venta === 'Recepción'
+          ? acc + parseFloat(venta.total || 0) : acc, 0)
+    },
+    totalEfectivoRecepcion() {
+      return this.ventasFiltradas.reduce((acc, venta) =>
+        venta.estado === 'Activo' && String(venta.tipo_pago).toUpperCase() === 'EFECTIVO' && venta.tipo_venta === 'Recepción'
+          ? acc + parseFloat(venta.total || 0) : acc, 0)
     }
   }
 }

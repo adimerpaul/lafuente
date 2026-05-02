@@ -46,7 +46,7 @@ class ArancelController extends Controller
 
     public function update(Request $request, Arancel $arancel)
     {
-        $this->authorize('update', $arancel);
+//        $this->authorize('update', $arancel);
 
         $data = $request->validate([
             'categoria' => 'nullable|string|max:255',

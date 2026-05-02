@@ -697,7 +697,7 @@ export default {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
     },
     tiposVentaDialogOptions() {
-      return this.esModoGasto ? ['Egreso'] : ['Internado', 'Externo', 'Seguro']
+      return this.esModoGasto ? ['Egreso'] : ['Internado', 'Externo', 'Seguro', 'Recepción']
     },
     totalVenta() {
       return this.productosVentas.reduce(

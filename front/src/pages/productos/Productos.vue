@@ -91,6 +91,21 @@
           />
         </div>
 
+        <div class="totales-bar q-mb-xs">
+          <div class="totales-item totales-compra">
+            <div class="totales-label">Costo total</div>
+            <div class="totales-valor">Bs {{ formatMonto(totales.total_compra) }}</div>
+          </div>
+          <div class="totales-item totales-venta">
+            <div class="totales-label">Venta total</div>
+            <div class="totales-valor">Bs {{ formatMonto(totales.total_venta) }}</div>
+          </div>
+          <div class="totales-item totales-ganancia">
+            <div class="totales-label">Ganancia</div>
+            <div class="totales-valor">Bs {{ formatMonto(totales.ganancia) }}</div>
+          </div>
+        </div>
+
         <q-markup-table dense wrap-cells>
           <thead>
             <tr>
@@ -350,7 +365,6 @@
 </template>
 
 <script>
-import { Excel } from 'src/addons/Excel'
 import { debounce } from 'quasar'
 
 export default {
@@ -386,6 +400,7 @@ export default {
       existenciaFecha: '',
       fechaInicioExistencias: '2025-10-01',
       fechaHoy: new Date().toISOString().slice(0, 10),
+      totales: { total_compra: 0, total_venta: 0, ganancia: 0 },
     }
   },
   mounted () {
@@ -408,6 +423,16 @@ export default {
     }
   },
   methods: {
+    formatMonto (value) {
+      return Number(value || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    totalesGet () {
+      this.$axios.get('productos-totales', {
+        params: { search: this.filter, farmacia_tipo: this.farmaciaTipo }
+      }).then((res) => {
+        this.totales = res.data
+      }).catch(() => {})
+    },
     getExportMeta (mode) {
       const existing = mode === 'existing'
 
@@ -527,57 +552,28 @@ export default {
         this.existenciaFecha = this.fechaHoy
       }
     },
-    buildInventarioExcel (rows, fileName) {
-      let totalCompra = 0
-      let totalVenta = 0
-      rows.forEach((r) => {
-        totalCompra += r.precio_compra * r.cantidad
-        totalVenta  += r.precio * r.cantidad
-      })
-
-      const content = [
-        ...rows,
-        { nombre: '', unidad: '', precio_compra: null, precio: null, cantidad: null, stock_minimo: null, stock_maximo: null },
-        { nombre: 'TOTAL', unidad: '', precio_compra: Math.round(totalCompra * 100) / 100, precio: Math.round(totalVenta * 100) / 100, cantidad: null, stock_minimo: null, stock_maximo: null },
-      ]
-
-      Excel.export([{
-        sheet: 'Inventario',
-        columns: [
-          { label: 'Producto', value: 'nombre', wch: 30 },
-          { label: 'Unidad', value: 'unidad', wch: 10 },
-          { label: 'P.Compra', value: 'precio_compra', wch: 11 },
-          { label: 'P.Venta', value: 'precio', wch: 10 },
-          { label: 'Exist.', value: 'cantidad', wch: 9 },
-          { label: 'St.Min', value: 'stock_minimo', wch: 8 },
-          { label: 'St.Max', value: 'stock_maximo', wch: 8 },
-        ],
-        content,
-      }], fileName)
+    triggerBlobDownload (blob, fileName) {
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const a   = document.createElement('a')
+      a.href    = url
+      a.setAttribute('download', fileName)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
     },
     async exportExcel (mode) {
-      const meta = this.getExportMeta(mode)
-      const rows = []
-
+      const existing = mode === 'existing'
       this.loading = true
       try {
-        await this.streamProductosExport(meta.existing, async (items) => {
-          items.forEach((item) => {
-            rows.push({
-              nombre: item.nombre,
-              unidad: item.unidad,
-              precio_compra: Number(item.precio_compra || 0),
-              precio: Number(item.precio || 0),
-              cantidad: Number(item.cantidad || 0),
-              stock_minimo: item.stock_minimo,
-              stock_maximo: item.stock_maximo,
-            })
-          })
+        const res = await this.$axios.get('productos-excel', {
+          params: { existentes: existing, farmacia_tipo: this.farmaciaTipo },
+          responseType: 'blob',
         })
-
-        this.buildInventarioExcel(rows, meta.fileName)
+        const name = existing ? 'inventario_existencias.xlsx' : 'inventario_completo.xlsx'
+        this.triggerBlobDownload(res.data, name)
       } catch (error) {
-        this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
+        this.$alert.error('No se pudo exportar el Excel')
       } finally {
         this.loading = false
       }
@@ -586,28 +582,17 @@ export default {
       const fecha = this.getExistenciaFechaSeleccionada()
       if (!fecha) return
 
-      const meta = this.getExistenciaFechaMeta(mode, fecha)
-      const rows = []
-
+      const existing = mode === 'existing'
       this.loading = true
       try {
-        await this.streamProductosExistenciaFechaExport(fecha, meta.existing, async (items) => {
-          items.forEach((item) => {
-            rows.push({
-              nombre: item.nombre,
-              unidad: item.unidad,
-              precio_compra: Number(item.precio_compra || 0),
-              precio: Number(item.precio || 0),
-              cantidad: Number(item.cantidad || 0),
-              stock_minimo: item.stock_minimo,
-              stock_maximo: item.stock_maximo,
-            })
-          })
+        const res = await this.$axios.get('productos-existencia-fecha-excel', {
+          params: { fecha, existentes: existing, farmacia_tipo: this.farmaciaTipo },
+          responseType: 'blob',
         })
-
-        this.buildInventarioExcel(rows, meta.fileName)
+        const suffix = existing ? 'con_stock' : 'todo'
+        this.triggerBlobDownload(res.data, `existencia_${fecha}_${suffix}.xlsx`)
       } catch (error) {
-        this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
+        this.$alert.error('No se pudo exportar el Excel')
       } finally {
         this.loading = false
       }
@@ -842,6 +827,7 @@ export default {
       }).then((res) => {
         this.productos = res.data.data
         this.pagination.rowsNumber = res.data.total
+        this.totalesGet()
       }).catch((error) => {
         this.$alert.error(error.response?.data?.message || 'Error al cargar productos')
       }).finally(() => {
@@ -923,5 +909,49 @@ export default {
     grid-template-columns: auto auto auto minmax(240px, 320px);
     justify-content: end;
   }
+}
+
+.totales-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.totales-item {
+  flex: 1 1 140px;
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.totales-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.totales-valor {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.totales-compra {
+  background: #dbeafe;
+  color: #1e3a5f;
+}
+
+.totales-venta {
+  background: #d1fae5;
+  color: #064e3b;
+}
+
+.totales-ganancia {
+  background: #fef9c3;
+  color: #713f12;
 }
 </style>

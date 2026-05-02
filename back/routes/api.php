@@ -59,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/productos', [App\Http\Controllers\ProductoController::class, 'index']);
     Route::get('/productos-export', [App\Http\Controllers\ProductoController::class, 'exportIndex']);
     Route::get('/productos-existencia-fecha-export', [App\Http\Controllers\ProductoController::class, 'exportExistenciaFecha']);
+    Route::get('/productos-excel', [App\Http\Controllers\ProductoController::class, 'exportExcelInventario']);
+    Route::get('/productos-existencia-fecha-excel', [App\Http\Controllers\ProductoController::class, 'exportExcelExistenciaFecha']);
+    Route::get('/productos-totales', [App\Http\Controllers\ProductoController::class, 'totales']);
     Route::put('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'update']);
     Route::delete('/productos/{producto}', [App\Http\Controllers\ProductoController::class, 'destroy']);
 
