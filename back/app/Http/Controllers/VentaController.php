@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\VentasExcelExport;
 use App\Models\Cliente;
 use App\Models\Compra;
 use App\Models\CompraDetalle;
@@ -384,6 +385,47 @@ class VentaController extends Controller
         ])->setPaper('letter');
 
         return $pdf->stream('ventas_reporte.pdf');
+    }
+
+    public function ventasExcel(Request $request)
+    {
+        $ventas = $this->ventasIndexQuery($request)
+            ->where('estado', 'Activo')
+            ->get();
+
+        $tipoVenta = $request->input('tipoVenta', $request->input('tipo_venta'));
+        $facturado = $request->input('facturado');
+        $userId = $request->input('user');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+        $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+
+        $titulo = match ($tipoVenta) {
+            'Internado' => 'Reporte de Ventas Internas',
+            'Externo' => 'Reporte de Ventas Externas',
+            'Seguro' => 'Reporte de Ventas Seguro',
+            'Recepción', 'Recepcion' => 'Reporte de Ventas Recepción',
+            'Egreso' => 'Reporte de Egresos',
+            default => 'Reporte General de Ventas',
+        };
+
+        $facturadoLabel = null;
+        $fileFacturado = 'todos';
+        if ($facturado !== null && $facturado !== '') {
+            $isFacturado = filter_var($facturado, FILTER_VALIDATE_BOOLEAN);
+            $facturadoLabel = $isFacturado ? 'Facturadas' : 'No facturadas';
+            $fileFacturado = $isFacturado ? 'facturadas' : 'no_facturadas';
+            $titulo .= ' - ' . $facturadoLabel;
+        }
+
+        $safeTipo = $tipoVenta ? str($tipoVenta)->ascii()->lower()->replace(' ', '_')->toString() : 'todos';
+        $fileName = 'ventas_' . $safeTipo . '_' . $fileFacturado . '_' . now()->format('Ymd');
+
+        return (new VentasExcelExport($ventas, $titulo, $farmaciaTipo, $fileName, [
+            'fechaInicio' => $request->input('fechaInicio'),
+            'fechaFin' => $request->input('fechaFin'),
+            'userLabel' => $userLabel,
+            'facturadoLabel' => $facturadoLabel,
+        ]))->download();
     }
 
     public function reporteFarmaciaPdf(Request $request)

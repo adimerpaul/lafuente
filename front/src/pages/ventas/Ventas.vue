@@ -1032,7 +1032,6 @@
 <script>
 import moment from 'moment'
 import {Imprimir} from "src/addons/Imprimir";
-import {Excel} from "src/addons/Excel";
 export default {
   name: 'Ventas',
   data() {
@@ -1367,6 +1366,16 @@ export default {
       if (facturado === false) return 'NoFacturados'
       return 'Todos'
     },
+    triggerBlobDownload(blob, fileName) {
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const a = document.createElement('a')
+      a.href = url
+      a.setAttribute('download', fileName)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    },
     getVentasExportables(tipoVenta = null, facturado = null) {
       return (this.ventasFiltradas || []).filter(v => {
         const esActiva = String(v.estado).toLowerCase() === 'activo';
@@ -1375,7 +1384,7 @@ export default {
         return esActiva && coincideTipo && coincideFacturado;
       });
     },
-    exportExcelPorTipo(tipoVenta = null, facturado = null) {
+    async exportExcelPorTipo(tipoVenta = null, facturado = null) {
       const ventasActivas = this.getVentasExportables(tipoVenta, facturado);
       const sufijoTipo = tipoVenta || 'Todos';
       const sufijoFacturado = this.facturadoLabel(facturado);
@@ -1386,24 +1395,27 @@ export default {
         return;
       }
 
-      const data = [{
-        sheet: `Ventas ${sufijoTipo} ${sufijoFacturado}`,
-        columns: [
-          { label: "ID",        value: "id" },
-          { label: "Fecha",     value: "fecha" },
-          { label: "Cliente",   value: "cliente.nombre" },
-          { label: "Usuario",   value: "user.name" },
-          { label: "Estado",    value: "estado" },          // seguirá apareciendo "Activo"
-          { label: "Total",     value: "total" },
-          { label: "Detalle",   value: "detailsText" },
-          { label: "Tipo venta",value: "tipo_venta" },
-          { label: "Facturado", value: row => row.facturado ? 'Sí' : 'No' },
-          { label: "Nro factura", value: row => row.numero_factura || '' },
-        ],
-        content: ventasActivas
-      }];
+      const params = {
+        fechaInicio: this.fechaInicio || '',
+        fechaFin: this.fechaFin || '',
+        user: this.user || '',
+        farmacia_tipo: this.farmaciaTipo,
+      }
+      if (tipoVenta) params.tipoVenta = tipoVenta
+      if (facturado !== null) params.facturado = facturado ? '1' : '0'
 
-      Excel.export(data, `Ventas_Activas_${sufijoTipo}_${sufijoFacturado}`);
+      this.loading = true
+      try {
+        const res = await this.$axios.get('ventas/excel', {
+          params,
+          responseType: 'blob',
+        })
+        this.triggerBlobDownload(res.data, `Ventas_Activas_${sufijoTipo}_${sufijoFacturado}.xlsx`)
+      } catch (error) {
+        this.$alert.error(error.response?.data?.message || 'No se pudo exportar el Excel')
+      } finally {
+        this.loading = false
+      }
     },
     exportPdfPorTipo(tipoVenta = null, facturado = null) {
       const ventas = this.getVentasExportables(tipoVenta, facturado);
