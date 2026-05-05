@@ -169,7 +169,7 @@
                   </td>
                   <td class="pm-none">
                     <input v-model="producto.precio_venta" type="number" style="width: 55px;color: red;font-weight: bold"
-                           step="1"/>
+                           step="0.5"/>
                   </td>
                   <td class="pm-none">
                     <input v-model="producto.lote" type="text" style="width: 70px;" />
