@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'show']);
     Route::put('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'update']);
     Route::put('/pacientes/{paciente}/alta', [App\Http\Controllers\PacienteController::class, 'darAlta']);
+    Route::put('/pacientes/{paciente}/alta/limpiar', [App\Http\Controllers\PacienteController::class, 'limpiarAlta']);
     Route::delete('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'destroy']);
     Route::get('/pacientes-reporte/pdf', [App\Http\Controllers\PacienteController::class, 'reportePdf']);
     Route::get('/pacientes/exportar/interno-alta', [App\Http\Controllers\PacienteController::class, 'exportarInternoAlta']);

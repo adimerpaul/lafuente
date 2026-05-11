@@ -160,6 +160,24 @@
         .nowrap {
             white-space: nowrap;
         }
+
+        .farmacia-badge {
+            display: inline-block;
+            color: #ffffff;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            text-transform: uppercase;
+        }
+
+        .farmacia-badge.farmacia {
+            background: #16a34a;
+        }
+
+        .farmacia-badge.institucional {
+            background: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +238,8 @@
     @php
         $detalles = $venta->ventaDetalles ?? collect();
         $doctor = $venta->doctor;
+        $farmaciaTipo = $venta->farmacia_tipo ?: 'Farmacia';
+        $farmaciaClase = $farmaciaTipo === 'Farmacia institucional' ? 'institucional' : 'farmacia';
         $totalVenta = is_null($venta->total)
             ? $detalles->sum(fn($d) => floatval($d->cantidad) * floatval($d->precio))
             : floatval($venta->total);
@@ -238,6 +258,8 @@
                 <b>CLIENTE:</b> {{ $venta->nombre ?: 'SN' }}
                 &nbsp; | &nbsp;
                 <b>TIPO:</b> {{ $venta->tipo_venta ?: '—' }}
+                &nbsp; | &nbsp;
+                <span class="farmacia-badge {{ $farmaciaClase }}">{{ $farmaciaTipo }}</span>
                 &nbsp; | &nbsp;
                 <b>PAGO:</b> {{ $venta->tipo_pago ?: '—' }}
                 &nbsp; | &nbsp;

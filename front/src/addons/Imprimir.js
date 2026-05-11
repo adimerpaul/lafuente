@@ -962,6 +962,8 @@ Oruro</div>
       const centavos = Math.round((total - enteros) * 100).toString().padStart(2, '0');
       const literal  = `Son ${miConversor.convertToText(enteros)} ${centavos}/100 Bolivianos`;
       const comentario = (venta.comentario ?? '').toString().trim();
+      const farmaciaTipo = S(venta.farmacia_tipo || 'Farmacia', 'Farmacia');
+      const farmaciaClass = farmaciaTipo === 'Farmacia institucional' ? 'badge-institucional' : 'badge-farmacia';
 
       const detalles = Array.isArray(venta.venta_detalles) ? venta.venta_detalles : [];
 
@@ -980,6 +982,9 @@ Oruro</div>
       .imprimir-scope table{ width:100%; border-collapse:collapse; }
       .imprimir-scope td{ vertical-align:top; padding:1px 0; }
       .imprimir-scope .small{ font-size:9px; line-height:1.2; }
+      .imprimir-scope .farmacia-badge{ display:inline-block; color:#fff; font-weight:700; padding:3px 8px; border-radius:4px; margin-top:4px; text-transform:uppercase; letter-spacing:0.03em; }
+      .imprimir-scope .badge-farmacia{ background:#16a34a; }
+      .imprimir-scope .badge-institucional{ background:#2563eb; }
     `;
 
       // ===== HTML ENVUELTO EN ".imprimir-scope" =====
@@ -987,6 +992,9 @@ Oruro</div>
       <div class="imprimir-scope">
         <div class="ticket">
           <div class="center bold" style="font-size:12px;">RECIBO DE VENTA</div>
+          <div class="center">
+            <span class="farmacia-badge ${farmaciaClass}">${farmaciaTipo}</span>
+          </div>
           <div class="center small">
             ${S(env.razon, '—')}<br>
             ${S(env.direccion, '')}<br>

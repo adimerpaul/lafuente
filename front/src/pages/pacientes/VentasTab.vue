@@ -4,13 +4,13 @@
     <div class="row items-center q-mb-sm">
       <div class="text-h6">
         Ventas
-        <template v-if="paciente.paciente_ventas?.length">
+        <template v-if="pacienteVentasFarmacia.length">
           <span class="text-caption">
-            ({{ paciente.paciente_ventas.length }})
+            ({{ pacienteVentasFarmacia.length }})
           </span>
           <span class="text-h5 text-bold">
             {{
-              paciente.paciente_ventas.reduce(
+              pacienteVentasFarmacia.reduce(
                 (total, pv) => total + parseFloat(pv.venta.total || 0), 0
               ).toFixed(2)
             }} Bs.
@@ -51,9 +51,28 @@
       />
     </div>
 
+    <q-tabs
+      v-model="selectedFarmaciaTipo"
+      dense
+      align="left"
+      class="text-primary q-mb-sm"
+      active-color="white"
+      active-bg-color="primary"
+      indicator-color="primary"
+    >
+      <q-tab
+        v-for="farmacia in farmacias"
+        :key="farmacia"
+        :name="farmacia"
+        icon="local_pharmacy"
+        :label="farmacia"
+        no-caps
+      />
+    </q-tabs>
+
     <!-- Listado de ventas del paciente -->
     <q-list bordered>
-      <q-item v-for="(pv, index) in paciente.paciente_ventas" :key="index">
+      <q-item v-for="(pv, index) in pacienteVentasFarmacia" :key="index">
         <q-item-section avatar>
 <!--          <pre>{{pv}}</pre>-->
           <q-avatar>
@@ -138,7 +157,7 @@
 
     <!-- === SECCIÓN DE VENTA DIRECTA (BUSCAR PRODUCTOS + CARRITO) === -->
     <q-separator class="q-my-md" />
-    <div class="text-subtitle1 q-mb-sm">Crear venta</div>
+    <div class="text-subtitle1 q-mb-sm">Crear venta - {{ selectedFarmaciaTipo }}</div>
 
     <div class="row">
       <!-- LISTA PRODUCTOS -->
@@ -517,6 +536,8 @@ export default {
       productos: [],
       productosSearch: "",
       pagination: { page: 1, rowsPerPage: 24, rowsNumber: 0 },
+      farmacias: ['Farmacia', 'Farmacia institucional'],
+      selectedFarmaciaTipo: 'Farmacia',
 
       // carrito
       productosVentas: [],
@@ -576,7 +597,8 @@ export default {
         params: {
           search: this.productosSearch,
           page: this.pagination.page,
-          per_page: this.pagination.rowsPerPage
+          per_page: this.pagination.rowsPerPage,
+          farmacia_tipo: this.selectedFarmaciaTipo
         }
       }).then(res => {
         this.productos = res.data.data || [];
@@ -607,7 +629,9 @@ export default {
       this.lotes = [];
       this.lotesLoading = true;
       try {
-        const res = await this.$axios.get(`productos/${producto.id}/historial-compras-ventas`);
+        const res = await this.$axios.get(`productos/${producto.id}/historial-compras-ventas`, {
+          params: { farmacia_tipo: this.selectedFarmaciaTipo }
+        });
         this.lotes = res.data || [];
         if (this.lotes.length === 1) this.onPickLote(this.lotes[0]);
       } catch (e) {
@@ -735,7 +759,8 @@ export default {
           tipo_venta: this.venta.tipo_venta,
           tipo_pago: this.venta.tipo_pago,
           receta_id: null,
-          doctor_id: this.venta.doctor_id
+          doctor_id: this.venta.doctor_id,
+          farmacia_tipo: this.selectedFarmaciaTipo
         });
 
         const ventaCreada = res.data;
@@ -854,6 +879,11 @@ export default {
     }
   },
   computed: {
+    pacienteVentasFarmacia () {
+      return (this.paciente.paciente_ventas || []).filter(pv => {
+        return (pv.venta?.farmacia_tipo || 'Farmacia') === this.selectedFarmaciaTipo
+      })
+    },
     totalVenta () {
       return this.productosVentas.reduce(
         (acc, it) => acc + (Number(it.cantidad) * Number(it.precio)), 0
@@ -863,6 +893,14 @@ export default {
       let c = Number(this.efectivo || 0) - this.totalVenta;
       if (c < 0) c = 0;
       return c.toFixed(2);
+    }
+  },
+  watch: {
+    selectedFarmaciaTipo () {
+      this.productosVentas = []
+      this.productosSearch = ''
+      this.pagination.page = 1
+      this.productosGet()
     }
   }
 }

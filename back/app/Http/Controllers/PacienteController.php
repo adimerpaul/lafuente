@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PacienteAlta;
 use App\Models\Paciente;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PacienteController extends Controller{
     function index(Request $request) {
@@ -68,6 +70,7 @@ class PacienteController extends Controller{
             'formulariosControl.user',
             'registroUser',
             'altaUser',
+            'altas.user',
         )->find($paciente->id);
     }
     function update(Request $request, Paciente $paciente){
@@ -93,13 +96,58 @@ class PacienteController extends Controller{
             return response()->json(['message' => 'El paciente ya fue dado de alta.'], 422);
         }
 
-        $paciente->update([
-            'estado_internacion' => 'Alta',
-            'fecha_alta' => now(),
-            'alta_user_id' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($paciente) {
+            $estadoAnterior = $paciente->estado_internacion;
+            $fechaAlta = now();
 
-        return response()->json($paciente->load(['registroUser', 'altaUser']));
+            $paciente->update([
+                'estado_internacion' => 'Alta',
+                'fecha_alta' => $fechaAlta,
+                'alta_user_id' => auth()->id(),
+            ]);
+
+            PacienteAlta::create([
+                'paciente_id' => $paciente->id,
+                'user_id' => auth()->id(),
+                'accion' => 'Alta',
+                'estado_anterior' => $estadoAnterior,
+                'estado_nuevo' => 'Alta',
+                'fecha_hora' => $fechaAlta,
+            ]);
+        });
+
+        return response()->json($paciente->load(['registroUser', 'altaUser', 'altas.user']));
+    }
+    function limpiarAlta(Paciente $paciente){
+        if ($paciente->tipo_paciente !== 'Interno') {
+            return response()->json(['message' => 'Solo se puede cambiar el alta de pacientes internos.'], 422);
+        }
+
+        if ($paciente->estado_internacion !== 'Alta' && empty($paciente->fecha_alta)) {
+            return response()->json(['message' => 'El paciente no tiene alta registrada.'], 422);
+        }
+
+        DB::transaction(function () use ($paciente) {
+            $estadoAnterior = $paciente->estado_internacion;
+            $fechaCambio = now();
+
+            $paciente->update([
+                'estado_internacion' => 'Internado',
+                'fecha_alta' => null,
+                'alta_user_id' => null,
+            ]);
+
+            PacienteAlta::create([
+                'paciente_id' => $paciente->id,
+                'user_id' => auth()->id(),
+                'accion' => 'Alta vacia',
+                'estado_anterior' => $estadoAnterior,
+                'estado_nuevo' => 'Internado',
+                'fecha_hora' => $fechaCambio,
+            ]);
+        });
+
+        return response()->json($paciente->load(['registroUser', 'altaUser', 'altas.user']));
     }
     function reportePdf(Request $request){
         $fechaAltaInicio = $request->input('fecha_alta_inicio');

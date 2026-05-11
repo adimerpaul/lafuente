@@ -143,6 +143,24 @@
         .nowrap {
             white-space: nowrap;
         }
+
+        .farmacia-badge {
+            display: inline-block;
+            color: #ffffff;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            text-transform: uppercase;
+        }
+
+        .farmacia-badge.farmacia {
+            background: #16a34a;
+        }
+
+        .farmacia-badge.institucional {
+            background: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +222,8 @@
         $pagadoInternado = (int)($venta->pagado_interno ?? 0) === 1 ? 'SI' : 'NO';
 
         $doctor = $venta->doctor ?? null;
+        $farmaciaTipo = $venta->farmacia_tipo ?: 'Farmacia';
+        $farmaciaClase = $farmaciaTipo === 'Farmacia institucional' ? 'institucional' : 'farmacia';
 
         $totalVenta = is_null($venta->total)
             ? $detalles->sum(fn($d) => floatval($d->cantidad) * floatval($d->precio))
@@ -221,12 +241,14 @@
                 &nbsp; | &nbsp;
                 <b>TIPO:</b> {{ $tipoVenta ?: '—' }}
                 &nbsp; | &nbsp;
+                <span class="farmacia-badge {{ $farmaciaClase }}">{{ $farmaciaTipo }}</span>
+                &nbsp; | &nbsp;
                 <b>PAGADO INTERNADO:</b> {{ $pagadoInternado }}
                 &nbsp; | &nbsp;
                 <b>DOCTOR(A):</b>
                 {{ $doctor ? $doctor->nombre : '—' }}
                 @if($doctor && !empty($doctor->especialidad))
-                    <span class="muted">— {{ $doctor->especialidad }}</span>
+{{--                    <span class="muted">— {{ $doctor->especialidad }}</span>--}}
                 @endif
             </td>
         </tr>

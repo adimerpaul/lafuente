@@ -11,6 +11,14 @@
         @click="darAlta"
         :loading="$store.loading"
       />
+      <q-btn
+        v-if="puedeLimpiarAlta"
+        icon="undo"
+        color="warning"
+        @click="limpiarAlta"
+        :loading="$store.loading"
+      />
+      <q-btn icon="history" color="primary" flat @click="historialVisible = !historialVisible" :loading="$store.loading" />
       <q-btn icon="edit" @click="pacienteDialog = true" :loading="$store.loading" />
       <q-btn icon="delete" @click="deletePaciente" :loading="$store.loading" />
     </q-btn-group>
@@ -81,6 +89,40 @@
     </div>
   </div>
 
+  <q-slide-transition>
+    <div v-show="historialVisible" class="q-mt-md">
+      <div class="row items-center q-mb-xs">
+        <q-icon name="history" color="primary" size="sm" class="q-mr-xs" />
+        <div class="text-subtitle1 text-bold">Historial de altas</div>
+      </div>
+      <q-markup-table dense flat bordered wrap-cells>
+        <thead>
+          <tr class="bg-primary text-white">
+            <th>Accion</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado anterior</th>
+            <th>Estado nuevo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="alta in paciente.altas || []" :key="alta.id">
+            <td>{{ alta.accion }}</td>
+            <td>{{ alta.user?.name || '-' }}</td>
+            <td>{{ formatFecha(alta.fecha_hora) }}</td>
+            <td>{{ formatHora(alta.fecha_hora) }}</td>
+            <td>{{ alta.estado_anterior || '-' }}</td>
+            <td>{{ alta.estado_nuevo || '-' }}</td>
+          </tr>
+          <tr v-if="!(paciente.altas || []).length">
+            <td colspan="6" class="text-center text-grey">Sin historial de altas</td>
+          </tr>
+        </tbody>
+      </q-markup-table>
+    </div>
+  </q-slide-transition>
+
   <q-dialog v-model="pacienteDialog" persistent>
     <q-card style="min-width: 350px">
       <q-card-section>
@@ -127,11 +169,15 @@ export default {
   data () {
     return {
       pacienteDialog: false,
+      historialVisible: true,
     }
   },
   computed: {
     puedeDarAlta() {
       return this.paciente.tipo_paciente === 'Interno' && this.paciente.estado_internacion !== 'Alta'
+    },
+    puedeLimpiarAlta() {
+      return this.paciente.tipo_paciente === 'Interno' && (this.paciente.estado_internacion === 'Alta' || !!this.paciente.fecha_alta)
     },
     estadoColor() {
       if (this.paciente.estado_internacion === 'Internado') return 'indigo'
@@ -150,6 +196,14 @@ export default {
     formatDateTime(value) {
       if (!value) return '-'
       return moment(value).format('YYYY-MM-DD HH:mm')
+    },
+    formatFecha(value) {
+      if (!value) return '-'
+      return moment(value).format('YYYY-MM-DD')
+    },
+    formatHora(value) {
+      if (!value) return '-'
+      return moment(value).format('HH:mm')
     },
     deletePaciente() {
       this.$alert.dialog('¿Está seguro de eliminar el paciente?').onOk(() => {
@@ -172,6 +226,19 @@ export default {
           this.$emit('pacienteGet')
         }).catch(error => {
           this.$alert.error(error.response?.data?.message || 'No se pudo dar de alta al paciente')
+        }).finally(() => {
+          this.$store.loading = false
+        })
+      })
+    },
+    limpiarAlta() {
+      this.$alert.dialog('Desea cambiar el alta a vacio y dejar al paciente como internado?').onOk(() => {
+        this.$store.loading = true
+        this.$axios.put(`pacientes/${this.paciente.id}/alta/limpiar`).then(() => {
+          this.$alert.success('Alta cambiada a vacio')
+          this.$emit('pacienteGet')
+        }).catch(error => {
+          this.$alert.error(error.response?.data?.message || 'No se pudo cambiar el alta')
         }).finally(() => {
           this.$store.loading = false
         })

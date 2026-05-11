@@ -86,4 +86,7 @@ class Paciente extends Model{
     function altaUser(){
         return $this->belongsTo(User::class, 'alta_user_id');
     }
+    function altas(){
+        return $this->hasMany(PacienteAlta::class)->orderByDesc('fecha_hora');
+    }
 }
