@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CajaRecepcionesExcelExport;
 use App\Models\User;
 use App\Models\Paciente;
 use App\Models\PacienteVenta;
@@ -110,6 +111,42 @@ class CajaRecepcionController extends Controller
         ])->setPaper('letter', 'landscape');
 
         return $pdf->stream('caja_recepciones_reporte.pdf');
+    }
+
+    public function excel(Request $request)
+    {
+        $items = $this->queryIndex($request)
+            ->with(['costoItems.costo'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get();
+
+        $activeItems = $items->where('estado', '!=', 'Anulado');
+        $paidItems = $activeItems->where('estado_cobro', 'Pagado');
+
+        $summary = [
+            'total_recaudado'     => (float) $paidItems->sum('recaudado_total'),
+            'total_ingresos'      => (float) $paidItems->sum('recaudado_total'),
+            'total_egresos'       => (float) $paidItems->sum('egreso'),
+            'total_qr'            => (float) $paidItems->sum('qr'),
+            'total_efectivo'      => (float) $paidItems->sum('efectivo'),
+            'total_efectivo_caja' => (float) $paidItems->sum('efectivo')
+                                   - (float) $paidItems->sum('egreso'),
+            'total_farmacia'      => (float) $paidItems->sum('costo_farmacia'),
+            'total_final'         => (float) $paidItems->sum('efectivo')
+                                   - (float) $paidItems->sum('egreso'),
+            'total_pendiente'     => (float) $activeItems->where('estado_cobro', '!=', 'Pagado')->sum('recaudado_total'),
+        ];
+
+        $userId = $request->get('user_id');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+        $fileName = 'Caja_Recepcion_' . now()->format('Ymd_His');
+
+        return (new CajaRecepcionesExcelExport($items, $summary, [
+            'fechaInicio' => $request->get('fechaInicio'),
+            'fechaFin' => $request->get('fechaFin'),
+            'search' => $request->get('search'),
+        ], $userLabel, $fileName))->download();
     }
 
     public function pdfCarta(CajaRecepcion $cajaRecepcion)
@@ -323,6 +360,9 @@ class CajaRecepcionController extends Controller
                 'costo_id'   => $item['costo_id'] ?? null,
                 'nombre'     => $item['nombre'] ?? '',
                 'monto'      => (float) ($item['monto'] ?? 0),
+                'doctor_porcentaje' => in_array((int) ($item['doctor_porcentaje'] ?? 20), [20, 30, 50], true)
+                    ? (int) ($item['doctor_porcentaje'] ?? 20)
+                    : 20,
                 'arancel_ids' => $item['arancel_ids'] ?? [],
             ]);
         }
@@ -512,7 +552,7 @@ class CajaRecepcionController extends Controller
             'hora' => 'nullable|date_format:H:i',
             'paciente_id' => 'required|exists:pacientes,id',
             'doctor_id' => 'nullable|exists:doctores,id',
-            'tipo_atencion' => 'nullable|in:Externo,Especialidad,Especialidad externa,Especialidad interna',
+            'tipo_atencion' => 'nullable',
             'punto' => 'nullable|integer|in:0,1',
             'nombre_factura' => 'nullable|string|max:255',
             'numero_ficha' => 'nullable|string|max:255',
@@ -669,7 +709,7 @@ class CajaRecepcionController extends Controller
     private function codigoAtencionPrefix(?string $tipoAtencion): string
     {
         return match ($tipoAtencion) {
-            'Especialidad interna' => 'CLSC',
+            'Especialidad interna', 'Interna' => 'CLSC',
             default => 'SC',
         };
     }

@@ -318,6 +318,22 @@
                           <span class="text-caption text-grey-7">Bs</span>
                         </template>
                       </q-input>
+                      <div class="q-mt-sm">
+                        <div class="text-caption text-weight-medium">Porcentaje doctor</div>
+                        <q-option-group
+                          :model-value="costoDoctorPorcentaje(costo.id)"
+                          :options="doctorPagoPorcentajeOptions"
+                          type="radio"
+                          inline
+                          dense
+                          color="negative"
+                          class="doctor-percent-options"
+                          @update:model-value="setCostoDoctorPorcentaje(costo.id, $event)"
+                        />
+                        <div class="text-caption text-grey-7">
+                          Doctor: {{ money(costoDoctorMonto(costo.id)) }}
+                        </div>
+                      </div>
                     </q-card-section>
                   </q-card>
                 </div>
@@ -386,7 +402,7 @@
                       @update:model-value="setDoctorEgresoManual"
                     />
                     <div class="text-caption text-grey-7">
-                      {{ doctorPagoPorcentaje }}% de {{ money(recaudadoTotal) }} = {{ money(doctorEgresoCalculado) }}
+                      Suma por costos: {{ money(doctorEgresoCalculado) }}
                     </div>
                   </q-card>
                 </div>
@@ -809,7 +825,7 @@ export default {
       observacionesByTipo: {},
       pendingObservaciones: [],
       form: emptyForm(),
-      tipoAtencionOptions: ['Externo', 'Especialidad externa', 'Especialidad interna'],
+      tipoAtencionOptions: ['Externo', 'Especialidad', 'Interna','Seguro'],
       doctores: [],
       pacienteOptions: [],
       doctorOptions: [],
@@ -843,8 +859,9 @@ export default {
         { label: 'Mixto', value: 'mixto' },
         { label: 'Pendiente', value: 'pendiente' }
       ],
-      doctorPagoPorcentaje: 15,
-      doctorPagoPorcentajeOptions: [15, 20, 25, 30, 35].map(value => ({
+      doctorPagoPorcentaje: 20,
+      suppressDoctorPercentageApply: false,
+      doctorPagoPorcentajeOptions: [20, 30, 50].map(value => ({
         label: `${value}%`,
         value
       })),
@@ -867,9 +884,11 @@ export default {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
     },
     doctorEgresoCalculado () {
-      const base = this.recaudadoTotal
-      const porcentaje = Number(this.doctorPagoPorcentaje || 0)
-      return Math.round(Math.max((base * porcentaje) / 100, 0))
+      return Math.round(Object.values(this.costosValues).reduce((sum, value) => {
+        const monto = Number(value?.monto || 0)
+        const porcentaje = Number(value?.doctor_porcentaje || 20)
+        return sum + ((monto * porcentaje) / 100)
+      }, 0))
     },
     saldoFinal () {
       return Number(this.form.efectivo || 0) - Number(this.form.egreso || 0)
@@ -942,8 +961,13 @@ export default {
   watch: {
     recaudadoTotal () {
       this.syncPaymentAmounts()
+      this.syncDoctorEgresoAmount()
     },
     doctorPagoPorcentaje () {
+      if (this.suppressDoctorPercentageApply) {
+        this.suppressDoctorPercentageApply = false
+        return
+      }
       this.syncDoctorEgreso()
     },
     metodoPago () {
@@ -1008,7 +1032,7 @@ export default {
       }))
       const newValues = {}
       costos.forEach(c => {
-        newValues[c.id] = this.costosValues[c.id] || { monto: 0, arancel_ids: [] }
+        newValues[c.id] = this.costosValues[c.id] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
       })
       this.costosValues = newValues
     },
@@ -1016,11 +1040,15 @@ export default {
       const values = {}
       ;(costoItems || []).forEach(item => {
         if (item.costo_id) {
-          values[item.costo_id] = { monto: item.monto || 0, arancel_ids: item.arancel_ids || [] }
+          values[item.costo_id] = {
+            monto: item.monto || 0,
+            doctor_porcentaje: [20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 20,
+            arancel_ids: item.arancel_ids || []
+          }
         }
       })
       this.costosCatalogo.forEach(c => {
-        if (!values[c.id]) values[c.id] = { monto: 0, arancel_ids: [] }
+        if (!values[c.id]) values[c.id] = { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
       })
       this.costosValues = values
     },
@@ -1030,11 +1058,33 @@ export default {
       return n === 0 ? '' : n
     },
     setCostoMonto (costoId, value) {
-      const current = this.costosValues[costoId] || { monto: 0, arancel_ids: [] }
+      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
       this.costosValues = {
         ...this.costosValues,
         [costoId]: { ...current, monto: value === '' || value === null ? 0 : Number(value) }
       }
+      this.syncDoctorEgresoAmount()
+    },
+    costoDoctorPorcentaje (costoId) {
+      return Number(this.costosValues[costoId]?.doctor_porcentaje || 20)
+    },
+    costoDoctorMonto (costoId) {
+      const current = this.costosValues[costoId] || {}
+      return Math.round((Number(current.monto || 0) * this.costoDoctorPorcentaje(costoId)) / 100)
+    },
+    setCostoDoctorPorcentaje (costoId, value) {
+      const safePercent = [20, 30, 50].includes(Number(value)) ? Number(value) : 20
+      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
+      this.costosValues = {
+        ...this.costosValues,
+        [costoId]: { ...current, doctor_porcentaje: safePercent }
+      }
+      this.syncDoctorEgresoAmount()
+    },
+    firstCostoDoctorPercentage () {
+      const active = Object.values(this.costosValues).find(value => Number(value?.monto || 0) > 0)
+      const percent = Number(active?.doctor_porcentaje || 20)
+      return [20, 30, 50].includes(percent) ? percent : 20
     },
     costoArancelCount (costoId) {
       return (this.costosValues[costoId]?.arancel_ids || []).length
@@ -1069,8 +1119,13 @@ export default {
         .reduce((sum, ar) => sum + Number(ar.precio || 0), 0)
       this.costosValues = {
         ...this.costosValues,
-        [costoId]: { monto: total, arancel_ids: selectedIds }
+        [costoId]: {
+          ...(this.costosValues[costoId] || { doctor_porcentaje: 20 }),
+          monto: total,
+          arancel_ids: selectedIds
+        }
       }
+      this.syncDoctorEgresoAmount()
       this.arancelDialog = false
     },
     getObservacionCount (tipo) {
@@ -1274,14 +1329,14 @@ export default {
     },
     closestDoctorPercentage (egreso) {
       const base = this.recaudadoTotal
-      if (base <= 0) return 15
+      if (base <= 0) return 20
 
       const percent = Math.round((Number(egreso || 0) / base) * 100)
       return this.doctorPagoPorcentajeOptions.reduce((closest, option) => {
         return Math.abs(option.value - percent) < Math.abs(closest - percent)
           ? option.value
           : closest
-      }, 15)
+      }, 20)
     },
     setDoctorEgresoManual (value) {
       const nextValue = Math.max(Math.round(Number(value || 0)), 0)
@@ -1321,12 +1376,23 @@ export default {
       const allowed = this.doctorPagoPorcentajeOptions.map(option => option.value)
       const safePercent = allowed.includes(Number(this.doctorPagoPorcentaje))
         ? Number(this.doctorPagoPorcentaje)
-        : 15
+        : 20
       if (safePercent !== Number(this.doctorPagoPorcentaje || 0)) {
         this.doctorPagoPorcentaje = safePercent
         return
       }
-      const nextValue = Math.round(Math.max((this.recaudadoTotal * safePercent) / 100, 0))
+      const nextValues = {}
+      Object.entries(this.costosValues).forEach(([costoId, value]) => {
+        nextValues[costoId] = {
+          ...value,
+          doctor_porcentaje: safePercent
+        }
+      })
+      this.costosValues = nextValues
+      this.syncDoctorEgresoAmount()
+    },
+    syncDoctorEgresoAmount () {
+      const nextValue = this.doctorEgresoCalculado
       if (Number(this.form.egreso || 0) !== nextValue) {
         this.form.egreso = nextValue
       }
@@ -1420,7 +1486,8 @@ export default {
           }
           this.loadCostosValues(itemRes.data.costo_items || [])
           this.form.egreso = Math.round(Number(this.form.egreso || 0))
-          this.doctorPagoPorcentaje = this.closestDoctorPercentage(this.form.egreso)
+          this.suppressDoctorPercentageApply = true
+          this.doctorPagoPorcentaje = this.firstCostoDoctorPercentage()
           this.metodoPago = this.detectMetodoPago()
           this.syncPaymentAmounts()
           const paciente = itemRes.data.paciente
@@ -1431,7 +1498,7 @@ export default {
             }
           }
         } else {
-          this.doctorPagoPorcentaje = 15
+          this.doctorPagoPorcentaje = 20
           this.syncDoctorEgreso()
           this.syncPaymentAmounts()
         }
@@ -1611,6 +1678,7 @@ export default {
             costo_id: parseInt(costo_id),
             nombre: costo?.nombre || '',
             monto: Number(v.monto || 0),
+            doctor_porcentaje: [20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 20,
             arancel_ids: v.arancel_ids || [],
           }
         })

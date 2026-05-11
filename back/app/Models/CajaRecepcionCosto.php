@@ -13,11 +13,13 @@ class CajaRecepcionCosto extends Model
         'costo_id',
         'nombre',
         'monto',
+        'doctor_porcentaje',
         'arancel_ids',
     ];
 
     protected $casts = [
         'monto' => 'float',
+        'doctor_porcentaje' => 'integer',
         'arancel_ids' => 'array',
     ];
 

@@ -205,7 +205,6 @@
 
 <script>
 import moment from 'moment'
-import { Excel } from 'src/addons/Excel'
 import { Imprimir } from 'src/addons/Imprimir'
 
 export default {
@@ -281,28 +280,35 @@ export default {
         })
       })
     },
-    exportExcel () {
-      const data = [{
-        sheet: 'Caja recepcion',
-        columns: [
-          { label: 'Estado', value: row => row.estado_label || '' },
-          { label: 'Fecha y hora', value: row => `${row.fecha || ''} ${row.hora || ''}`.trim() },
-          { label: 'Paciente', value: row => row.paciente?.nombre_completo || '' },
-          { label: 'Ficha', value: 'numero_ficha' },
-          { label: 'Encargado', value: row => row.user?.name || '' },
-          { label: 'Movimiento', value: 'tipo_movimiento' },
-          { label: 'Documento', value: 'documento_label' },
-          { label: 'Atencion', value: 'tipo_atencion' },
-          { label: 'QR', value: row => Number(row.qr || 0) },
-          { label: 'Efectivo', value: row => Number(row.efectivo || 0) },
-          { label: 'Egreso', value: row => Number(row.egreso || 0) },
-          { label: 'Recaudado', value: row => Number(row.recaudado_total || 0) },
-          { label: 'Farmacia', value: row => Number(row.costo_farmacia || 0) },
-          { label: 'Final', value: row => Number(row.saldo_final || 0) }
-        ],
-        content: this.activeItems
-      }]
-      Excel.export(data, 'Caja_Recepcion_Activos')
+    triggerBlobDownload (blob, fileName) {
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const a = document.createElement('a')
+      a.href = url
+      a.setAttribute('download', fileName)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    },
+    async exportExcel () {
+      if (!this.items.length) {
+        this.$q.notify({ type: 'warning', message: 'No hay registros para exportar en Excel' })
+        return
+      }
+
+      this.loading = true
+      try {
+        const res = await this.$axios.get('caja-recepciones/excel', {
+          params: this.filters,
+          responseType: 'blob'
+        })
+        const suffix = `${this.filters.fechaInicio || 'inicio'}_a_${this.filters.fechaFin || 'fin'}`
+        this.triggerBlobDownload(res.data, `Caja_Recepcion_${suffix}.xlsx`)
+      } catch (err) {
+        this.$alert.error(err.response?.data?.message || 'No se pudo exportar el Excel')
+      } finally {
+        this.loading = false
+      }
     },
     exportPdf () {
       if (!this.items.length) {

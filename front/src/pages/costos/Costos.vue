@@ -146,6 +146,10 @@
                       <q-item-section>
                         <q-item-label class="text-caption text-weight-medium">{{ arancel.nombre }}</q-item-label>
                         <q-item-label caption v-if="arancel.presentacion">{{ arancel.presentacion }}</q-item-label>
+                        <q-item-label caption v-if="arancel.categoria">
+<!--                          {{ arancel.presentacion }}-->
+                          {{arancel.categoria}}
+                        </q-item-label>
                       </q-item-section>
                       <q-item-section side>
                         <q-badge color="teal-8" text-color="white">{{ arancel.precio }} Bs</q-badge>
