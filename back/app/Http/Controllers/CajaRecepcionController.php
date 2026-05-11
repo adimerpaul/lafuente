@@ -8,7 +8,9 @@ use App\Models\PacienteVenta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CajaRecepcion;
 use App\Models\CajaRecepcionCosto;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CajaRecepcionController extends Controller
 {
@@ -254,6 +256,7 @@ class CajaRecepcionController extends Controller
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
         $data['estado'] = 'Activo';
+        $data['numero_ficha'] = trim((string) ($data['numero_ficha'] ?? ''));
 
         $costosDetalle = $request->input('costos_detalle', null);
         if ($costosDetalle !== null) {
@@ -262,11 +265,19 @@ class CajaRecepcionController extends Controller
             $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
         }
 
-        $cajaRecepcion = CajaRecepcion::create($data);
+        $cajaRecepcion = DB::transaction(function () use ($data, $costosDetalle) {
+            if ($data['numero_ficha'] === '') {
+                $data['numero_ficha'] = $this->generateNumeroFicha($data['tipo_atencion'] ?? null, $data['fecha'] ?? null);
+            }
 
-        if ($costosDetalle !== null) {
-            $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
-        }
+            $cajaRecepcion = CajaRecepcion::create($data);
+
+            if ($costosDetalle !== null) {
+                $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
+            }
+
+            return $cajaRecepcion;
+        });
 
         return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']), 201);
     }
@@ -277,6 +288,7 @@ class CajaRecepcionController extends Controller
         $data['user_id'] = $request->user()->id;
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
+        $data['numero_ficha'] = trim((string) ($data['numero_ficha'] ?? ''));
 
         $costosDetalle = $request->input('costos_detalle', null);
         if ($costosDetalle !== null) {
@@ -285,11 +297,17 @@ class CajaRecepcionController extends Controller
             $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
         }
 
-        $cajaRecepcion->update($data);
+        DB::transaction(function () use ($cajaRecepcion, $data, $costosDetalle) {
+            if ($data['numero_ficha'] === '') {
+                $data['numero_ficha'] = $this->generateNumeroFicha($data['tipo_atencion'] ?? null, $data['fecha'] ?? null);
+            }
 
-        if ($costosDetalle !== null) {
-            $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
-        }
+            $cajaRecepcion->update($data);
+
+            if ($costosDetalle !== null) {
+                $this->saveCostosDetalle($cajaRecepcion, $costosDetalle);
+            }
+        });
 
         return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']));
     }
@@ -494,7 +512,7 @@ class CajaRecepcionController extends Controller
             'hora' => 'nullable|date_format:H:i',
             'paciente_id' => 'required|exists:pacientes,id',
             'doctor_id' => 'nullable|exists:doctores,id',
-            'tipo_atencion' => 'nullable|in:Externo,Especialidad',
+            'tipo_atencion' => 'nullable|in:Externo,Especialidad,Especialidad externa,Especialidad interna',
             'punto' => 'nullable|integer|in:0,1',
             'nombre_factura' => 'nullable|string|max:255',
             'numero_ficha' => 'nullable|string|max:255',
@@ -623,6 +641,37 @@ class CajaRecepcionController extends Controller
     {
         return (float) collect(CajaRecepcion::COST_FIELDS)
             ->sum(fn ($field) => (float) ($data[$field] ?? 0));
+    }
+
+    private function generateNumeroFicha(?string $tipoAtencion, ?string $fecha): string
+    {
+        $date = $fecha ? Carbon::parse($fecha) : now();
+        $prefix = $this->codigoAtencionPrefix($tipoAtencion);
+        $monthYear = $date->format('m-y');
+        $pattern = "{$prefix}-%-{$monthYear}";
+
+        $maxNumber = CajaRecepcion::withTrashed()
+            ->where('numero_ficha', 'like', $pattern)
+            ->lockForUpdate()
+            ->get(['numero_ficha'])
+            ->reduce(function (int $max, CajaRecepcion $item) use ($prefix, $monthYear) {
+                $regex = '/^' . preg_quote($prefix, '/') . '-(\d{4})-' . preg_quote($monthYear, '/') . '$/';
+                if (preg_match($regex, (string) $item->numero_ficha, $matches)) {
+                    return max($max, (int) $matches[1]);
+                }
+
+                return $max;
+            }, 0);
+
+        return sprintf('%s-%04d-%s', $prefix, $maxNumber + 1, $monthYear);
+    }
+
+    private function codigoAtencionPrefix(?string $tipoAtencion): string
+    {
+        return match ($tipoAtencion) {
+            'Especialidad interna' => 'CLSC',
+            default => 'SC',
+        };
     }
 
     private function buildRowsFromFields($items, array $fieldMap): array

@@ -128,7 +128,7 @@
                 <div class="col-12 col-md-3">
                   <q-select
                     v-model="form.tipo_atencion"
-                    :options="['Externo', 'Especialidad']"
+                    :options="tipoAtencionOptions"
                     dense
                     outlined
                     clearable
@@ -158,7 +158,13 @@
                 </div>
 
                 <div class="col-12 col-md-3">
-                  <q-input v-model="form.numero_ficha" dense outlined label="Numero de ficha" />
+                  <q-input
+                    v-model="form.numero_ficha"
+                    dense
+                    outlined
+                    label="Codigo / numero de ficha"
+                    :hint="codigoRecepcionHint"
+                  />
                 </div>
                 <div class="col-12 col-md-6">
                   <q-select
@@ -803,6 +809,7 @@ export default {
       observacionesByTipo: {},
       pendingObservaciones: [],
       form: emptyForm(),
+      tipoAtencionOptions: ['Externo', 'Especialidad externa', 'Especialidad interna'],
       doctores: [],
       pacienteOptions: [],
       doctorOptions: [],
@@ -923,6 +930,13 @@ export default {
     },
     nowLabel () {
       return moment().format('DD/MM/YYYY HH:mm')
+    },
+    codigoRecepcionHint () {
+      if (this.form.numero_ficha) return 'Puedes editar el codigo si necesitas conservar uno existente'
+      const prefix = this.form.tipo_atencion === 'Especialidad interna' ? 'CLSC' : 'SC'
+      const fecha = moment(this.form.fecha || undefined)
+      const monthYear = fecha.isValid() ? fecha.format('MM-YY') : moment().format('MM-YY')
+      return `Se generara automaticamente con formato ${prefix}-0001-${monthYear}`
     }
   },
   watch: {

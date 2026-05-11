@@ -381,11 +381,14 @@
 </template>
 <script>
 import {Imprimir} from "src/addons/Imprimir";
+import { useComprasCreateStore } from "stores/compras-create-store";
 
 export default {
   name: "ComprasCreate",
   data() {
     return {
+      comprasDraftStore: null,
+      restoringDraft: false,
       proveedorDialog: false,
       formProveedorRef: null,
       proveedorForm: {
@@ -422,6 +425,9 @@ export default {
     farmaciaNombre() {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
     },
+    draftKey() {
+      return this.farmaciaTipo
+    },
     totalCompra() {
       const total = this.productosCompras.reduce((acc, p) => {
         const qty = Number(p.cantidad) || 0
@@ -434,7 +440,72 @@ export default {
       return this.round2(total).toFixed(2)
     },
   },
+  watch: {
+    productosCompras: {
+      deep: true,
+      handler() {
+        this.saveDraft()
+      },
+    },
+    compra: {
+      deep: true,
+      handler() {
+        this.saveDraft()
+      },
+    },
+    proveedor() {
+      this.saveDraft()
+    },
+  },
   methods: {
+    getDraftPayload() {
+      return {
+        productosCompras: this.productosCompras,
+        proveedor: this.proveedor,
+        compra: this.compra,
+      }
+    },
+
+    restoreDraft() {
+      const draft = this.comprasDraftStore?.getDraft(this.draftKey)
+      if (!draft) return
+
+      this.restoringDraft = true
+      this.productosCompras = Array.isArray(draft.productosCompras) ? draft.productosCompras : []
+      this.proveedor = draft.proveedor || null
+      this.compra = {
+        nit: "",
+        nombre: "",
+        tipo_pago: "Efectivo",
+        comentario: "",
+        ...(draft.compra || {}),
+      }
+      this.$nextTick(() => {
+        this.restoringDraft = false
+      })
+    },
+
+    saveDraft() {
+      if (this.restoringDraft || !this.comprasDraftStore) return
+
+      const hasDraft =
+        this.productosCompras.length > 0 ||
+        !!this.proveedor ||
+        this.compra.tipo_pago !== 'Efectivo' ||
+        !!this.compra.nro_factura ||
+        !!this.compra.comentario
+
+      if (hasDraft) {
+        this.comprasDraftStore.setDraft(this.draftKey, this.getDraftPayload())
+      } else {
+        this.comprasDraftStore.clearDraft(this.draftKey)
+      }
+    },
+
+    clearDraft() {
+      this.comprasDraftStore?.clearDraft(this.draftKey)
+    },
+
     openProveedorDialog() {
       this.resetProveedorForm()
       this.proveedorDialog = true
@@ -653,6 +724,7 @@ export default {
       this.$axios.post("compras", data).then((res) => {
         this.$alert.success("Compra registrada correctamente");
         this.compraDialog = false;
+        this.clearDraft();
         this.productosCompras = [];
         Imprimir.reciboCompra(res.data);
         this.productosGet();
@@ -667,7 +739,7 @@ export default {
         console.error("Error registrando compra:", err);
         this.$alert.error("Error al registrar la compra");
       }).finally(() => {
-        // this.loading = false;
+        this.loading = false;
       });
     },
     proveedoresGet() {
@@ -681,7 +753,11 @@ export default {
       });
     }
   },
+  created() {
+    this.comprasDraftStore = useComprasCreateStore();
+  },
   mounted() {
+    this.restoreDraft();
     this.productosGet();
     this.proveedoresGet();
   }
