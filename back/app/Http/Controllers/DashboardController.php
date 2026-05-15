@@ -13,6 +13,7 @@ class DashboardController extends Controller
     {
         $desde = $request->input('desde');
         $hasta = $request->input('hasta');
+        $farmaciaTipo = 'Farmacia';
 
         // Defaults: mes actual [YYYY-MM-01 .. YYYY-MM-DD]
         if (!$desde || !$hasta) {
@@ -25,6 +26,7 @@ class DashboardController extends Controller
         // ==========================
         $ventas = Venta::with(['doctor', 'user'])
             ->where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderByDesc('fecha')
             ->orderByDesc('hora')
@@ -46,6 +48,7 @@ class DashboardController extends Controller
                 SUM(CASE WHEN tipo_venta='Externo' THEN total ELSE 0 END) as externo
             ")
             ->where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->first();
 
@@ -53,6 +56,7 @@ class DashboardController extends Controller
         // Ventas diarias (solo ACTIVAS)
         // ==========================
         $ventasPorDia = Venta::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->selectRaw('DATE(fecha) as dia, SUM(total) as total')
             ->groupBy('dia')
@@ -68,12 +72,14 @@ class DashboardController extends Controller
         $anio = now()->year;
 
         $ventasMesRaw = Venta::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereYear('fecha', $anio)
             ->selectRaw('MONTH(fecha) as m, SUM(total) as total')
             ->groupBy('m')
             ->pluck('total', 'm');
 
         $comprasMesRaw = Compra::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereYear('fecha', $anio)
             ->selectRaw('MONTH(fecha) as m, SUM(total) as total')
             ->groupBy('m')
@@ -92,10 +98,12 @@ class DashboardController extends Controller
         // Utilidad en el rango
         // ==========================
         $ventasTotalRango  = (float) Venta::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->sum('total');
 
         $comprasTotalRango = (float) Compra::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->sum('total');
 
@@ -105,6 +113,7 @@ class DashboardController extends Controller
         // Ventas por usuario (rango)
         // ==========================
         $ventasPorUsuario = Venta::where('estado', 'Activo')
+            ->where('farmacia_tipo', $farmaciaTipo)
             ->whereBetween('fecha', [$desde, $hasta])
             ->join('users', 'users.id', '=', 'ventas.user_id')
             ->selectRaw("users.name as usuario, SUM(ventas.total) as total")

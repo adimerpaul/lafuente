@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\DB;
 class PacienteController extends Controller{
     function index(Request $request) {
         $search = $request->search;
+        $tipoPaciente = $request->input('tipo_paciente');
         $estadoInternacion = $request->input('estado_internacion');
         $fechaAltaInicio = $request->input('fecha_alta_inicio');
         $fechaAltaFin = $request->input('fecha_alta_fin');
+        $perPage = min(max((int) $request->input('per_page', 20), 1), 100);
 
         $pacientes = Paciente::with(['registroUser', 'altaUser'])
             ->when($search, function ($query) use ($search) {
@@ -25,6 +27,7 @@ class PacienteController extends Controller{
                         ->orWhereRaw('CONCAT(apellido, " ", nombre) LIKE ?', ["%$search%"]);
                 });
             })
+            ->when($tipoPaciente, fn($query) => $query->where('tipo_paciente', $tipoPaciente))
             ->when($estadoInternacion, fn($query) => $query->where('estado_internacion', $estadoInternacion))
             ->when($fechaAltaInicio && $fechaAltaFin, fn($query) => $query->whereBetween('fecha_alta', [
                 $fechaAltaInicio . ' 00:00:00',
@@ -32,7 +35,7 @@ class PacienteController extends Controller{
             ]))
             ->orderBy('nombre')
             ->orderBy('apellido')
-            ->paginate(20);
+            ->paginate($perPage);
 
         return response()->json($pacientes);
     }
@@ -75,16 +78,50 @@ class PacienteController extends Controller{
     }
     function update(Request $request, Paciente $paciente){
         $data = $request->all();
+        $tipoPaciente = $data['tipo_paciente'] ?? $paciente->tipo_paciente;
+        $estadoAnterior = $paciente->estado_internacion;
 
-        if (($data['tipo_paciente'] ?? $paciente->tipo_paciente) === 'Interno' && empty($paciente->fecha_alta)) {
-            $data['estado_internacion'] = 'Internado';
+        if ($request->has('estado_internacion')) {
+            if ($tipoPaciente !== 'Interno') {
+                $data['estado_internacion'] = 'No internado';
+                $data['fecha_alta'] = null;
+                $data['alta_user_id'] = null;
+            }
+
+            if ($tipoPaciente === 'Interno' && ($data['estado_internacion'] ?? null) === 'Alta' && empty($paciente->fecha_alta)) {
+                $data['fecha_alta'] = now();
+                $data['alta_user_id'] = auth()->id();
+            }
+
+            if ($tipoPaciente === 'Interno' && ($data['estado_internacion'] ?? null) === 'Internado') {
+                $data['fecha_alta'] = null;
+                $data['alta_user_id'] = null;
+            }
+        } else {
+            if ($tipoPaciente === 'Interno' && empty($paciente->fecha_alta)) {
+                $data['estado_internacion'] = 'Internado';
+            }
+
+            if ($tipoPaciente !== 'Interno' && empty($paciente->fecha_alta)) {
+                $data['estado_internacion'] = 'No internado';
+            }
         }
 
-        if (($data['tipo_paciente'] ?? $paciente->tipo_paciente) !== 'Interno' && empty($paciente->fecha_alta)) {
-            $data['estado_internacion'] = 'No internado';
-        }
+        DB::transaction(function () use ($paciente, $data, $estadoAnterior) {
+            $paciente->update($data);
 
-        $paciente->update($data);
+            if (array_key_exists('estado_internacion', $data) && $estadoAnterior !== $data['estado_internacion']) {
+                PacienteAlta::create([
+                    'paciente_id' => $paciente->id,
+                    'user_id' => auth()->id(),
+                    'accion' => $data['estado_internacion'] === 'Alta' ? 'Alta' : 'Cambio estado internacion',
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => $data['estado_internacion'],
+                    'fecha_hora' => now(),
+                ]);
+            }
+        });
+
         return response()->json($paciente->load(['registroUser', 'altaUser']));
     }
     function darAlta(Paciente $paciente){
@@ -148,6 +185,22 @@ class PacienteController extends Controller{
         });
 
         return response()->json($paciente->load(['registroUser', 'altaUser', 'altas.user']));
+    }
+    function cambiarTipoPacienteMasivo(Request $request){
+        $data = $request->validate([
+            'paciente_ids' => 'required|array|min:1',
+            'paciente_ids.*' => 'required|integer|exists:pacientes,id',
+            'tipo_paciente' => 'required|in:Interno,Externo,Seguro,Recepción',
+        ]);
+
+        $actualizados = Paciente::whereIn('id', $data['paciente_ids'])
+            ->where('tipo_paciente', '!=', $data['tipo_paciente'])
+            ->update(['tipo_paciente' => $data['tipo_paciente']]);
+
+        return response()->json([
+            'message' => "Pacientes actualizados: {$actualizados}",
+            'actualizados' => $actualizados,
+        ]);
     }
     function reportePdf(Request $request){
         $fechaAltaInicio = $request->input('fecha_alta_inicio');

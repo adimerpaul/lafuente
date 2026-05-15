@@ -166,17 +166,35 @@
             <div class="row">
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-input v-model="venta.nit" outlined dense label="CI/NIT" @update:modelValue="searchCliente"
-                         :debounce="500"/>
+                         :debounce="500" :disable="requierePacienteInterno"/>
+              </div>
+              <div v-if="requierePacienteInterno" class="col-12 col-md-6 q-pa-xs">
+                <q-select
+                  v-model="venta.paciente_id"
+                  :options="pacienteOptions"
+                  outlined
+                  dense
+                  label="Paciente interno"
+                  use-input
+                  input-debounce="300"
+                  emit-value
+                  map-options
+                  clearable
+                  :loading="pacientesLoading"
+                  :rules="[val => !!val || 'Seleccione un paciente interno']"
+                  @filter="filterPacientes"
+                  @update:modelValue="onPacienteSelected"
+                />
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
-                <q-input v-model="venta.nombre" outlined dense label="Nombre"/>
+                <q-input v-model="venta.nombre" outlined dense label="Nombre" :disable="requierePacienteInterno"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-input v-model="venta.email" outlined dense label="Email"/>
               </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-select v-model="venta.tipo_venta" outlined dense label="Tipo de venta"
-                          :options="tiposVentaDialogOptions"/>
+                          :options="tiposVentaDialogOptions" :disable="esFarmaciaInstitucional || esModoGasto"/>
               </div>
               <!-- 🔵 Doctor -->
               <div class="col-12 col-md-6 q-pa-xs">
@@ -433,6 +451,7 @@ export default {
         numero_factura: "",
         doctor_id: null,
         comentario: "",
+        paciente_id: null,
       },
 
       pagination: {
@@ -448,6 +467,8 @@ export default {
       productos: [],
       productosSearch: "",
       productosVentas: [],
+      pacienteOptions: [],
+      pacientesLoading: false,
 
       // Lotes
       loteDialog: false,
@@ -466,6 +487,7 @@ export default {
     });
     this.productosGet();
     this.doctoresGet();
+    if (this.esFarmaciaInstitucional) this.pacientesInternosGet();
 
     // (Opcional) Voz
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
@@ -496,6 +518,7 @@ export default {
         numero_factura: "",
         doctor_id: null,
         comentario: "",
+        paciente_id: null,
       }
     },
     doctoresGet() {                // 🔵 obtiene doctores
@@ -578,6 +601,7 @@ export default {
 
     // ==== CLIENTE & FLUJO VENTA ====
     searchCliente() {
+      if (this.requierePacienteInterno) return;
       this.loading = true;
       this.$axios.post("searchCliente", {nit: this.venta.nit})
         .then((res) => {
@@ -603,9 +627,10 @@ export default {
       // reset efectivo
       this.efectivo = '';
       // defecto externo, y para modo gasto usar egreso
-      this.venta.tipo_venta = this.esModoGasto ? 'Egreso' : 'Externo';
+      this.venta.tipo_venta = this.esModoGasto ? 'Egreso' : (this.esFarmaciaInstitucional ? 'Internado' : 'Externo');
       this.venta.fecha = moment().format('YYYY-MM-DD');
       if (!this.venta.facturado) this.venta.numero_factura = '';
+      if (this.requierePacienteInterno) this.pacientesInternosGet();
     },
 
     productosGet() {
@@ -635,6 +660,10 @@ export default {
     },
 
     submitVenta() {
+      if (this.requierePacienteInterno && !this.venta.paciente_id) {
+        this.$alert?.error?.("Debe seleccionar un paciente interno");
+        return;
+      }
       if (this.venta.facturado && !String(this.venta.numero_factura || '').trim()) {
         this.$alert?.error?.("Debe ingresar el número de factura");
         return;
@@ -651,6 +680,7 @@ export default {
         tipo_pago: this.venta.tipo_pago,
         receta_id: this.receta_id,
         doctor_id: this.venta.doctor_id,
+        paciente_id: this.venta.paciente_id,
         fecha: this.venta.fecha,
         facturado: this.venta.facturado,
         numero_factura: this.venta.facturado ? this.venta.numero_factura : null,
@@ -684,6 +714,39 @@ export default {
         this.$q.notify({color: "negative", message: "El reconocimiento de voz no está soportado en este navegador"});
       }
     },
+    async pacientesInternosGet(search = '', update = null) {
+      this.pacientesLoading = true;
+      try {
+        const res = await this.$axios.get('pacientes', {
+          params: {
+            search,
+            tipo_paciente: 'Interno',
+          }
+        });
+        const pacientes = res.data?.data || [];
+        this.pacienteOptions = pacientes.map(paciente => ({
+          label: `${paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim()} - ${paciente.identificacion || 'SN'}`,
+          value: paciente.id,
+          paciente,
+        }));
+        if (update) update();
+      } catch (error) {
+        this.$alert?.error?.(error?.response?.data?.message || 'No se pudieron cargar pacientes internos');
+      } finally {
+        this.pacientesLoading = false;
+      }
+    },
+    filterPacientes(val, update) {
+      this.pacientesInternosGet(val, update);
+    },
+    onPacienteSelected(pacienteId) {
+      const option = this.pacienteOptions.find(item => item.value === pacienteId);
+      const paciente = option?.paciente;
+      if (!paciente) return;
+      this.venta.nit = paciente.identificacion || '0';
+      this.venta.nombre = paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim() || 'SN';
+      this.venta.tipo_venta = 'Internado';
+    },
   },
 
   computed: {
@@ -695,6 +758,12 @@ export default {
     },
     farmaciaNombre() {
       return this.$route.meta?.farmaciaNombre || this.farmaciaTipo
+    },
+    esFarmaciaInstitucional() {
+      return this.farmaciaTipo === 'Farmacia institucional'
+    },
+    requierePacienteInterno() {
+      return this.esFarmaciaInstitucional && !this.esModoGasto
     },
     tiposVentaDialogOptions() {
       return this.esModoGasto ? ['Egreso'] : ['Internado', 'Externo', 'Seguro', 'Recepción']

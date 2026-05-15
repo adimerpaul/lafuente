@@ -6,6 +6,8 @@ use App\Exports\VentasExcelExport;
 use App\Models\Cliente;
 use App\Models\Compra;
 use App\Models\CompraDetalle;
+use App\Models\Paciente;
+use App\Models\PacienteVenta;
 use App\Models\Producto;
 use App\Models\Receta;
 use App\Models\User;
@@ -519,18 +521,36 @@ class VentaController extends Controller
             // 1) Cliente
             $cliente = $this->clienteUpdateOrCreate($request);
             $farmaciaTipo = $this->resolveFarmaciaTipo($request);
+            $tipoVentaNormalizado = match ($request->input('tipo_venta')) {
+                'Interno', 'Internado' => 'Internado',
+                'Seguro' => 'Seguro',
+                'Egreso' => 'Egreso',
+                'RecepciÃ³n', 'Recepcion' => 'RecepciÃ³n',
+                default => 'Externo',
+            };
+            $paciente = null;
+
+            if ($farmaciaTipo === 'Farmacia institucional' && $tipoVentaNormalizado !== 'Egreso') {
+                $paciente = Paciente::where('tipo_paciente', 'Interno')->find($request->input('paciente_id'));
+
+                if (!$paciente) {
+                    abort(422, 'Debe seleccionar un paciente interno para ventas de farmacia institucional.');
+                }
+            }
 
             $fecha = $request->input('fecha') ?? date('Y-m-d');
             // 2) Venta cabecera
             $request->merge([
                 'user_id'    => auth()->id(),
                 'cliente_id' => $cliente->id,
+                'paciente_id_ref' => $paciente?->id,
                 'farmacia_tipo' => $farmaciaTipo,
                 'fecha'      => $fecha,
                 'hora'       => date('H:i:s'),
                 'estado'     => 'Activo',
                 'tipo_comprobante' => 'Venta',
-                'tipo_venta' => match ($request->input('tipo_venta')) {
+                'tipo_venta' => $tipoVentaNormalizado,
+                'tipo_venta_original' => match ($request->input('tipo_venta')) {
                     'Interno', 'Internado' => 'Internado',
                     'Seguro' => 'Seguro',
                     'Egreso' => 'Egreso',
@@ -542,7 +562,7 @@ class VentaController extends Controller
             /** @var Venta $venta */
             $venta = Venta::create($request->only([
                 'user_id','cliente_id','fecha','hora','ci','nombre','estado',
-                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','facturado','numero_factura','pagado_interno','doctor_id','farmacia_tipo'
+                'tipo_comprobante','total','comentario','tipo_venta','tipo_pago','facturado','numero_factura','pagado_interno','doctor_id','farmacia_tipo','paciente_id_ref'
             ]));
 
             // 3) Detalles con LOTES (usa compra_detalles.cantidad_venta como "disponible")
@@ -650,6 +670,15 @@ class VentaController extends Controller
 
             // 4) Totales + receta
             $venta->update(['total' => $total]);
+
+            if ($paciente) {
+                PacienteVenta::create([
+                    'paciente_id' => $paciente->id,
+                    'venta_id' => $venta->id,
+                    'user_id' => auth()->id(),
+                    'hora' => date('H:i'),
+                ]);
+            }
 
             if ($request->filled('receta_id')) {
                 $receta = Receta::findOrFail((int)$request->input('receta_id'));

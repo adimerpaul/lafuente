@@ -19,7 +19,7 @@
         :loading="$store.loading"
       />
       <q-btn icon="history" color="primary" flat @click="historialVisible = !historialVisible" :loading="$store.loading" />
-      <q-btn icon="edit" @click="pacienteDialog = true" :loading="$store.loading" />
+      <q-btn icon="edit" @click="openPacienteDialog" :loading="$store.loading" />
       <q-btn icon="delete" @click="deletePaciente" :loading="$store.loading" />
     </q-btn-group>
   </div>
@@ -34,7 +34,7 @@
       <div>{{ paciente.apellido }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
-      <label class="text-bold">Identificación:</label>
+      <label class="text-bold">Identificacion:</label>
       <div>{{ paciente.identificacion }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
@@ -43,9 +43,7 @@
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
       <label class="text-bold">Fecha de nacimiento:</label>
-      <div v-if="paciente.fecha_nacimiento">
-        {{ paciente.fecha_nacimiento.substring(0, 10) }}
-      </div>
+      <div>{{ formatDate(paciente.fecha_nacimiento) }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
       <label class="text-bold">Edad:</label>
@@ -56,21 +54,21 @@
       <div>{{ paciente.estado_civil }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
-      <label class="text-bold">Dirección:</label>
+      <label class="text-bold">Direccion:</label>
       <div>{{ paciente.direccion }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
-      <label class="text-bold">Teléfono:</label>
+      <label class="text-bold">Telefono:</label>
       <div>{{ paciente.telefono }}</div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
       <label class="text-bold">Tipo paciente:</label>
       <div>
-        <q-chip :label="paciente.tipo_paciente" :color="paciente.tipo_paciente === 'Interno' ? 'indigo' : 'orange'" dense class="text-white" />
+        <q-chip :label="paciente.tipo_paciente" :color="tipoPacienteColor(paciente.tipo_paciente)" dense class="text-white" />
       </div>
     </div>
     <div class="col-12 col-md-6 q-pa-xs">
-      <label class="text-bold">Estado internación:</label>
+      <label class="text-bold">Estado internacion:</label>
       <div>
         <q-chip :label="paciente.estado_internacion || 'No internado'" :color="estadoColor" dense class="text-white" />
       </div>
@@ -124,7 +122,7 @@
   </q-slide-transition>
 
   <q-dialog v-model="pacienteDialog" persistent>
-    <q-card style="min-width: 350px">
+    <q-card style="width: 760px; max-width: 95vw">
       <q-card-section>
         <div class="row items-center">
           <div class="text-h6">Editar paciente</div>
@@ -134,16 +132,48 @@
       </q-card-section>
       <q-card-section>
         <q-form @submit="submitPaciente">
-          <q-input v-model="paciente.nombre" label="Nombre" dense filled />
-          <q-input v-model="paciente.apellido" label="Apellido" dense filled />
-          <q-input v-model="paciente.identificacion" label="Identificación" dense filled />
-          <q-input v-model="paciente.sexo" label="Sexo" dense filled />
-          <q-input v-model="paciente.fecha_nacimiento" label="Fecha de nacimiento" type="date" dense filled @update:modelValue="calculateEdad" />
-          <q-input v-model="paciente.edad" label="Edad" dense filled />
-          <q-input v-model="paciente.estado_civil" label="Estado civil" dense filled />
-          <q-input v-model="paciente.direccion" label="Dirección" dense filled />
-          <q-input v-model="paciente.telefono" label="Teléfono" dense filled />
-          <q-select v-model="paciente.tipo_paciente" label="Tipo paciente" dense filled :options="['Interno', 'Externo', 'Seguro', 'Recepción']" />
+          <div class="text-subtitle2 text-weight-bold q-mb-sm">Datos personales</div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.nombre" label="Nombre" dense filled />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.apellido" label="Apellido" dense filled />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.identificacion" label="Identificacion" dense filled />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="editPaciente.sexo" label="Sexo" dense filled :options="sexoOptions" />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.fecha_nacimiento" label="Fecha de nacimiento" type="date" dense filled @update:modelValue="calculateEdad" />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.edad" label="Edad" dense filled />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="editPaciente.estado_civil" label="Estado civil" dense filled :options="estadoCivilOptions" />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input v-model="editPaciente.telefono" label="Telefono" dense filled />
+            </div>
+            <div class="col-12">
+              <q-input v-model="editPaciente.direccion" label="Direccion" dense filled />
+            </div>
+          </div>
+
+          <q-separator class="q-my-md" />
+          <div class="text-subtitle2 text-weight-bold q-mb-sm">Clasificacion del paciente</div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-md-6">
+              <q-select v-model="editPaciente.tipo_paciente" label="Tipo paciente" dense filled :options="tipoPacienteOptions" />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="editPaciente.estado_internacion" label="Estado internacion" dense filled :options="estadoInternacionOptions" />
+            </div>
+          </div>
+
           <q-card-actions align="right">
             <q-btn label="Cancelar" color="primary" flat @click="pacienteDialog = false" :loading="$store.loading" />
             <q-btn label="Guardar" color="primary" flat type="submit" :loading="$store.loading" />
@@ -170,6 +200,11 @@ export default {
     return {
       pacienteDialog: false,
       historialVisible: true,
+      editPaciente: {},
+      tipoPacienteOptions: ['Interno', 'Externo', 'Seguro', 'Recepción'],
+      estadoInternacionOptions: ['Internado', 'Alta', 'No internado'],
+      estadoCivilOptions: ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Otro'],
+      sexoOptions: ['Masculino', 'Femenino'],
     }
   },
   computed: {
@@ -189,9 +224,27 @@ export default {
     refresh() {
       this.$emit('pacienteGet')
     },
+    openPacienteDialog() {
+      this.editPaciente = {
+        ...this.paciente,
+        fecha_nacimiento: this.paciente.fecha_nacimiento ? moment(this.paciente.fecha_nacimiento).format('YYYY-MM-DD') : '',
+        estado_internacion: this.paciente.estado_internacion || 'No internado',
+      }
+      this.pacienteDialog = true
+    },
     calculateEdad() {
-      const edad = moment().diff(this.paciente.fecha_nacimiento, 'years')
-      this.paciente.edad = isNaN(edad) ? '' : edad
+      const edad = moment().diff(this.editPaciente.fecha_nacimiento, 'years')
+      this.editPaciente.edad = isNaN(edad) ? '' : edad
+    },
+    tipoPacienteColor(tipoPaciente) {
+      if (tipoPaciente === 'Interno') return 'indigo'
+      if (tipoPaciente === 'Seguro') return 'teal'
+      if (tipoPaciente === 'Recepción') return 'brown'
+      return 'orange'
+    },
+    formatDate(value) {
+      if (!value) return '-'
+      return moment(value).format('YYYY-MM-DD')
     },
     formatDateTime(value) {
       if (!value) return '-'
@@ -232,10 +285,10 @@ export default {
       })
     },
     limpiarAlta() {
-      this.$alert.dialog('Desea cambiar el alta a vacio y dejar al paciente como internado?').onOk(() => {
+      this.$alert.dialog('¿Desea limpiar el alta y dejar al paciente como internado?').onOk(() => {
         this.$store.loading = true
         this.$axios.put(`pacientes/${this.paciente.id}/alta/limpiar`).then(() => {
-          this.$alert.success('Alta cambiada a vacio')
+          this.$alert.success('Alta limpiada')
           this.$emit('pacienteGet')
         }).catch(error => {
           this.$alert.error(error.response?.data?.message || 'No se pudo cambiar el alta')
@@ -246,7 +299,7 @@ export default {
     },
     submitPaciente() {
       this.$store.loading = true
-      this.$axios.put('pacientes/' + this.paciente.id, this.paciente).then(() => {
+      this.$axios.put('pacientes/' + this.paciente.id, this.editPaciente).then(() => {
         this.$alert.success('Paciente actualizado')
         this.pacienteDialog = false
         this.$emit('pacienteGet')

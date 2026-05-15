@@ -18,6 +18,7 @@ const routes = [
       { path: 'productos-vencidos', name: 'productos-vencidos', component: () => import('pages/productos/ProductosVencidos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'reportes/farmacia', name: 'reportes-farmacia', component: () => import('pages/reportes/ReporteFarmacia.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'reportes/pacientes', name: 'reportes-pacientes', component: () => import('pages/reportes/ReportePacientes.vue'), meta: { requiresAuth: true } },
+      { path: 'institucional/pacientes-internados', name: 'pacientes-internados-institucional', component: () => import('pages/pacientes/Paciente.vue'), meta: { requiresAuth: true, title: 'Pacientes internados', tipoPaciente: 'Interno' } },
       { path: 'institucional/productos', name: 'productos-institucional', component: () => import('pages/productos/Productos.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/venta', name: 'venta-institucional', component: () => import('pages/ventas/Ventas.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },
       { path: 'institucional/ventaNuevo', name: 'ventaNuevo-institucional', component: () => import('pages/ventas/VentaNew.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia institucional', farmaciaNombre: 'Farmacia institucional' } },

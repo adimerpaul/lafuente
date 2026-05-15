@@ -188,6 +188,7 @@ export default {
           title: 'Farmacia Institucional',
           icon: 'medical_services',
           links: [
+            { title: 'Pacientes internados', icon: 'personal_injury', link: '/institucional/pacientes-internados', can: 'Pacientes internados farmacia institucional' },
             { title: 'Productos', icon: 'inventory_2', link: '/institucional/productos', can: 'Productos farmacia institucional' },
             { title: 'Ventas', icon: 'sell', link: '/institucional/venta', can: 'Ventas farmacia institucional' },
             { title: 'Venta nueva', icon: 'add_shopping_cart', link: '/institucional/ventaNuevo', can: 'Ventas nuevas farmacia institucional' },

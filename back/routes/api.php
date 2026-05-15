@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/pacientes', [App\Http\Controllers\PacienteController::class, 'index']);
     Route::post('/pacientes', [App\Http\Controllers\PacienteController::class, 'store']);
+    Route::post('/pacientes/tipo-paciente', [App\Http\Controllers\PacienteController::class, 'cambiarTipoPacienteMasivo']);
     Route::get('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'show']);
     Route::put('/pacientes/{paciente}', [App\Http\Controllers\PacienteController::class, 'update']);
     Route::put('/pacientes/{paciente}/alta', [App\Http\Controllers\PacienteController::class, 'darAlta']);

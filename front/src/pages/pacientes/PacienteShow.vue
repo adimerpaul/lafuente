@@ -3,6 +3,10 @@
     <q-card flat bordered>
       <q-card-section>
         <div class="row">
+          <div class="col-12 col-md-1 q-pa-xs">
+<!--            boton ir a tras-->
+            <q-btn flat dense icon="arrow_back" label="Volver" no-caps @click="$router.back()" />
+          </div>
           <div class="col-12 col-md-3 q-pa-xs">
             <label class="text-bold">Nombre completo:</label>
             <div>
@@ -15,12 +19,12 @@
               {{ calculateEdad(paciente.fecha_nacimiento) }}
             </div>
           </div>
-          <div class="col-6 col-md-3 q-pa-xs">
-            <label class="text-bold">Fecha de nacimiento:</label>
-            <div>
-              {{ paciente.fecha_nacimiento? paciente.fecha_nacimiento.substring(0, 10) : '' }}
-            </div>
-          </div>
+<!--          <div class="col-6 col-md-3 q-pa-xs">-->
+<!--            <label class="text-bold">Fecha de nacimiento:</label>-->
+<!--            <div>-->
+<!--              {{ paciente.fecha_nacimiento? paciente.fecha_nacimiento.substring(0, 10) : '' }}-->
+<!--            </div>-->
+<!--          </div>-->
           <div class="col-6 col-md-3 q-pa-xs">
             <label class="text-bold">Fecha de creación:</label>
             <div>
