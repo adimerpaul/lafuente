@@ -132,6 +132,7 @@
       </tbody>
     </q-markup-table>
   </q-page>
+  <div id="myElement" class="hidden"></div>
 </template>
 
 <script>

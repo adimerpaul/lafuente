@@ -224,37 +224,148 @@
     </q-dialog>
 
     <q-dialog v-model="historialDialog" persistent>
-      <q-card style="width: 800px;">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Historial de Compras: {{ productoHistorialNombre }} - {{ farmaciaNombre }}</div>
+      <q-card style="width: 960px; max-width: 98vw;">
+        <q-card-section class="row items-center bg-primary text-white q-py-sm">
+          <div>
+            <div class="text-subtitle1 text-weight-bold">{{ productoHistorialNombre }}</div>
+            <div class="text-caption opacity-80">{{ farmaciaNombre }} · Historial completo</div>
+          </div>
           <q-space />
-          <q-btn icon="close" flat round dense @click="historialDialog = false" />
+          <q-btn icon="close" flat round dense color="white" @click="historialDialog = false" />
         </q-card-section>
-        <q-card-section class="q-pt-none">
-          <q-markup-table dense wrap-cells flat bordered>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Lote</th>
-                <th>Vencimiento</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, i) in historialCompras" :key="item.id">
-                <td>{{ i + 1 }}</td>
-                <td>{{ item.compra?.fecha }}</td>
-                <td>{{ item.lote }}</td>
-                <td>{{ item.fecha_vencimiento }}</td>
-                <td>{{ item.cantidad }}</td>
-                <td>{{ item.precio }}</td>
-                <td>{{ item.total }}</td>
-              </tr>
-            </tbody>
-          </q-markup-table>
+
+        <!-- Resumen estadístico -->
+        <q-card-section class="q-pa-sm bg-grey-1">
+          <div class="row q-col-gutter-sm">
+            <div class="col-6 col-md-3">
+              <q-card flat bordered class="text-center q-pa-sm">
+                <div class="text-caption text-grey-6">Comprado total</div>
+                <div class="text-h6 text-primary">{{ resumenHistorial.total_comprado }}</div>
+                <div class="text-caption text-grey-5">unidades</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-md-3">
+              <q-card flat bordered class="text-center q-pa-sm">
+                <div class="text-caption text-grey-6">Vendido total</div>
+                <div class="text-h6 text-positive">{{ resumenHistorial.total_vendido }}</div>
+                <div class="text-caption text-grey-5">unidades · {{ money(resumenHistorial.total_monto) }}</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-md-3">
+              <q-card flat bordered class="text-center q-pa-sm">
+                <div class="text-caption text-grey-6">Stock disponible</div>
+                <div class="text-h6 text-orange">{{ resumenHistorial.stock_disponible }}</div>
+                <div class="text-caption text-grey-5">unidades actuales</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-md-3">
+              <q-card flat bordered class="text-center q-pa-sm">
+                <div class="text-caption text-grey-6">N° de ventas</div>
+                <div class="text-h6 text-indigo">{{ resumenHistorial.total_ventas }}</div>
+                <div class="text-caption text-grey-5">transacciones</div>
+              </q-card>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-tabs v-model="historialTab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-7 bg-white">
+          <q-tab name="ventas" icon="point_of_sale" label="Ventas" no-caps />
+          <q-tab name="compras" icon="shopping_cart" label="Compras / Lotes" no-caps />
+        </q-tabs>
+        <q-separator />
+
+        <q-card-section class="q-pa-xs" style="max-height: 420px; overflow-y: auto;">
+          <!-- TAB VENTAS -->
+          <div v-if="historialTab === 'ventas'">
+            <div v-if="loadingHistorialVentas" class="flex flex-center q-py-lg">
+              <q-spinner color="primary" size="36px" />
+            </div>
+            <q-markup-table v-else dense wrap-cells flat bordered>
+              <thead>
+                <tr class="bg-grey-2">
+                  <th class="text-left">#</th>
+                  <th class="text-left">Fecha</th>
+                  <th class="text-left">Hora</th>
+                  <th class="text-left">Paciente / Cliente</th>
+                  <th class="text-left">Tipo venta</th>
+                  <th class="text-left">Pago</th>
+                  <th class="text-left">Lote</th>
+                  <th class="text-right">Cant.</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-right">Subtotal</th>
+                  <th class="text-left">Usuario</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, i) in historialVentas" :key="item.id">
+                  <td class="text-grey-6">{{ i + 1 }}</td>
+                  <td>{{ item.fecha }}</td>
+                  <td class="text-grey-6">{{ item.hora || '—' }}</td>
+                  <td>{{ item.paciente || '—' }}</td>
+                  <td>
+                    <q-chip dense size="sm" :color="item.tipo_venta === 'Farmacia' ? 'green-1' : 'blue-1'" :text-color="item.tipo_venta === 'Farmacia' ? 'positive' : 'primary'">
+                      {{ item.tipo_venta || '—' }}
+                    </q-chip>
+                  </td>
+                  <td class="text-grey-7">{{ item.tipo_pago || '—' }}</td>
+                  <td class="text-grey-6 text-caption">{{ item.lote || '—' }}</td>
+                  <td class="text-right text-weight-bold">{{ item.cantidad }}</td>
+                  <td class="text-right">{{ money(item.precio) }}</td>
+                  <td class="text-right text-weight-bold text-positive">{{ money(item.subtotal) }}</td>
+                  <td class="text-caption text-grey-6">{{ item.usuario || '—' }}</td>
+                </tr>
+                <tr v-if="!historialVentas.length">
+                  <td colspan="11" class="text-center text-grey q-py-md">Sin ventas registradas</td>
+                </tr>
+              </tbody>
+            </q-markup-table>
+          </div>
+
+          <!-- TAB COMPRAS -->
+          <div v-if="historialTab === 'compras'">
+            <q-markup-table dense wrap-cells flat bordered>
+              <thead>
+                <tr class="bg-grey-2">
+                  <th class="text-left">#</th>
+                  <th class="text-left">Fecha compra</th>
+                  <th class="text-left">Proveedor</th>
+                  <th class="text-left">Lote</th>
+                  <th class="text-left">Vencimiento</th>
+                  <th class="text-right">Cant. comprada</th>
+                  <th class="text-right">Disponible</th>
+                  <th class="text-right">Costo</th>
+                  <th class="text-right">P. venta</th>
+                  <th class="text-left">Registrado por</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, i) in historialCompras" :key="item.id">
+                  <td class="text-grey-6">{{ i + 1 }}</td>
+                  <td>{{ item.compra?.fecha }}</td>
+                  <td>{{ item.compra?.proveedor?.nombre || '—' }}</td>
+                  <td>
+                    <q-chip dense size="sm" color="grey-2" text-color="grey-8">{{ item.lote || '—' }}</q-chip>
+                  </td>
+                  <td :class="esPorVencer(item.fecha_vencimiento) ? 'text-negative text-weight-bold' : ''">
+                    {{ item.fecha_vencimiento || '—' }}
+                    <q-icon v-if="esPorVencer(item.fecha_vencimiento)" name="warning" color="negative" size="xs" />
+                  </td>
+                  <td class="text-right">{{ item.cantidad }}</td>
+                  <td class="text-right">
+                    <q-chip dense size="sm" :color="item.cantidad_venta > 0 ? 'positive' : 'grey-3'" :text-color="item.cantidad_venta > 0 ? 'white' : 'grey-6'">
+                      {{ item.cantidad_venta ?? 0 }}
+                    </q-chip>
+                  </td>
+                  <td class="text-right">{{ money(item.precio) }}</td>
+                  <td class="text-right text-weight-bold">{{ money(item.precio_venta) }}</td>
+                  <td class="text-caption text-grey-6">{{ item.compra?.user?.name || '—' }}</td>
+                </tr>
+                <tr v-if="!historialCompras.length">
+                  <td colspan="10" class="text-center text-grey q-py-md">Sin compras registradas</td>
+                </tr>
+              </tbody>
+            </q-markup-table>
+          </div>
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -393,7 +504,11 @@ export default {
         { name: 'stock_maximo', label: 'Stock maximo', align: 'left', field: 'stock_maximo' },
       ],
       historialDialog: false,
+      historialTab: 'ventas',
       historialCompras: [],
+      historialVentas: [],
+      loadingHistorialVentas: false,
+      resumenHistorial: { total_comprado: 0, total_vendido: 0, total_monto: 0, stock_disponible: 0, total_ventas: 0 },
       productoHistorialNombre: '',
       dialogFoto: false,
       existenciaFechaDialog: false,
@@ -423,6 +538,9 @@ export default {
     }
   },
   methods: {
+    money (value) {
+      return `${Number(value || 0).toFixed(2)} Bs`
+    },
     formatMonto (value) {
       return Number(value || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     },
@@ -766,19 +884,38 @@ export default {
     verHistorial (producto) {
       this.loading = true
       this.productoHistorialNombre = producto.nombre
-      this.$axios.get(`productos/${producto.id}/historial-compras`, {
-        params: {
-          farmacia_tipo: this.farmaciaTipo,
+      this.historialTab = 'ventas'
+      this.historialCompras = []
+      this.historialVentas = []
+      this.resumenHistorial = { total_comprado: 0, total_vendido: 0, total_monto: 0, stock_disponible: 0, total_ventas: 0 }
+      const params = { farmacia_tipo: this.farmaciaTipo }
+      Promise.all([
+        this.$axios.get(`productos/${producto.id}/historial-compras`, { params }),
+        this.$axios.get(`productos/${producto.id}/historial-ventas`, { params })
+      ]).then(([comprasRes, ventasRes]) => {
+        this.historialCompras = comprasRes.data || []
+        this.historialVentas = ventasRes.data?.ventas || []
+        const resVentas = ventasRes.data?.resumen || {}
+        const totalComprado = this.historialCompras.reduce((s, c) => s + Number(c.cantidad || 0), 0)
+        const stockDisponible = this.historialCompras.reduce((s, c) => s + Number(c.cantidad_venta ?? 0), 0)
+        this.resumenHistorial = {
+          total_comprado: totalComprado,
+          total_vendido: resVentas.total_unidades ?? 0,
+          total_monto: resVentas.total_monto ?? 0,
+          stock_disponible: stockDisponible,
+          total_ventas: resVentas.total_ventas ?? 0,
         }
+        this.historialDialog = true
+      }).catch(() => {
+        this.$alert.error('Error al obtener historial')
+      }).finally(() => {
+        this.loading = false
       })
-        .then((res) => {
-          this.historialCompras = res.data
-          this.historialDialog = true
-        }).catch(() => {
-          this.$alert.error('Error al obtener historial')
-        }).finally(() => {
-          this.loading = false
-        })
+    },
+    esPorVencer (fecha) {
+      if (!fecha) return false
+      const diff = new Date(fecha) - new Date()
+      return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000
     },
     cambioStock (producto) {
       this.loading = true

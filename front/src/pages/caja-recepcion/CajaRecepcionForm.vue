@@ -94,9 +94,36 @@
                 :options="pacienteOptions"
                 label="Paciente"
                 :rules="[required]"
+                popup-content-class="paciente-select-popup"
                 @filter="filterPacientes"
               >
+                <template #option="scope">
+                  <q-item v-bind="scope.itemProps" dense>
+                    <q-item-section>
+                      <q-item-label class="text-weight-bold text-body2">{{ scope.opt.label }}</q-item-label>
+                      <q-item-label caption class="text-grey-7">
+                        <span v-if="scope.opt.identificacion"><q-icon name="badge" size="10px" class="q-mr-xs" />{{ scope.opt.identificacion }}</span>
+                        <span v-if="scope.opt.identificacion && scope.opt.direccion"> &nbsp;·&nbsp; </span>
+                        <span v-if="scope.opt.direccion"><q-icon name="home" size="10px" class="q-mr-xs" />{{ scope.opt.direccion }}</span>
+                      </q-item-label>
+                      <q-item-label v-if="scope.opt.telefono" caption class="text-grey-6">
+                        <q-icon name="phone" size="10px" class="q-mr-xs" />{{ scope.opt.telefono }}
+                      </q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <div class="row items-center q-gutter-xs">
+                        <q-badge v-if="scope.opt.tipo_paciente" :label="scope.opt.tipo_paciente" color="primary" style="font-size:10px;" />
+                        <q-btn flat round dense size="xs" icon="edit" color="orange" @click.stop="openEditPatient(scope.opt)">
+                          <q-tooltip>Editar datos</q-tooltip>
+                        </q-btn>
+                      </div>
+                    </q-item-section>
+                  </q-item>
+                </template>
                 <template #append>
+                  <q-btn v-if="form.paciente_id" flat round dense icon="edit" color="orange" size="sm" @click.stop="openEditPatientById(form.paciente_id)">
+                    <q-tooltip>Editar paciente seleccionado</q-tooltip>
+                  </q-btn>
                   <q-btn flat round dense icon="person_add" @click.stop="patientDialog = true" />
                 </template>
               </q-select>
@@ -645,6 +672,54 @@
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="editPatientDialog" persistent>
+      <q-card style="min-width: 400px; max-width: 95vw;">
+        <q-card-section class="row items-center bg-orange text-white q-py-sm">
+          <q-icon name="edit" class="q-mr-sm" />
+          <div>
+            <div class="text-subtitle2 text-weight-bold">Editar paciente</div>
+            <div class="text-caption opacity-80">{{ editPatient.nombre }}</div>
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense color="white" @click="editPatientDialog = false" />
+        </q-card-section>
+        <q-card-section>
+          <q-form @submit="saveEditPatient">
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-md-6">
+                <q-input v-model="editPatient.identificacion" dense outlined clearable label="Carnet / CI">
+                  <template #prepend><q-icon name="badge" /></template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="editPatient.telefono" dense outlined clearable label="Celular / Teléfono">
+                  <template #prepend><q-icon name="phone" /></template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input
+                  v-model="editPatient.fecha_nacimiento"
+                  dense outlined clearable type="date"
+                  label="Fecha de nacimiento"
+                >
+                  <template #prepend><q-icon name="cake" /></template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="editPatient.direccion" dense outlined clearable label="Dirección">
+                  <template #prepend><q-icon name="home" /></template>
+                </q-input>
+              </div>
+            </div>
+            <div class="text-right q-mt-md">
+              <q-btn flat label="Cancelar" no-caps @click="editPatientDialog = false" :loading="savingEditPatient" />
+              <q-btn color="orange" label="Guardar cambios" type="submit" no-caps icon="save" class="q-ml-sm" :loading="savingEditPatient" />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="doctorDialog" persistent>
       <q-card style="min-width: 420px; max-width: 95vw;">
         <q-card-section class="q-pb-none row items-center">
@@ -833,6 +908,9 @@ export default {
       doctorOptions: [],
       metodoPago: 'efectivo',
       patientDialog: false,
+      editPatientDialog: false,
+      savingEditPatient: false,
+      editPatient: { id: null, nombre: '', identificacion: '', telefono: '', fecha_nacimiento: '', direccion: '' },
       doctorDialog: false,
       quickPatient: {
         nombre: '',
@@ -861,7 +939,7 @@ export default {
         { label: 'Mixto', value: 'mixto' },
         { label: 'Pendiente', value: 'pendiente' }
       ],
-      doctorPagoPorcentaje: 20,
+      doctorPagoPorcentaje: 0,
       suppressDoctorPercentageApply: false,
       doctorPagoPorcentajeOptions: [0, 20, 30, 50].map(value => ({
         label: `${value}%`,
@@ -888,7 +966,7 @@ export default {
     doctorEgresoCalculado () {
       return Math.round(Object.values(this.costosValues).reduce((sum, value) => {
         const monto = Number(value?.monto || 0)
-        const porcentaje = Number(value?.doctor_porcentaje || 20)
+        const porcentaje = Number(value?.doctor_porcentaje ?? 0)
         return sum + ((monto * porcentaje) / 100)
       }, 0))
     },
@@ -1034,7 +1112,7 @@ export default {
       }))
       const newValues = {}
       costos.forEach(c => {
-        newValues[c.id] = this.costosValues[c.id] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
+        newValues[c.id] = this.costosValues[c.id] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
       })
       this.costosValues = newValues
     },
@@ -1044,13 +1122,13 @@ export default {
         if (item.costo_id) {
           values[item.costo_id] = {
             monto: item.monto || 0,
-            doctor_porcentaje: [0, 20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 20,
+            doctor_porcentaje: [0, 20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 0,
             arancel_ids: item.arancel_ids || []
           }
         }
       })
       this.costosCatalogo.forEach(c => {
-        if (!values[c.id]) values[c.id] = { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
+        if (!values[c.id]) values[c.id] = { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
       })
       this.costosValues = values
     },
@@ -1060,7 +1138,7 @@ export default {
       return n === 0 ? '' : n
     },
     setCostoMonto (costoId, value) {
-      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
+      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
       this.costosValues = {
         ...this.costosValues,
         [costoId]: { ...current, monto: value === '' || value === null ? 0 : Number(value) }
@@ -1068,15 +1146,15 @@ export default {
       this.syncDoctorEgresoAmount()
     },
     costoDoctorPorcentaje (costoId) {
-      return Number(this.costosValues[costoId]?.doctor_porcentaje || 20)
+      return Number(this.costosValues[costoId]?.doctor_porcentaje ?? 0)
     },
     costoDoctorMonto (costoId) {
       const current = this.costosValues[costoId] || {}
       return Math.round((Number(current.monto || 0) * this.costoDoctorPorcentaje(costoId)) / 100)
     },
     setCostoDoctorPorcentaje (costoId, value) {
-      const safePercent = [0, 20, 30, 50].includes(Number(value)) ? Number(value) : 20
-      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
+      const safePercent = [0, 20, 30, 50].includes(Number(value)) ? Number(value) : 0
+      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
       this.costosValues = {
         ...this.costosValues,
         [costoId]: { ...current, doctor_porcentaje: safePercent }
@@ -1085,8 +1163,8 @@ export default {
     },
     firstCostoDoctorPercentage () {
       const active = Object.values(this.costosValues).find(value => Number(value?.monto || 0) > 0)
-      const percent = Number(active?.doctor_porcentaje || 20)
-      return [0, 20, 30, 50].includes(percent) ? percent : 20
+      const percent = Number(active?.doctor_porcentaje ?? 0)
+      return [0, 20, 30, 50].includes(percent) ? percent : 0
     },
     costoArancelCount (costoId) {
       return (this.costosValues[costoId]?.arancel_ids || []).length
@@ -1122,7 +1200,7 @@ export default {
       this.costosValues = {
         ...this.costosValues,
         [costoId]: {
-          ...(this.costosValues[costoId] || { doctor_porcentaje: 20 }),
+          ...(this.costosValues[costoId] || { doctor_porcentaje: 0 }),
           monto: total,
           arancel_ids: selectedIds
         }
@@ -1500,7 +1578,7 @@ export default {
             }
           }
         } else {
-          this.doctorPagoPorcentaje = 20
+          this.doctorPagoPorcentaje = 0
           this.syncDoctorEgreso()
           this.syncPaymentAmounts()
         }
@@ -1519,10 +1597,14 @@ export default {
     },
     mapPacienteOption (paciente) {
       const nombre = paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim()
-      const doc = paciente.identificacion ? ` - ${paciente.identificacion}` : ''
       return {
-        label: `${nombre}${doc}`,
-        value: paciente.id
+        label: nombre,
+        value: paciente.id,
+        identificacion: paciente.identificacion || '',
+        direccion: paciente.direccion || '',
+        telefono: paciente.telefono || '',
+        fecha_nacimiento: paciente.fecha_nacimiento || '',
+        tipo_paciente: paciente.tipo_paciente || ''
       }
     },
     mapDoctorOption (doctor) {
@@ -1612,6 +1694,52 @@ export default {
         })
       }
     },
+    openEditPatient (opt) {
+      this.editPatient = {
+        id: opt.value,
+        nombre: opt.label,
+        identificacion: opt.identificacion || '',
+        telefono: opt.telefono || '',
+        fecha_nacimiento: opt.fecha_nacimiento || '',
+        direccion: opt.direccion || ''
+      }
+      this.editPatientDialog = true
+    },
+    openEditPatientById (id) {
+      const opt = this.pacienteOptions.find(o => o.value === id)
+      if (opt) {
+        this.openEditPatient(opt)
+      } else {
+        this.$axios.get(`pacientes/${id}`).then(res => {
+          this.openEditPatient(this.mapPacienteOption(res.data))
+        }).catch(() => {
+          this.$alert.error('No se pudo cargar el paciente')
+        })
+      }
+    },
+    saveEditPatient () {
+      if (!this.editPatient.id) return
+      this.savingEditPatient = true
+      this.$axios.put(`pacientes/${this.editPatient.id}`, {
+        identificacion: this.editPatient.identificacion,
+        telefono: this.editPatient.telefono,
+        fecha_nacimiento: this.editPatient.fecha_nacimiento || null,
+        direccion: this.editPatient.direccion
+      }).then(res => {
+        const updated = this.mapPacienteOption(res.data)
+        const idx = this.pacienteOptions.findIndex(o => o.value === updated.value)
+        if (idx !== -1) {
+          this.pacienteOptions[idx] = { ...this.pacienteOptions[idx], ...updated }
+          this.pacienteOptions = [...this.pacienteOptions]
+        }
+        this.editPatientDialog = false
+        this.$alert.success('Paciente actualizado')
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'No se pudo actualizar el paciente')
+      }).finally(() => {
+        this.savingEditPatient = false
+      })
+    },
     saveQuickPatient () {
       this.savingPatient = true
       this.$axios.post('pacientes', this.quickPatient).then(res => {
@@ -1680,7 +1808,7 @@ export default {
             costo_id: parseInt(costo_id),
             nombre: costo?.nombre || '',
             monto: Number(v.monto || 0),
-            doctor_porcentaje: [0, 20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 20,
+            doctor_porcentaje: [0, 20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 0,
             arancel_ids: v.arancel_ids || [],
           }
         })

@@ -61,6 +61,54 @@ class CompraController extends Controller{
         return response()->json($historial);
     }
 
+    function historialVentas($id){
+        $farmaciaTipo = $this->resolveFarmaciaTipo(request());
+
+        $detalles = \App\Models\VentaDetalle::with(['venta.user', 'compraDetalle'])
+            ->where('producto_id', $id)
+            ->where('farmacia_tipo', $farmaciaTipo)
+            ->whereHas('venta', function ($q) {
+                $q->where('estado', '!=', 'Anulado')->whereNull('deleted_at');
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        $ventaIds = $detalles->pluck('venta_id')->unique()->filter()->values();
+        $pacientesPorVenta = \DB::table('paciente_ventas')
+            ->join('pacientes', 'pacientes.id', '=', 'paciente_ventas.paciente_id')
+            ->whereIn('paciente_ventas.venta_id', $ventaIds)
+            ->whereNull('paciente_ventas.deleted_at')
+            ->select('paciente_ventas.venta_id', \DB::raw("TRIM(CONCAT(COALESCE(pacientes.nombre,''),' ',COALESCE(pacientes.apellido,''))) as nombre_completo"))
+            ->get()
+            ->keyBy('venta_id');
+
+        $ventas = $detalles->map(function ($d) use ($pacientesPorVenta) {
+            $pv = $pacientesPorVenta->get($d->venta_id);
+            return [
+                'id'          => $d->id,
+                'venta_id'    => $d->venta_id,
+                'fecha'       => $d->venta?->fecha,
+                'hora'        => $d->venta?->hora,
+                'cantidad'    => (float) $d->cantidad,
+                'precio'      => (float) $d->precio,
+                'subtotal'    => round((float) $d->cantidad * (float) $d->precio, 2),
+                'tipo_venta'  => $d->venta?->tipo_venta,
+                'tipo_pago'   => $d->venta?->tipo_pago,
+                'usuario'     => $d->venta?->user?->name,
+                'paciente'    => $pv?->nombre_completo,
+                'lote'        => $d->compraDetalle?->lote ?? null,
+            ];
+        });
+
+        $resumen = [
+            'total_unidades' => $ventas->sum('cantidad'),
+            'total_monto'    => round($ventas->sum('subtotal'), 2),
+            'total_ventas'   => $ventas->count(),
+        ];
+
+        return response()->json(['ventas' => $ventas, 'resumen' => $resumen]);
+    }
+
     public function productosPorVencer(Request $request){
         $farmaciaTipo = $this->resolveFarmaciaTipo($request);
         $dias = (int) ($request->dias ?? 5);
