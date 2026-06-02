@@ -48,57 +48,102 @@ export class Imprimir {
       const F2 = (n) => Number(n || 0).toFixed(2)
       const S = (value, fallback = '—') => (value ?? fallback).toString()
       const comentario = (caja?.observaciones ?? '').toString().trim()
+      const paciente = caja?.paciente || {}
+
+      const formatFecha = (fecha) => {
+        if (!fecha) return '—'
+        try {
+          const p = fecha.substring(0, 10).split('-')
+          return `${p[2]}/${p[1]}/${p[0]}`
+        } catch { return fecha }
+      }
 
       const styles = `
-      @page { margin: 6mm; }
-      .imprimir-scope { font-family: "Courier New", Courier, monospace; font-size:10px; }
-      .imprimir-scope .ticket { width:300px; margin:0 auto; }
-      .imprimir-scope .center { text-align:center; }
-      .imprimir-scope .right { text-align:right; }
-      .imprimir-scope .bold { font-weight:700; }
-      .imprimir-scope .small { font-size:9px; line-height:1.2; }
-      .imprimir-scope hr { border:0; border-top:1px dashed #000; margin:6px 0; }
-      .imprimir-scope table { width:100%; border-collapse:collapse; }
-      .imprimir-scope td { padding:2px 0; vertical-align:top; }
+      @page { margin: 4mm 5mm; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      .tk { width: 300px; margin: 0 auto; font-family: "Courier New", Courier, monospace; font-size: 10px; color: #111; }
+      .tk-header { background: #111; color: #fff; padding: 8px 8px 6px; text-align: center; }
+      .tk-header .clinic { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+      .tk-header .sub { font-size: 8px; color: #bbb; margin-top: 3px; line-height: 1.4; }
+      .tk-title { background: #333; color: #fff; text-align: center; font-size: 11px; font-weight: 700; padding: 5px 0; letter-spacing: 0.12em; text-transform: uppercase; }
+      .tk-sec { padding: 5px 8px; }
+      .tk-sep { border: none; border-top: 1px dashed #999; margin: 0; }
+      .tk-sep-solid { border: none; border-top: 2px solid #111; margin: 0; }
+      .tk-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+      .tk-row .lbl { font-weight: 700; font-size: 9px; color: #555; text-transform: uppercase; min-width: 72px; flex-shrink: 0; }
+      .tk-row .val { text-align: right; font-size: 10px; }
+      .tk-row .val.bold { font-weight: 700; }
+      .tk-amt { padding: 5px 8px; }
+      .tk-amt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+      .tk-amt-row .albl { font-size: 9px; color: #555; text-transform: uppercase; }
+      .tk-amt-row .aval { font-size: 10px; font-weight: 600; }
+      .tk-total { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 8px; background: #111; color: #fff; margin-top: 2px; }
+      .tk-total .tlbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .tk-total .tval { font-size: 13px; font-weight: 700; }
+      .tk-obs { padding: 4px 8px; font-size: 9px; color: #333; }
+      .tk-extra { padding: 3px 8px; }
+      .tk-extra .tk-row .lbl { font-size: 8px; }
+      .tk-extra .tk-row .val { font-size: 9px; }
+      .tk-footer { text-align: center; font-size: 8px; color: #777; padding: 5px 8px; border-top: 1px dashed #aaa; margin-top: 2px; }
       `
 
       const html = `
-      <div class="imprimir-scope">
-        <div class="ticket">
-          <div class="center bold" style="font-size:12px;">RECIBO CAJA RECEPCIÓN</div>
-          <div class="center small">
-            ${S(env.razon, 'CLÍNICA LA FUENTE')}<br>
-            ${S(env.direccion, '')}<br>
-            Tel. ${S(env.telefono, '')}
-          </div>
-          <hr>
-          <table>
-            <tr><td class="bold">Registro:</td><td>#${S(caja?.id)}</td></tr>
-            <tr><td class="bold">Fecha/Hora:</td><td>${S(caja?.fecha)} ${S(caja?.hora, '')}</td></tr>
-            <tr><td class="bold">Paciente:</td><td>${S(caja?.paciente?.nombre_completo, 'SN')}</td></tr>
-            <tr><td class="bold">Ficha:</td><td>${S(caja?.numero_ficha, '-')}</td></tr>
-            <tr><td class="bold">Encargado:</td><td>${S(caja?.user?.name, '-')}</td></tr>
-            <tr><td class="bold">Documento:</td><td>${S(caja?.documento_label, '-')}</td></tr>
-          </table>
-          <hr>
-          <table>
-            <tr><td>Recaudado</td><td class="right bold">${F2(caja?.recaudado_total)} Bs</td></tr>
-            <tr><td>QR</td><td class="right">${F2(caja?.qr)} Bs</td></tr>
-            <tr><td>Efectivo</td><td class="right">${F2(caja?.efectivo)} Bs</td></tr>
-            <tr><td>Egreso</td><td class="right">${F2(caja?.egreso)} Bs</td></tr>
-            <tr><td>Farmacia</td><td class="right">${F2(caja?.costo_farmacia)} Bs</td></tr>
-            <tr><td class="bold">Saldo final</td><td class="right bold">${F2(caja?.saldo_final)} Bs</td></tr>
-          </table>
-          ${comentario ? `<hr><div><span class="bold">Obs:</span> ${comentario}</div>` : ''}
+      <div class="tk">
+        <div class="tk-header">
+          <div class="clinic">${S(env.razon, 'CLÍNICA LA FUENTE')}</div>
+          <div class="sub">${S(env.direccion, '')} &nbsp;·&nbsp; Tel. ${S(env.telefono, '')}</div>
         </div>
+        <div class="tk-title">Recibo Caja Recepción</div>
+
+        <div class="tk-sec">
+          <div class="tk-row"><span class="lbl">Registro</span><span class="val">#${S(caja?.id)}</span></div>
+          <div class="tk-row"><span class="lbl">Fecha/Hora</span><span class="val">${S(caja?.fecha)} ${S(caja?.hora, '')}</span></div>
+          <div class="tk-row"><span class="lbl">Ficha</span><span class="val">${S(caja?.numero_ficha, '-')}</span></div>
+          <div class="tk-row"><span class="lbl">Documento</span><span class="val">${S(caja?.documento_label, '-')}</span></div>
+          <div class="tk-row"><span class="lbl">Encargado</span><span class="val">${S(caja?.user?.name, '-')}</span></div>
+        </div>
+
+        <hr class="tk-sep">
+
+        <div class="tk-sec">
+          <div class="tk-row"><span class="lbl">Paciente</span><span class="val bold">${S(paciente.nombre_completo, 'SN')}</span></div>
+          <div class="tk-row"><span class="lbl">Carnet</span><span class="val">${S(paciente.identificacion, '-')}</span></div>
+          <div class="tk-row"><span class="lbl">Fec. Nac.</span><span class="val">${formatFecha(paciente.fecha_nacimiento)}</span></div>
+          <div class="tk-row"><span class="lbl">Celular</span><span class="val">${S(paciente.telefono, '-')}</span></div>
+        </div>
+
+        <hr class="tk-sep-solid">
+
+        <div class="tk-amt">
+          <div class="tk-amt-row"><span class="albl">Recaudado</span><span class="aval">${F2(caja?.recaudado_total)} Bs</span></div>
+          <div class="tk-amt-row"><span class="albl">QR</span><span class="aval">${F2(caja?.qr)} Bs</span></div>
+          <div class="tk-amt-row"><span class="albl">Efectivo</span><span class="aval">${F2(caja?.efectivo)} Bs</span></div>
+          <div class="tk-amt-row"><span class="albl">Egreso doctor</span><span class="aval">${F2(caja?.egreso)} Bs</span></div>
+          <div class="tk-amt-row"><span class="albl">Farmacia</span><span class="aval">${F2(caja?.costo_farmacia)} Bs</span></div>
+        </div>
+
+        <div class="tk-total">
+          <span class="tlbl">Saldo Final</span>
+          <span class="tval">${F2(caja?.saldo_final)} Bs</span>
+        </div>
+
+        ${comentario ? `<div class="tk-obs"><b>Obs:</b> ${comentario}</div>` : ''}
+
+        <div class="tk-extra">
+          ${caja?.doctor ? `<div class="tk-row"><span class="lbl">Médico</span><span class="val">${S(caja.doctor?.nombre, '-')}</span></div>` : ''}
+          ${(caja?.laboratorio_nombre || '').trim() ? `<div class="tk-row"><span class="lbl">Laboratorio</span><span class="val">${S(caja.laboratorio_nombre)}</span></div>` : ''}
+          ${(caja?.medico_ecografia || '').trim() ? `<div class="tk-row"><span class="lbl">Ecografía</span><span class="val">${S(caja.medico_ecografia)}</span></div>` : ''}
+        </div>
+
+        <div class="tk-footer">${S(env.razon, 'Clínica La Fuente')} &nbsp;·&nbsp; Gracias por su visita</div>
       </div>`
 
       const mount = document.getElementById('myElement')
       if (!mount) return
       mount.innerHTML = html
-      const node = mount.querySelector('.imprimir-scope')
+      const node = mount.querySelector('.tk')
       const d = new Printd()
-      d.print(node, styles)
+      d.print(node, [styles])
     } catch (e) {
       console.error('imprimirCaja error:', e)
     }

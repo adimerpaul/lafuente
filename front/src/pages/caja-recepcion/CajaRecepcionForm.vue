@@ -742,10 +742,12 @@
       </q-card>
     </q-dialog>
   </q-page>
+  <div id="myElement" class="hidden"></div>
 </template>
 
 <script>
 import moment from 'moment'
+import { Imprimir } from 'src/addons/Imprimir'
 import {
   controlCatalog,
   controlOptions,
@@ -861,7 +863,7 @@ export default {
       ],
       doctorPagoPorcentaje: 20,
       suppressDoctorPercentageApply: false,
-      doctorPagoPorcentajeOptions: [20, 30, 50].map(value => ({
+      doctorPagoPorcentajeOptions: [0, 20, 30, 50].map(value => ({
         label: `${value}%`,
         value
       })),
@@ -1042,7 +1044,7 @@ export default {
         if (item.costo_id) {
           values[item.costo_id] = {
             monto: item.monto || 0,
-            doctor_porcentaje: [20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 20,
+            doctor_porcentaje: [0, 20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 20,
             arancel_ids: item.arancel_ids || []
           }
         }
@@ -1073,7 +1075,7 @@ export default {
       return Math.round((Number(current.monto || 0) * this.costoDoctorPorcentaje(costoId)) / 100)
     },
     setCostoDoctorPorcentaje (costoId, value) {
-      const safePercent = [20, 30, 50].includes(Number(value)) ? Number(value) : 20
+      const safePercent = [0, 20, 30, 50].includes(Number(value)) ? Number(value) : 20
       const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 20, arancel_ids: [] }
       this.costosValues = {
         ...this.costosValues,
@@ -1084,7 +1086,7 @@ export default {
     firstCostoDoctorPercentage () {
       const active = Object.values(this.costosValues).find(value => Number(value?.monto || 0) > 0)
       const percent = Number(active?.doctor_porcentaje || 20)
-      return [20, 30, 50].includes(percent) ? percent : 20
+      return [0, 20, 30, 50].includes(percent) ? percent : 20
     },
     costoArancelCount (costoId) {
       return (this.costosValues[costoId]?.arancel_ids || []).length
@@ -1678,7 +1680,7 @@ export default {
             costo_id: parseInt(costo_id),
             nombre: costo?.nombre || '',
             monto: Number(v.monto || 0),
-            doctor_porcentaje: [20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 20,
+            doctor_porcentaje: [0, 20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 20,
             arancel_ids: v.arancel_ids || [],
           }
         })
@@ -1713,6 +1715,9 @@ export default {
 
         await this.persistPendingObservaciones(cajaId)
         this.$alert.success(this.isEdit ? 'Caja de recepcion actualizada' : 'Caja de recepcion creada')
+        if (!this.isEdit && res?.data) {
+          Imprimir.imprimirCaja(res.data)
+        }
         this.$router.push({ name: 'caja-recepciones' })
       } catch (err) {
         if (cajaId && !this.isEdit) {
