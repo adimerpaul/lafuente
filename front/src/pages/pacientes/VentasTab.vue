@@ -18,16 +18,30 @@
         </template>
       </div>
       <q-space />
-      <q-btn
-        icon="print"
+      <q-btn-dropdown
+        icon="description"
         :loading="$store.loading || loading"
         unelevated
         color="primary"
-        label="Imprimir proforma"
+        label="Proforma"
         no-caps
         class="q-ml-sm"
-        @click="imprimirProforma"
-      />
+      >
+        <q-list dense>
+          <q-item clickable v-close-popup @click="imprimirProforma">
+            <q-item-section avatar>
+              <q-icon name="print" />
+            </q-item-section>
+            <q-item-section>Imprimir proforma</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup @click="exportarProformaExcel">
+            <q-item-section avatar>
+              <q-icon name="fa-solid fa-file-excel" />
+            </q-item-section>
+            <q-item-section>Exportar Excel</q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
 
 <!--      <q-btn-->
 <!--        icon="add_shopping_cart"-->
@@ -732,6 +746,39 @@ export default {
       // Si tu backend sirve el API en la misma base de $url:
       const url = `${this.$url}/../pacientes/${this.paciente.id}/proforma-pdf`;
       window.open(url, '_blank'); // abre el PDF en otra pestaña
+    },
+    async exportarProformaExcel () {
+      if (!this.pacienteVentasFarmacia.length) {
+        this.$q.notify({ type: 'warning', message: 'No hay ventas para exportar' });
+        return;
+      }
+
+      const pacienteNombre = (this.paciente.nombre_completo || `${this.paciente.nombre || ''} ${this.paciente.apellido || ''}`).trim() || 'paciente';
+      const fileName = `proforma_${pacienteNombre}_${this.selectedFarmaciaTipo}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
+
+      this.loading = true;
+      try {
+        const res = await this.$axios.get(`pacientes/${this.paciente.id}/proforma-excel`, {
+          params: { farmacia_tipo: this.selectedFarmaciaTipo },
+          responseType: 'blob',
+        });
+        this.triggerBlobDownload(res.data, `${fileName}.xlsx`);
+      } catch (error) {
+        this.$alert?.error?.(error.response?.data?.message || 'No se pudo exportar la proforma en Excel')
+        || this.$q.notify({ type: 'negative', message: 'No se pudo exportar la proforma en Excel' });
+      } finally {
+        this.loading = false;
+      }
+    },
+    triggerBlobDownload (blob, fileName) {
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     },
     clickDialogVenta () {
       if (this.productosVentas.length === 0) {
