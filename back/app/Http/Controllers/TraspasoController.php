@@ -29,6 +29,7 @@ class TraspasoController extends Controller
                 'productos.precio',
                 'productos.unidad',
                 'productos.imagen',
+                'productos.stock',
                 'productos.farmacia_tipo',
             ])
             ->where('productos.farmacia_tipo', $farmacia_tipo)
@@ -44,6 +45,9 @@ class TraspasoController extends Controller
                 $query->where(function ($nested) use ($search) {
                     $nested->where('productos.nombre', 'like', "%{$search}%")
                         ->orWhere('productos.descripcion', 'like', "%{$search}%");
+                    if (is_numeric($search)) {
+                        $nested->orWhere('productos.id', (int) $search);
+                    }
                 });
             })
             ->having('cantidad', '>', 0)
@@ -51,7 +55,9 @@ class TraspasoController extends Controller
             ->paginate($perPage);
 
         $productos->getCollection()->transform(function ($producto) {
+            $producto->stock_registrado = (float) ($producto->stock ?? 0);
             $producto->stock = $producto->cantidad;
+
             return $producto;
         });
 
@@ -65,14 +71,14 @@ class TraspasoController extends Controller
     {
         $producto_id = $request->query('producto_id');
         $farmacia_tipo = $request->query('farmacia_tipo', 'Farmacia');
-        
+
         $lotes = CompraDetalle::where('producto_id', $producto_id)
             ->where('farmacia_tipo', $farmacia_tipo)
             ->where('cantidad_venta', '>', 0)
             ->where('estado', 'Activo')
             ->select('id', 'lote as numero_lote', 'fecha_vencimiento', 'cantidad_venta as cantidad', 'precio')
             ->get();
-        
+
         return response()->json($lotes);
     }
 
@@ -105,7 +111,7 @@ class TraspasoController extends Controller
                 'hora' => $hora,
                 'tipo_venta' => 'Interno',
                 'ci' => null,
-                'nombre' => 'Traspaso a ' . $validated['farmacia_destino'],
+                'nombre' => 'Traspaso a '.$validated['farmacia_destino'],
                 'estado' => 'Activo',
                 'tipo_comprobante' => 'Venta',
                 'total' => 0,
@@ -122,7 +128,7 @@ class TraspasoController extends Controller
                 'fecha' => $fecha,
                 'hora' => $hora,
                 'ci' => null,
-                'nombre' => 'Traspaso desde ' . $validated['farmacia_origen'],
+                'nombre' => 'Traspaso desde '.$validated['farmacia_origen'],
                 'estado' => 'Activo',
                 'total' => 0,
                 'tipo_pago' => 'Traspaso',
@@ -141,12 +147,18 @@ class TraspasoController extends Controller
 
             // Procesar cada item
             foreach ($validated['items'] as $item) {
-                $compraDetalleOrigen = CompraDetalle::findOrFail($item['compra_detalle_id']);
-                $cantidad = $item['cantidad'];
+                $compraDetalleOrigen = CompraDetalle::where('id', $item['compra_detalle_id'])
+                    ->where('farmacia_tipo', $validated['farmacia_origen'])
+                    ->where('estado', 'Activo')
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $cantidad = (float) $item['cantidad'];
 
                 // Validar que haya suficiente cantidad
                 if (($compraDetalleOrigen->cantidad_venta ?? 0) < $cantidad) {
-                    throw new \Exception("Stock insuficiente para el lote {$compraDetalleOrigen->lote}");
+                    $loteLabel = $compraDetalleOrigen->lote ?: 'sin lote';
+                    $vencimientoLabel = $compraDetalleOrigen->fecha_vencimiento ?: 'sin vencimiento';
+                    throw new \Exception("Stock insuficiente para el lote {$loteLabel} ({$vencimientoLabel}). Disponible: {$compraDetalleOrigen->cantidad_venta}, solicitado: {$cantidad}");
                 }
 
                 $subtotal = $cantidad * $compraDetalleOrigen->precio;
@@ -157,7 +169,7 @@ class TraspasoController extends Controller
                     ->where('farmacia_tipo', $validated['farmacia_origen'])
                     ->first();
 
-                if (!$productoOrigen) {
+                if (! $productoOrigen) {
                     throw new \Exception('Producto origen no encontrado para el traspaso');
                 }
 
@@ -165,7 +177,7 @@ class TraspasoController extends Controller
                     ->where('farmacia_tipo', $validated['farmacia_destino'])
                     ->first();
 
-                if (!$cloneProducto) {
+                if (! $cloneProducto) {
                     $cloneProducto = Producto::create([
                         'nombre' => $productoOrigen->nombre,
                         'imagen' => $productoOrigen->imagen,
@@ -212,17 +224,17 @@ class TraspasoController extends Controller
 
                 // Disminuir stock en farmacia origen
                 $compraDetalleOrigen->update([
-                    'cantidad' => $compraDetalleOrigen->cantidad - $cantidad,
-                    'cantidad_venta' => max(0, ($compraDetalleOrigen->cantidad_venta ?? 0) - $cantidad)
+                    'cantidad' => max(0, (float) $compraDetalleOrigen->cantidad - $cantidad),
+                    'cantidad_venta' => max(0, (float) ($compraDetalleOrigen->cantidad_venta ?? 0) - $cantidad),
                 ]);
 
                 // Actualizar stock de producto en farmacia origen
                 $productoOrigen->update([
-                    'stock' => max(0, $productoOrigen->stock - $cantidad)
+                    'stock' => max(0, (float) $productoOrigen->stock - $cantidad),
                 ]);
 
                 $cloneProducto->update([
-                    'stock' => $cloneProducto->stock + $cantidad
+                    'stock' => (float) $cloneProducto->stock + $cantidad,
                 ]);
             }
 
@@ -257,7 +269,8 @@ class TraspasoController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 400);
+
+            return response()->json(['message' => 'Error: '.$e->getMessage()], 400);
         }
     }
 
@@ -306,74 +319,105 @@ class TraspasoController extends Controller
             DB::beginTransaction();
 
             // Obtener la venta (origen del traspaso)
-            $venta = Venta::findOrFail($ventaId);
-            
+            $venta = Venta::where('id', $ventaId)->lockForUpdate()->firstOrFail();
+
             if ($venta->tipo !== 'Traspaso') {
                 throw new \Exception('Esta venta no es un traspaso');
             }
 
+            if ($venta->estado === 'Anulado') {
+                throw new \Exception('Este traspaso ya fue anulado');
+            }
+
             // Obtener la compra vinculada (destino del traspaso)
-            $compra = Compra::find($venta->traspaso_compra_id);
-            if (!$compra) {
+            $compra = Compra::where('id', $venta->traspaso_compra_id)->lockForUpdate()->first();
+            if (! $compra) {
                 throw new \Exception('No se encontró la compra vinculada');
             }
 
             // Procesar cada detalle para revertir stock
-            $ventaDetalles = VentaDetalle::where('venta_id', $venta->id)->get();
-            
+            $ventaDetalles = VentaDetalle::with('producto')
+                ->where('venta_id', $venta->id)
+                ->get();
+
             foreach ($ventaDetalles as $ventaDetalle) {
-                // Revertir: Aumentar stock en origen
-                $compraDetalleOrigen = CompraDetalle::where('compra_id', '!=', $compra->id)
-                    ->where('producto_id', $ventaDetalle->producto_id)
+                $cantidad = (float) $ventaDetalle->cantidad;
+                $productoNombre = $ventaDetalle->producto?->nombre ?: $ventaDetalle->nombre;
+                $loteLabel = $ventaDetalle->lote ?: 'sin lote';
+
+                $compraDetalleOrigenExacto = CompraDetalle::where('id', $ventaDetalle->compra_detalle_id)
                     ->where('farmacia_tipo', $venta->farmacia_tipo)
-                    ->where('lote', $ventaDetalle->lote)
+                    ->lockForUpdate()
                     ->first();
 
-                if ($compraDetalleOrigen) {
-                    $compraDetalleOrigen->update([
-                        'cantidad' => $compraDetalleOrigen->cantidad + $ventaDetalle->cantidad,
-                        'cantidad_venta' => ($compraDetalleOrigen->cantidad_venta ?? 0) + $ventaDetalle->cantidad
-                    ]);
+                if (! $compraDetalleOrigenExacto) {
+                    throw new \Exception("No se encontro el lote origen {$loteLabel} del producto {$productoNombre}");
                 }
 
-                // Actualizar producto origen
-                $productoOrigen = Producto::where('nombre', $ventaDetalle->producto->nombre ?? '')
-                    ->where('farmacia_tipo', $venta->farmacia_tipo)
-                    ->first();
-                
-                if ($productoOrigen) {
-                    $productoOrigen->update([
-                        'stock' => $productoOrigen->stock + $ventaDetalle->cantidad
-                    ]);
-                }
-
-                // Revertir: Disminuir stock en destino
-                $compraDetalleDestino = CompraDetalle::where('compra_id', $compra->id)
-                    ->where('lote', $ventaDetalle->lote)
-                    ->first();
-
-                if ($compraDetalleDestino) {
-                    $compraDetalleDestino->update([
-                        'cantidad' => $compraDetalleDestino->cantidad - $ventaDetalle->cantidad,
-                        'cantidad_venta' => max(0, ($compraDetalleDestino->cantidad_venta ?? 0) - $ventaDetalle->cantidad)
-                    ]);
-                    
-                    // Si la cantidad llega a 0, eliminar el registro
-                    if ($compraDetalleDestino->cantidad <= 0) {
-                        $compraDetalleDestino->delete();
-                    }
-                }
-
-                // Actualizar producto destino
-                $productoDestino = Producto::where('nombre', $ventaDetalle->producto->nombre ?? '')
+                $compraDetalleDestinoExacto = CompraDetalle::where('compra_id', $compra->id)
                     ->where('farmacia_tipo', $compra->farmacia_tipo)
+                    ->where('nombre', $ventaDetalle->nombre)
+                    ->where(function ($query) use ($ventaDetalle) {
+                        if ($ventaDetalle->lote === null || $ventaDetalle->lote === '') {
+                            $query->whereNull('lote')->orWhere('lote', '');
+
+                            return;
+                        }
+
+                        $query->where('lote', $ventaDetalle->lote);
+                    })
+                    ->when(
+                        $ventaDetalle->fecha_vencimiento,
+                        fn ($query) => $query->where('fecha_vencimiento', $ventaDetalle->fecha_vencimiento),
+                        fn ($query) => $query->whereNull('fecha_vencimiento')
+                    )
+                    ->lockForUpdate()
                     ->first();
-                
-                if ($productoDestino) {
-                    $productoDestino->update([
-                        'stock' => $productoDestino->stock - $ventaDetalle->cantidad
+
+                if (! $compraDetalleDestinoExacto) {
+                    throw new \Exception("No se encontro el lote destino {$loteLabel} del producto {$productoNombre}");
+                }
+
+                if ((float) ($compraDetalleDestinoExacto->cantidad_venta ?? 0) < $cantidad) {
+                    throw new \Exception("No se puede anular: el destino ya no tiene {$cantidad} disponible del producto {$productoNombre}, lote {$loteLabel}");
+                }
+
+                $compraDetalleOrigenExacto->update([
+                    'cantidad' => (float) $compraDetalleOrigenExacto->cantidad + $cantidad,
+                    'cantidad_venta' => (float) ($compraDetalleOrigenExacto->cantidad_venta ?? 0) + $cantidad,
+                ]);
+
+                $productoOrigenExacto = Producto::where('id', $ventaDetalle->producto_id)
+                    ->where('farmacia_tipo', $venta->farmacia_tipo)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($productoOrigenExacto) {
+                    $productoOrigenExacto->update([
+                        'stock' => (float) $productoOrigenExacto->stock + $cantidad,
                     ]);
                 }
+
+                $compraDetalleDestinoExacto->update([
+                    'cantidad' => max(0, (float) $compraDetalleDestinoExacto->cantidad - $cantidad),
+                    'cantidad_venta' => max(0, (float) ($compraDetalleDestinoExacto->cantidad_venta ?? 0) - $cantidad),
+                ]);
+
+                $productoDestinoExacto = Producto::where('id', $compraDetalleDestinoExacto->producto_id)
+                    ->where('farmacia_tipo', $compra->farmacia_tipo)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($productoDestinoExacto) {
+                    $productoDestinoExacto->update([
+                        'stock' => max(0, (float) $productoDestinoExacto->stock - $cantidad),
+                    ]);
+                }
+
+                if ((float) $compraDetalleDestinoExacto->cantidad <= 0 && (float) ($compraDetalleDestinoExacto->cantidad_venta ?? 0) <= 0) {
+                    $compraDetalleDestinoExacto->delete();
+                }
+
             }
 
             // Marcar como anulado (soft delete o cambiar estado)
@@ -383,12 +427,13 @@ class TraspasoController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Traspaso anulado exitosamente'
+                'message' => 'Traspaso anulado exitosamente',
             ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 400);
+
+            return response()->json(['message' => 'Error: '.$e->getMessage()], 400);
         }
     }
 }

@@ -93,10 +93,16 @@
                           {{ $filters.textUpper(producto.nombre) }}
                         </div>
                         <div class="card-meta">
-                          <span>{{ producto.cantidad }} {{ producto.unidad }}</span>
+                          <span>Disp: {{ producto.cantidad }} {{ producto.unidad }}</span>
                           <span class="text-bold bg-orange text-black border q-px-xs">
                             {{ producto.precio }} Bs
                           </span>
+                        </div>
+                        <div
+                          v-if="stockRegistradoDistinto(producto)"
+                          class="text-caption bg-warning text-black q-px-xs"
+                        >
+                          Stock reg: {{ producto.stock_registrado }}
                         </div>
                       </div>
                     </q-img>
@@ -156,8 +162,8 @@
                     {{ $filters.textUpper(item.producto?.nombre || '') }}
                   </div>
                 </td>
-                <td>{{ item.lote || '-' }}</td>
-                <td>{{ item.fecha_vencimiento || '-' }}</td>
+                <td>{{ item.lote || 'Sin lote' }}</td>
+                <td>{{ item.fecha_vencimiento || 'Sin vencimiento' }}</td>
                 <td class="text-right">{{ item.disponible }}</td>
                 <td style="padding:0;margin:0;">
                   <input
@@ -240,7 +246,12 @@
               >
                 <template #body-cell-fecha_vencimiento="props">
                   <q-td :props="props">
-                    {{ props.row.fecha_vencimiento || '-' }}
+                    {{ props.row.fecha_vencimiento || 'Sin vencimiento' }}
+                  </q-td>
+                </template>
+                <template #body-cell-numero_lote="props">
+                  <q-td :props="props">
+                    {{ props.row.numero_lote || 'Sin lote' }}
                   </q-td>
                 </template>
               </q-table>
@@ -342,6 +353,9 @@ export default {
   methods: {
     productoImagen(producto) {
       return `${this.$url}../images/${producto?.imagen || ''}`
+    },
+    stockRegistradoDistinto(producto) {
+      return Number(producto?.stock_registrado || 0) !== Number(producto?.cantidad || 0)
     },
     recargarDatos() {
       this.productosGet()
