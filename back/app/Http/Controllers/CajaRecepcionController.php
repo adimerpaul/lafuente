@@ -321,6 +321,10 @@ class CajaRecepcionController extends Controller
 
     public function update(Request $request, CajaRecepcion $cajaRecepcion)
     {
+        if (! $request->user()->can('Caja recepcion editar')) {
+            return response()->json(['message' => 'No tiene permiso para editar registros de caja de recepcion.'], 403);
+        }
+
         $data = $this->validatedData($request);
         $data['user_id'] = $request->user()->id;
         $data['tipo_movimiento'] = 'Ingreso';
@@ -368,8 +372,12 @@ class CajaRecepcionController extends Controller
         }
     }
 
-    public function anular(CajaRecepcion $cajaRecepcion)
+    public function anular(Request $request, CajaRecepcion $cajaRecepcion)
     {
+        if (! $request->user()->can('Caja recepcion editar')) {
+            return response()->json(['message' => 'No tiene permiso para anular registros de caja de recepcion.'], 403);
+        }
+
         if ($cajaRecepcion->is_anulado) {
             return response()->json(['message' => 'Este registro ya fue anulado.'], 422);
         }
@@ -394,8 +402,12 @@ class CajaRecepcionController extends Controller
         return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
     }
 
-    public function destroy(CajaRecepcion $cajaRecepcion)
+    public function destroy(Request $request, CajaRecepcion $cajaRecepcion)
     {
+        if (! $request->user()->can('Caja recepcion editar')) {
+            return response()->json(['message' => 'No tiene permiso para anular registros de caja de recepcion.'], 403);
+        }
+
         $cajaRecepcion->update([
             'estado' => 'Anulado',
         ]);

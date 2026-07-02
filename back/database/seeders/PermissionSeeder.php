@@ -48,6 +48,7 @@ class PermissionSeeder extends Seeder
             'Formulario control nuevo',
             'Caja recepcion',
             'Caja recepcion crear',
+            'Caja recepcion editar',
         ];
 
         foreach ($permisos as $permiso) {

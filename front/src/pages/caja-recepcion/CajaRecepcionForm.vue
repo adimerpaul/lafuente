@@ -8,7 +8,7 @@
         </div>
         <q-space />
         <q-btn
-          v-if="isEdit && !form.is_anulado"
+          v-if="isEdit && !form.is_anulado && canEditarCaja"
           flat
           no-caps
           icon="cancel"
@@ -25,8 +25,12 @@
         <q-icon name="cancel" class="q-mr-xs" /> Este registro fue ANULADO y no puede editarse.
       </q-banner>
 
+      <q-banner v-else-if="formLocked" class="bg-warning text-white text-center text-weight-bold">
+        <q-icon name="lock" class="q-mr-xs" /> No tienes permiso para editar este registro (se requiere el permiso "Caja recepcion editar"). Puedes ver los datos pero no guardarlos.
+      </q-banner>
+
       <q-card-section class="q-pa-sm">
-        <q-form @submit="save" :disable="form.is_anulado">
+        <q-form @submit="save" :disable="form.is_anulado || formLocked">
           <div class="row q-col-gutter-sm q-mb-sm">
             <div class="col-12 col-md-2">
               <q-card flat bordered>
@@ -78,7 +82,7 @@
             </div>
           </div>
 
-          <div class="row q-col-gutter-sm q-mb-sm">
+          <div class="row q-col-gutter-sm q-mb-sm" :class="{ 'form-locked': formLocked }">
             <div class="col-12">
               <q-select
                 v-model="form.paciente_id"
@@ -90,6 +94,7 @@
                 emit-value
                 map-options
                 clearable
+                :disable="formLocked"
                 input-debounce="600"
                 :options="pacienteOptions"
                 label="Paciente"
@@ -132,7 +137,7 @@
 
           <div class="text-right q-mb-sm">
             <q-btn color="negative" label="Cancelar" no-caps @click="$router.push({ name: 'caja-recepciones' })" :loading="saving" />
-            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" />
+            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" :disable="formLocked" />
           </div>
 
           <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-8">
@@ -143,7 +148,7 @@
           </q-tabs>
           <q-separator />
 
-          <q-tab-panels v-model="tab" animated>
+          <q-tab-panels v-model="tab" animated :class="{ 'form-locked': formLocked }">
             <q-tab-panel name="datos" class="q-pa-sm">
               <div class="row q-col-gutter-sm">
                 <div class="col-12 col-md-3">
@@ -444,7 +449,7 @@
 
           <div class="text-right">
             <q-btn color="negative" label="Cancelar" no-caps @click="$router.push({ name: 'caja-recepciones' })" :loading="saving" />
-            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" />
+            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" :disable="formLocked" />
           </div>
         </q-form>
       </q-card-section>
@@ -951,6 +956,12 @@ export default {
   computed: {
     isEdit () {
       return !!this.$route.params.id
+    },
+    canEditarCaja () {
+      return (this.$store.permissions || []).some(p => p.name === 'Caja recepcion editar')
+    },
+    formLocked () {
+      return this.isEdit && !this.canEditarCaja
     },
     recaudadoTotal () {
       return Object.values(this.costosValues).reduce((sum, v) => sum + Number(v.monto || 0), 0)
@@ -1841,6 +1852,10 @@ export default {
         .finally(() => { this.anulando = false })
     },
     async save () {
+      if (this.formLocked) {
+        this.$alert.error('No tienes permiso para editar este registro')
+        return
+      }
       this.saving = true
       const payload = this.buildPayload()
       let cajaId = this.isEdit ? this.$route.params.id : null
@@ -1874,6 +1889,12 @@ export default {
 </script>
 
 <style scoped>
+.form-locked {
+  pointer-events: none;
+  opacity: 0.6;
+  filter: grayscale(0.3);
+}
+
 .cost-card {
   height: 100%;
   border-radius: 10px;

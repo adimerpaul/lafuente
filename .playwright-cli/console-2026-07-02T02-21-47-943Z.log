@@ -2,3 +2,8 @@
 [     391ms] [INFO] [Quasar] Running SPA. @ http://localhost:9000/.quasar/client-entry.js?t=1782958890442:50
 [     536ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:9000/login:0
 [     649ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
+[ 2013934ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
+[ 2013954ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9000/node_modules/.q-cache/vite/spa/deps/register-service-worker.js?v=27e092be:0
+[ 2014239ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
+[ 2019038ms] [LOG] [vite] server connection lost. polling for restart... @ http://localhost:9000/@vite/client:374
+[ 2021398ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:9000/__vite_ping:0
