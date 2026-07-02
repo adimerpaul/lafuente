@@ -860,6 +860,7 @@ const emptyForm = () => ({
   qr: 0,
   efectivo: 0,
   egreso: 0,
+  costo_farmacia: 0,
   estado_cobro: 'Pagado',
 })
 
@@ -970,6 +971,13 @@ export default {
         return sum + ((monto * porcentaje) / 100)
       }, 0))
     },
+    costoFarmaciaCatalogo () {
+      return this.costosCatalogo.find(c => (c.nombre || '').trim().toLowerCase() === 'farmacia')
+    },
+    costoFarmaciaMonto () {
+      if (!this.costoFarmaciaCatalogo) return 0
+      return Number(this.costosValues[this.costoFarmaciaCatalogo.id]?.monto || 0)
+    },
     saldoFinal () {
       return Number(this.form.efectivo || 0) - Number(this.form.egreso || 0)
     },
@@ -1042,6 +1050,11 @@ export default {
     recaudadoTotal () {
       this.syncPaymentAmounts()
       this.syncDoctorEgresoAmount()
+    },
+    costoFarmaciaMonto (value) {
+      if (Number(this.form.costo_farmacia || 0) !== value) {
+        this.form.costo_farmacia = value
+      }
     },
     doctorPagoPorcentaje () {
       if (this.suppressDoctorPercentageApply) {

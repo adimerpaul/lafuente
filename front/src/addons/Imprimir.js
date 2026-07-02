@@ -101,6 +101,7 @@ export class Imprimir {
           <div class="tk-row"><span class="lbl">Ficha</span><span class="val">${S(caja?.numero_ficha, '-')}</span></div>
           <div class="tk-row"><span class="lbl">Documento</span><span class="val">${S(caja?.documento_label, '-')}</span></div>
           <div class="tk-row"><span class="lbl">Encargado</span><span class="val">${S(caja?.user?.name, '-')}</span></div>
+          ${caja?.doctor ? `<div class="tk-row"><span class="lbl">Médico</span><span class="val bold">${S(caja.doctor?.nombre, '-')}</span></div>` : ''}
         </div>
 
         <hr class="tk-sep">
@@ -130,7 +131,6 @@ export class Imprimir {
         ${comentario ? `<div class="tk-obs"><b>Obs:</b> ${comentario}</div>` : ''}
 
         <div class="tk-extra">
-          ${caja?.doctor ? `<div class="tk-row"><span class="lbl">Médico</span><span class="val">${S(caja.doctor?.nombre, '-')}</span></div>` : ''}
           ${(caja?.laboratorio_nombre || '').trim() ? `<div class="tk-row"><span class="lbl">Laboratorio</span><span class="val">${S(caja.laboratorio_nombre)}</span></div>` : ''}
           ${(caja?.medico_ecografia || '').trim() ? `<div class="tk-row"><span class="lbl">Ecografía</span><span class="val">${S(caja.medico_ecografia)}</span></div>` : ''}
         </div>
