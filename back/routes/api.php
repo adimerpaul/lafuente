@@ -150,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //    this.$axios.put(`ventasCambiarTipoPago/${venta.id}`, { tipo_pago: tipoPago }).then(res => {
     Route::put('/ventasCambiarTipoPago/{venta}', [App\Http\Controllers\VentaController::class, 'cambiarTipoPago']);
     Route::put('comprasCambiarLoteFecha/{compra}', [App\Http\Controllers\CompraController::class, 'cambiarLoteFecha']);
+    Route::put('comprasCambiarPrecio/{compra}', [App\Http\Controllers\CompraController::class, 'cambiarPrecio']);
 
 });
 Route::get('historial_medicos/{id}/pdf', [App\Http\Controllers\HistorialMedicoController::class, 'generatePdf']);

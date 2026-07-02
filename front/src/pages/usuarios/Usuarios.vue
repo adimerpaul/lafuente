@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <q-table :rows="filteredRows" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
+    <q-table class="usuarios-table" :rows="filteredRows" :columns="columns" dense wrap-cells flat bordered :rows-per-page-options="[0]"
               title="Usuarios">
       <template v-slot:top-right>
           <q-btn color="primary" label="Nuevo" @click="userNew" outline no-caps  icon="add_circle_outline" :loading="loading" />
@@ -187,10 +187,10 @@
 
         <q-card-section class="q-pt-xs q-px-sm">
           <div class="permission-categories">
-            <div v-for="category in permissionCategories" :key="category.name" class="category-section q-mb-sm">
+            <div v-for="category in permissionCategories" :key="category.name" class="category-section q-mb-xs">
               <div class="category-header q-mb-xs">
-                <q-icon :name="category.icon" size="20px" :color="category.color" />
-                <span class="text-body2 text-weight-bold q-ml-xs">{{ category.name }}</span>
+                <q-icon :name="category.icon" size="14px" :color="category.color" />
+                <span class="category-title q-ml-xs">{{ category.name }}</span>
                 <q-chip
                   dense size="sm"
                   :label="`${countCategorySelected(category.name)} / ${category.permisos.length}`"
@@ -209,6 +209,7 @@
                     :model-value="(user.permissionsSelected || []).includes(permiso.name)"
                     :label="permiso.name"
                     dense
+                    size="xs"
                     color="primary"
                     class="full-width"
                     @update:model-value="togglePermission(permiso.name, $event)"
@@ -543,18 +544,34 @@ export default {
 }
 </script>
 <style scoped>
+.usuarios-table :deep(th),
+.usuarios-table :deep(td) {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.usuarios-table :deep(.q-table__title) {
+  font-size: 14px;
+}
+
 .permission-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 2px;
   max-width: 320px;
+}
+
+.permission-chips :deep(.q-chip) {
+  height: 18px;
+  margin: 0;
 }
 
 .permission-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 4px 8px;
-  padding-top: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 2px 6px;
+  padding-top: 2px;
 }
 
 .permission-item {
@@ -562,9 +579,10 @@ export default {
 }
 
 .permission-categories {
-  max-height: 60vh;
+  max-height: 65vh;
   overflow-y: auto;
   padding-right: 4px;
+  font-size: 12px;
 }
 
 .permission-categories::-webkit-scrollbar {
@@ -588,8 +606,8 @@ export default {
 .category-section {
   background: #f9f9f9;
   border-left: 3px solid #e0e0e0;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
   transition: border-color 0.2s ease;
 }
 
@@ -600,21 +618,32 @@ export default {
 .category-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+}
+
+.category-title {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .permission-card {
-  padding: 8px;
+  padding: 1px 4px;
   background: white;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e0e0e0;
   transition: all 0.2s ease;
+  line-height: 1;
 }
 
 .permission-card:hover {
   background: #f5f5f5;
   border-color: #1976d2;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.permission-card :deep(.q-checkbox__label) {
+  font-size: 11px;
+  line-height: 1.1;
 }
 
 </style>

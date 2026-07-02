@@ -107,6 +107,10 @@
               <q-item-section avatar><q-icon name="edit" /></q-item-section>
               <q-item-section>Cambiar Lote/Fecha Venc.</q-item-section>
             </q-item>
+            <q-item clickable @click="cambiarPrecio(compra)" v-close-popup>
+              <q-item-section avatar><q-icon name="attach_money" /></q-item-section>
+              <q-item-section>Cambiar Precio de Compra</q-item-section>
+            </q-item>
           </q-btn-dropdown>
         </td>
         <td>{{ compra.id }}</td>
@@ -221,6 +225,32 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="dialogPrecio" persistent>
+    <q-card style="min-width: 550px;">
+      <q-card-section>
+        <div class="text-h6">Cambiar Precio de Compra</div>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="q-gutter-md">
+          <div v-for="detalle in compraSeleccionada.compra_detalles" :key="detalle.id" class="row q-col-gutter-md q-pa-sm items-center">
+            <div class="col-12 col-md-7">
+              <div><strong>Producto:</strong> {{ detalle.nombre }}</div>
+              <div><strong>Cantidad:</strong> {{ detalle.cantidad }}</div>
+            </div>
+            <div class="col-12 col-md-5">
+              <q-input v-model.number="detalle.precio" label="Precio de compra" dense outlined type="number" step="0.01" min="0" />
+            </div>
+          </div>
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" color="primary" v-close-popup />
+        <q-btn flat label="Guardar" color="primary" @click="guardarPrecio" :loading="loading" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
   <div id="myElement" class="hidden"></div>
 </template>
 
@@ -237,6 +267,7 @@ export default {
       fechaFin: moment().format('YYYY-MM-DD'),
       user: '',
       dialogLoteFecha: false,
+      dialogPrecio: false,
       users: [],
       loading: false
     }
@@ -330,6 +361,27 @@ export default {
     cambiarLoteFecha(compra){
       this.dialogLoteFecha = true
       this.compraSeleccionada = compra
+    },
+    cambiarPrecio(compra){
+      this.dialogPrecio = true
+      this.compraSeleccionada = compra
+    },
+    guardarPrecio() {
+      this.loading = true
+      this.$axios.put(`comprasCambiarPrecio/${this.compraSeleccionada.id}`, {
+        compra_detalles: this.compraSeleccionada.compra_detalles.map(d => ({
+          id: d.id,
+          precio: d.precio
+        }))
+      }).then(() => {
+        this.$alert.success('Precio de compra actualizado')
+        this.dialogPrecio = false
+        this.comprasGet()
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'Error al actualizar el precio')
+      }).finally(() => {
+        this.loading = false
+      })
     },
     anular(id) {
       this.$alert.dialog('¿Anular esta compra?').onOk(() => {

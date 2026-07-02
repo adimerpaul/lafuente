@@ -45,6 +45,50 @@ class CompraController extends Controller{
         }
     }
 
+    public function cambiarPrecio(Request $request, Compra $compra)
+    {
+        DB::beginTransaction();
+        try {
+            foreach ($request->compra_detalles as $detalle) {
+                $precio = (float) $detalle['precio'];
+                if ($precio < 0) {
+                    throw new \RuntimeException('El precio de compra no puede ser negativo.');
+                }
+
+                $cd = CompraDetalle::where('id', $detalle['id'])
+                    ->where('compra_id', $compra->id)
+                    ->first();
+
+                if (! $cd) {
+                    continue;
+                }
+
+                $cd->update([
+                    'precio' => $precio,
+                    'total' => $precio * $cd->cantidad,
+                    'precio13' => $precio * 1.3,
+                    'total13' => $precio * $cd->cantidad * 1.3,
+                ]);
+            }
+
+            $compra->total = $compra->compraDetalles()->where('estado', 'Activo')->sum('total');
+            $compra->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Precio de compra actualizado correctamente',
+                'compra' => Compra::with(['user', 'proveedor', 'compraDetalles.producto'])->find($compra->id),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar el precio de compra',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     function historialCompras($id){
         $farmaciaTipo = $this->resolveFarmaciaTipo(request());
 

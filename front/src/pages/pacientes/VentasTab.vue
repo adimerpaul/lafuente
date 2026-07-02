@@ -807,16 +807,21 @@ export default {
           tipo_pago: this.venta.tipo_pago,
           receta_id: null,
           doctor_id: this.venta.doctor_id,
-          farmacia_tipo: this.selectedFarmaciaTipo
+          farmacia_tipo: this.selectedFarmaciaTipo,
+          paciente_id: this.paciente.id
         });
 
         const ventaCreada = res.data;
 
         // 2) Vincular a paciente (paciente_ventas)
-        await this.$axios.post("paciente_ventas", {
-          venta_id: ventaCreada.id,
-          paciente_id: this.paciente.id
-        });
+        // El backend ya vincula automáticamente cuando es venta institucional
+        // (ver VentaController::store, paciente_id_ref); evitar duplicar el vínculo.
+        if (!ventaCreada.paciente_id_ref) {
+          await this.$axios.post("paciente_ventas", {
+            venta_id: ventaCreada.id,
+            paciente_id: this.paciente.id
+          });
+        }
 
         // 3) Feedback, imprimir, limpiar, refrescar
         this.$alert?.success?.("Venta realizada con éxito") || this.$q.notify({ type: 'positive', message: 'Venta realizada con éxito' });
