@@ -428,7 +428,7 @@
                       outlined
                       type="number"
                       min="0"
-                      step="1"
+                      step="0.01"
                       label="Editar egreso doctor"
                       class="q-mt-sm"
                       @update:model-value="setDoctorEgresoManual"
@@ -976,11 +976,12 @@ export default {
       return Number(this.form.qr || 0) + Number(this.form.efectivo || 0)
     },
     doctorEgresoCalculado () {
-      return Math.round(Object.values(this.costosValues).reduce((sum, value) => {
+      const total = Object.values(this.costosValues).reduce((sum, value) => {
         const monto = Number(value?.monto || 0)
         const porcentaje = Number(value?.doctor_porcentaje ?? 0)
         return sum + ((monto * porcentaje) / 100)
-      }, 0))
+      }, 0)
+      return Math.round(total * 100) / 100
     },
     costoFarmaciaCatalogo () {
       return this.costosCatalogo.find(c => (c.nombre || '').trim().toLowerCase() === 'farmacia')
@@ -1174,7 +1175,8 @@ export default {
     },
     costoDoctorMonto (costoId) {
       const current = this.costosValues[costoId] || {}
-      return Math.round((Number(current.monto || 0) * this.costoDoctorPorcentaje(costoId)) / 100)
+      const monto = (Number(current.monto || 0) * this.costoDoctorPorcentaje(costoId)) / 100
+      return Math.round(monto * 100) / 100
     },
     setCostoDoctorPorcentaje (costoId, value) {
       const safePercent = [0, 20, 30, 50].includes(Number(value)) ? Number(value) : 0
@@ -1443,7 +1445,7 @@ export default {
       }, 20)
     },
     setDoctorEgresoManual (value) {
-      const nextValue = Math.max(Math.round(Number(value || 0)), 0)
+      const nextValue = Math.max(Math.round(Number(value || 0) * 100) / 100, 0)
       if (Number(this.form.egreso || 0) !== nextValue) {
         this.form.egreso = nextValue
       }
@@ -1589,7 +1591,7 @@ export default {
             }
           }
           this.loadCostosValues(itemRes.data.costo_items || [])
-          this.form.egreso = Math.round(Number(this.form.egreso || 0))
+          this.form.egreso = Math.round(Number(this.form.egreso || 0) * 100) / 100
           this.suppressDoctorPercentageApply = true
           this.doctorPagoPorcentaje = this.firstCostoDoctorPercentage()
           this.metodoPago = this.detectMetodoPago()

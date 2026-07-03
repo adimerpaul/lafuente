@@ -101,7 +101,7 @@ class CajaRecepcionController extends Controller
         $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
 
         $pdf = Pdf::loadView('pdf.caja_recepciones_reporte', [
-            'items' => $items,
+            'items' => $activeItems->values(),
             'summary' => $summary,
             'fechaInicio' => $request->get('fechaInicio'),
             'fechaFin' => $request->get('fechaFin'),
@@ -142,7 +142,7 @@ class CajaRecepcionController extends Controller
         $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
         $fileName = 'Caja_Recepcion_' . now()->format('Ymd_His');
 
-        return (new CajaRecepcionesExcelExport($items, $summary, [
+        return (new CajaRecepcionesExcelExport($activeItems->values(), $summary, [
             'fechaInicio' => $request->get('fechaInicio'),
             'fechaFin' => $request->get('fechaFin'),
             'search' => $request->get('search'),
