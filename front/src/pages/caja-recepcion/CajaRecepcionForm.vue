@@ -1061,7 +1061,6 @@ export default {
   watch: {
     recaudadoTotal () {
       this.syncPaymentAmounts()
-      this.syncDoctorEgresoAmount()
     },
     costoFarmaciaMonto (value) {
       if (Number(this.form.costo_farmacia || 0) !== value) {

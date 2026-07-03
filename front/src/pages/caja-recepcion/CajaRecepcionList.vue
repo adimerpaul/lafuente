@@ -87,6 +87,14 @@
                   <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
                   <q-item-section>PDF</q-item-section>
                 </q-item>
+                <q-item clickable v-close-popup @click="exportPdfFarmacia">
+                  <q-item-section avatar><q-icon name="medication" /></q-item-section>
+                  <q-item-section>PDF Farmacia</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="exportPdfHonorarios">
+                  <q-item-section avatar><q-icon name="local_hospital" /></q-item-section>
+                  <q-item-section>PDF Honorarios doctor</q-item-section>
+                </q-item>
               </q-list>
             </q-btn-dropdown>
           </div>
@@ -311,6 +319,15 @@ export default {
       }
     },
     exportPdf () {
+      this.openReportPdf('pdf')
+    },
+    exportPdfFarmacia () {
+      this.openReportPdf('pdf-farmacia')
+    },
+    exportPdfHonorarios () {
+      this.openReportPdf('pdf-honorarios')
+    },
+    openReportPdf (endpoint) {
       if (!this.items.length) {
         this.$q.notify({ type: 'warning', message: 'No hay registros para exportar en PDF' })
         return
@@ -323,7 +340,7 @@ export default {
         search: this.filters.search || ''
       })
 
-      const url = `${this.$url}/../caja-recepciones/pdf?${params.toString()}`
+      const url = `${this.$url}/../caja-recepciones/${endpoint}?${params.toString()}`
       window.open(url, '_blank')
     },
     printTicket (item) {

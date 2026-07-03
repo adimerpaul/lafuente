@@ -149,6 +149,71 @@ class CajaRecepcionController extends Controller
         ], $userLabel, $fileName))->download();
     }
 
+    public function pdfFarmacia(Request $request)
+    {
+        $items = $this->queryIndex($request)->orderBy('fecha')->orderBy('id')->get();
+        $activeItems = $items->where('estado', '!=', 'Anulado');
+
+        $rows = $activeItems
+            ->filter(fn ($item) => (float) $item->costo_farmacia > 0)
+            ->values();
+
+        $totalFarmacia = (float) $rows->sum('costo_farmacia');
+
+        $userId = $request->get('user_id');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+
+        $pdf = Pdf::loadView('pdf.caja_farmacia_reporte', [
+            'items' => $rows,
+            'totalFarmacia' => $totalFarmacia,
+            'fechaInicio' => $request->get('fechaInicio'),
+            'fechaFin' => $request->get('fechaFin'),
+            'search' => $request->get('search'),
+            'userLabel' => $userLabel,
+            'hoy' => now(),
+        ])->setPaper('letter');
+
+        return $pdf->stream('caja_farmacia_reporte.pdf');
+    }
+
+    public function pdfHonorarios(Request $request)
+    {
+        $items = $this->queryIndex($request)->orderBy('fecha')->orderBy('id')->get();
+        $activeItems = $items->where('estado', '!=', 'Anulado');
+
+        $rows = $activeItems
+            ->filter(fn ($item) => (float) $item->egreso > 0)
+            ->values();
+
+        $porDoctor = $rows
+            ->groupBy(fn ($item) => optional($item->doctor)->nombre ?: 'Sin doctor asignado')
+            ->map(fn ($group, $doctor) => [
+                'doctor' => $doctor,
+                'cantidad' => $group->count(),
+                'monto' => (float) $group->sum('egreso'),
+            ])
+            ->sortByDesc('monto')
+            ->values();
+
+        $totalHonorarios = (float) $rows->sum('egreso');
+
+        $userId = $request->get('user_id');
+        $userLabel = $userId ? optional(User::find($userId))->name : 'Todos';
+
+        $pdf = Pdf::loadView('pdf.caja_honorarios_reporte', [
+            'items' => $rows,
+            'porDoctor' => $porDoctor,
+            'totalHonorarios' => $totalHonorarios,
+            'fechaInicio' => $request->get('fechaInicio'),
+            'fechaFin' => $request->get('fechaFin'),
+            'search' => $request->get('search'),
+            'userLabel' => $userLabel,
+            'hoy' => now(),
+        ])->setPaper('letter');
+
+        return $pdf->stream('caja_honorarios_reporte.pdf');
+    }
+
     public function pdfCarta(CajaRecepcion $cajaRecepcion)
     {
         $cajaRecepcion->load(['user', 'paciente', 'doctor']);
@@ -364,9 +429,9 @@ class CajaRecepcionController extends Controller
                 'costo_id'   => $item['costo_id'] ?? null,
                 'nombre'     => $item['nombre'] ?? '',
                 'monto'      => (float) ($item['monto'] ?? 0),
-                'doctor_porcentaje' => in_array((int) ($item['doctor_porcentaje'] ?? 20), [20, 30, 50], true)
-                    ? (int) ($item['doctor_porcentaje'] ?? 20)
-                    : 20,
+                'doctor_porcentaje' => in_array((int) ($item['doctor_porcentaje'] ?? 0), [0, 20, 30, 50], true)
+                    ? (int) ($item['doctor_porcentaje'] ?? 0)
+                    : 0,
                 'arancel_ids' => $item['arancel_ids'] ?? [],
             ]);
         }
