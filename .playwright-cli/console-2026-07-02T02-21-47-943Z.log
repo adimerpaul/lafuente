@@ -490,3 +490,10 @@
 [117582760ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
 [117583089ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
 [117583219ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:9000/login:0
+[117976260ms] [LOG] [vite] server connection lost. polling for restart... @ http://localhost:9000/@vite/client:374
+[117976616ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
+[117976622ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9000/node_modules/.q-cache/vite/spa/deps/vue.js?v=53e28394:0
+[117977433ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
+[117979231ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
+[117979237ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9000/node_modules/.q-cache/vite/spa/deps/vue.js?v=53e28394:0
+[117979539ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
