@@ -1,24 +1,20 @@
 <template>
   <q-page class="q-pa-sm">
     <q-card flat bordered>
-      <q-card-section class="row items-center bg-primary text-white">
-        <div>
-          <div class="text-h6">{{ isEdit ? 'Editar caja de recepcion' : 'Nueva caja de recepcion' }}</div>
-          <div class="text-caption">Registro rapido y ordenado para atencion de recepcion</div>
-        </div>
+      <q-card-section class="row items-center bg-primary text-white q-py-xs">
+        <q-btn flat round dense icon="arrow_back" color="white" @click="$router.push({ name: 'caja-recepciones' })" />
         <q-space />
         <q-btn
           v-if="isEdit && !form.is_anulado && canEditarCaja"
           flat
+          dense
           no-caps
           icon="cancel"
           label="Anular"
           color="white"
-          class="q-mr-sm"
           :loading="anulando"
           @click="anularDialog = true"
         />
-        <q-btn flat round dense icon="arrow_back" color="white" @click="$router.push({ name: 'caja-recepciones' })" />
       </q-card-section>
 
       <q-banner v-if="form.is_anulado" class="bg-negative text-white text-center text-weight-bold">
@@ -31,54 +27,46 @@
 
       <q-card-section class="q-pa-sm">
         <q-form @submit="save" :disable="form.is_anulado || formLocked">
-          <div class="row q-col-gutter-sm q-mb-sm">
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Recaudado total</div>
-                  <div class="text-h6 text-primary">{{ money(recaudadoTotal) }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">QR</div>
-                  <div class="text-h6 text-cyan">{{ money(form.qr) }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Farmacia</div>
-                  <div class="text-h6 text-orange">{{ money(form.costo_farmacia) }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Egreso doctor</div>
-                  <div class="text-h6 text-negative">{{ money(form.egreso) }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Efectivo</div>
-                  <div class="text-h6 text-positive">{{ money(form.efectivo) }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-12 col-md-2">
-              <q-card flat bordered>
-                <q-card-section class="q-pa-sm">
-                  <div class="text-caption">Saldo final caja</div>
-                  <div class="text-h6 text-indigo">{{ money(saldoFinal) }}</div>
-                </q-card-section>
-              </q-card>
+          <div class="stat-row q-mb-sm">
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">Recaudado total</div>
+                <div class="text-subtitle1 text-weight-bold text-primary">{{ money(recaudadoTotal) }}</div>
+              </q-card-section>
+            </q-card>
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">QR</div>
+                <div class="text-subtitle1 text-weight-bold text-cyan">{{ money(form.qr) }}</div>
+              </q-card-section>
+            </q-card>
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">Farmacia</div>
+                <div class="text-subtitle1 text-weight-bold text-orange">{{ money(form.costo_farmacia) }}</div>
+              </q-card-section>
+            </q-card>
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">Egreso doctor</div>
+                <div class="text-subtitle1 text-weight-bold text-negative">{{ money(form.egreso) }}</div>
+              </q-card-section>
+            </q-card>
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">Efectivo</div>
+                <div class="text-subtitle1 text-weight-bold text-positive">{{ money(form.efectivo) }}</div>
+              </q-card-section>
+            </q-card>
+            <q-card flat bordered class="stat-card">
+              <q-card-section class="q-py-xs q-px-sm">
+                <div class="text-caption">Saldo final caja</div>
+                <div class="text-subtitle1 text-weight-bold text-indigo">{{ money(saldoFinal) }}</div>
+              </q-card-section>
+            </q-card>
+            <div class="stat-actions">
+              <q-btn color="negative" label="Cancelar" no-caps dense @click="$router.push({ name: 'caja-recepciones' })" :loading="saving" />
+              <q-btn color="primary" label="Guardar" type="submit" no-caps dense :loading="saving" :disable="formLocked" />
             </div>
           </div>
 
@@ -133,11 +121,6 @@
                 </template>
               </q-select>
             </div>
-          </div>
-
-          <div class="text-right q-mb-sm">
-            <q-btn color="negative" label="Cancelar" no-caps @click="$router.push({ name: 'caja-recepciones' })" :loading="saving" />
-            <q-btn color="primary" label="Guardar" type="submit" no-caps class="q-ml-sm" :loading="saving" :disable="formLocked" />
           </div>
 
           <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary" class="text-grey-8">
@@ -305,16 +288,16 @@
               <div v-else-if="!costosCatalogo.length" class="text-center text-grey-6 q-py-lg">
                 No hay costos configurados. Ve a <strong>Financiera → Costos</strong> para crearlos.
               </div>
-              <div v-else class="row q-col-gutter-sm">
+              <div v-else class="row q-col-gutter-xs">
                 <div
                   v-for="costo in costosCatalogo"
                   :key="costo.id"
-                  class="col-12 col-sm-6 col-md-4 col-xl-3"
+                  class="col-6 col-sm-4 col-md-3"
                 >
                   <q-card flat bordered class="costo-item-card">
-                    <q-card-section class="q-pa-sm">
-                      <div class="row items-center no-wrap q-mb-sm">
-                        <div class="costo-item-icon q-mr-sm" :style="{ background: costo._hex }">
+                    <q-card-section class="q-pa-xs">
+                      <div class="row items-center no-wrap q-mb-xs">
+                        <div class="costo-item-icon q-mr-xs" :style="{ background: costo._hex }">
                           <q-icon :name="costo.icono || 'payments'" color="white" size="xs" />
                         </div>
                         <div class="col text-caption text-weight-bold ellipsis">{{ costo.nombre }}</div>
@@ -322,6 +305,7 @@
                           dense
                           no-caps
                           unelevated
+                          size="sm"
                           icon="fact_check"
                           label=""
                           color="teal-7"
@@ -350,22 +334,6 @@
                           <span class="text-caption text-grey-7">Bs</span>
                         </template>
                       </q-input>
-                      <div class="q-mt-sm">
-                        <div class="text-caption text-weight-medium">Porcentaje doctor</div>
-                        <q-option-group
-                          :model-value="costoDoctorPorcentaje(costo.id)"
-                          :options="doctorPagoPorcentajeOptions"
-                          type="radio"
-                          inline
-                          dense
-                          color="negative"
-                          class="doctor-percent-options"
-                          @update:model-value="setCostoDoctorPorcentaje(costo.id, $event)"
-                        />
-                        <div class="text-caption text-grey-7">
-                          Doctor: {{ money(costoDoctorMonto(costo.id)) }}
-                        </div>
-                      </div>
                     </q-card-section>
                   </q-card>
                 </div>
@@ -1146,7 +1114,7 @@ export default {
         if (item.costo_id) {
           values[item.costo_id] = {
             monto: item.monto || 0,
-            doctor_porcentaje: [0, 20, 30, 50].includes(Number(item.doctor_porcentaje)) ? Number(item.doctor_porcentaje) : 0,
+            doctor_porcentaje: Math.min(Math.max(Number(item.doctor_porcentaje) || 0, 0), 100),
             arancel_ids: item.arancel_ids || []
           }
         }
@@ -1178,7 +1146,9 @@ export default {
       return Math.round(monto * 100) / 100
     },
     setCostoDoctorPorcentaje (costoId, value) {
-      const safePercent = [0, 20, 30, 50].includes(Number(value)) ? Number(value) : 0
+      let safePercent = Number(value)
+      if (isNaN(safePercent)) safePercent = 0
+      safePercent = Math.min(Math.max(safePercent, 0), 100)
       const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
       this.costosValues = {
         ...this.costosValues,
@@ -1833,7 +1803,7 @@ export default {
             costo_id: parseInt(costo_id),
             nombre: costo?.nombre || '',
             monto: Number(v.monto || 0),
-            doctor_porcentaje: [0, 20, 30, 50].includes(Number(v.doctor_porcentaje)) ? Number(v.doctor_porcentaje) : 0,
+            doctor_porcentaje: Math.min(Math.max(Number(v.doctor_porcentaje) || 0, 0), 100),
             arancel_ids: v.arancel_ids || [],
           }
         })
@@ -1894,6 +1864,36 @@ export default {
   pointer-events: none;
   opacity: 0.6;
   filter: grayscale(0.3);
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stat-card {
+  flex: 1 1 120px;
+  min-width: 100px;
+  border-radius: 8px;
+}
+
+.stat-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 599px) {
+  .stat-card {
+    flex: 1 1 45%;
+  }
+  .stat-actions {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
 }
 
 .cost-card {

@@ -429,9 +429,7 @@ class CajaRecepcionController extends Controller
                 'costo_id'   => $item['costo_id'] ?? null,
                 'nombre'     => $item['nombre'] ?? '',
                 'monto'      => (float) ($item['monto'] ?? 0),
-                'doctor_porcentaje' => in_array((int) ($item['doctor_porcentaje'] ?? 0), [0, 20, 30, 50], true)
-                    ? (int) ($item['doctor_porcentaje'] ?? 0)
-                    : 0,
+                'doctor_porcentaje' => max(0, min(100, (int) ($item['doctor_porcentaje'] ?? 0))),
                 'arancel_ids' => $item['arancel_ids'] ?? [],
             ]);
         }
