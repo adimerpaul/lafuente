@@ -21,6 +21,8 @@ class CajaRecepcionController extends Controller
         $fechaFin = $request->get('fechaFin');
         $userId = $request->get('user_id');
         $pacienteId = $request->get('paciente_id');
+        $doctorId = $request->get('doctor_id');
+        $punto = $request->get('punto');
         $cobrosRetrasados = $request->boolean('cobros_retrasados');
         $cobradoPorUserId = $request->get('cobrado_por_user_id');
         $search = trim((string) $request->get('search', ''));
@@ -30,6 +32,8 @@ class CajaRecepcionController extends Controller
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->when($pacienteId, fn ($q) => $q->where('paciente_id', $pacienteId))
+            ->when($doctorId, fn ($q) => $q->where('doctor_id', $doctorId))
+            ->when($request->filled('punto'), fn ($q) => $q->where('punto', (int) $punto))
             ->when($cobrosRetrasados, fn ($q) => $q->where('estado_cobro', 'Pendiente'))
             ->when($cobradoPorUserId, fn ($q) => $q->where('cobrado_por_user_id', $cobradoPorUserId))
             ->when($search !== '', function ($q) use ($search) {

@@ -54,13 +54,13 @@
     <q-card flat bordered class="q-mb-xs">
       <q-card-section class="q-pa-sm">
         <div class="row q-col-gutter-sm items-center">
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-input v-model="filters.fechaInicio" dense outlined type="date" label="Fecha inicio" />
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-input v-model="filters.fechaFin" dense outlined type="date" label="Fecha fin" />
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-select
               v-model="filters.user_id"
               :options="usersOptions"
@@ -71,33 +71,64 @@
               label="Encargado"
             />
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
+            <q-select
+              v-model="filters.doctor_id"
+              :options="doctorOptions"
+              dense
+              outlined
+              emit-value
+              map-options
+              clearable
+              label="Doctor"
+            />
+          </div>
+          <div class="col-6 col-md-2">
+            <q-select
+              v-model="filters.punto"
+              :options="puntoOptions"
+              dense
+              outlined
+              emit-value
+              map-options
+              label="Punto"
+            />
+          </div>
+          <div class="col-6 col-md-2">
             <q-input v-model="filters.search" dense outlined clearable label="Buscar paciente/ficha" />
           </div>
-          <div class="col-12 col-md-4 text-right">
-            <q-btn color="primary" label="Buscar" no-caps icon="search" class="q-mr-sm" :loading="loading" @click="fetchItems" />
-            <q-btn color="positive" label="Nueva caja" no-caps icon="add_circle_outline" class="q-mr-sm" :to="{ name: 'caja-recepciones-nuevo' }" />
-            <q-btn-dropdown color="secondary" label="Reportes" no-caps icon="assessment">
-              <q-list dense>
-                <q-item clickable v-close-popup @click="exportExcel">
-                  <q-item-section avatar><q-icon name="table_view" /></q-item-section>
-                  <q-item-section>Excel</q-item-section>
-                </q-item>
-                <q-item clickable v-close-popup @click="exportPdf">
-                  <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
-                  <q-item-section>PDF</q-item-section>
-                </q-item>
-                <q-item clickable v-close-popup @click="exportPdfFarmacia">
-                  <q-item-section avatar><q-icon name="medication" /></q-item-section>
-                  <q-item-section>PDF Farmacia</q-item-section>
-                </q-item>
-                <q-item clickable v-close-popup @click="exportPdfHonorarios">
-                  <q-item-section avatar><q-icon name="local_hospital" /></q-item-section>
-                  <q-item-section>PDF Honorarios doctor</q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-          </div>
+        </div>
+        <div class="row justify-end items-center q-gutter-sm q-mt-sm">
+          <q-btn color="primary" label="Buscar" no-caps icon="search" :loading="loading" @click="fetchItems" />
+          <q-btn color="positive" label="Nueva caja" no-caps icon="add_circle_outline" :to="{ name: 'caja-recepciones-nuevo' }" />
+          <q-btn-dropdown color="secondary" label="Reportes" no-caps icon="assessment">
+            <q-list dense>
+              <q-item clickable v-close-popup @click="exportExcel()">
+                <q-item-section avatar><q-icon name="table_view" /></q-item-section>
+                <q-item-section>Excel</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportExcel(1)">
+                <q-item-section avatar><q-icon name="table_view" /></q-item-section>
+                <q-item-section>Excel Punto 1 (Factura)</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportExcel(0)">
+                <q-item-section avatar><q-icon name="table_view" /></q-item-section>
+                <q-item-section>Excel Punto 0 (Recibo)</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportPdf">
+                <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
+                <q-item-section>PDF</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportPdfFarmacia">
+                <q-item-section avatar><q-icon name="medication" /></q-item-section>
+                <q-item-section>PDF Farmacia</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="exportPdfHonorarios">
+                <q-item-section avatar><q-icon name="local_hospital" /></q-item-section>
+                <q-item-section>PDF Honorarios doctor</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
         </div>
         <div class="row q-col-gutter-sm q-mt-sm">
           <div class="col-12 col-md-3">
@@ -222,6 +253,7 @@ export default {
       loading: false,
       items: [],
       users: [],
+      doctores: [],
       summary: {
         total_recaudado: 0,
         total_ingresos: 0,
@@ -237,13 +269,24 @@ export default {
         fechaInicio: moment().format('YYYY-MM-DD'),
         fechaFin: moment().format('YYYY-MM-DD'),
         user_id: '',
+        doctor_id: '',
+        punto: '',
         search: ''
-      }
+      },
+      puntoOptions: [
+        { label: 'Todos', value: '' },
+        { label: '1', value: 1 },
+        { label: '0', value: 0 }
+      ]
     }
   },
   computed: {
     usersOptions () {
       return [{ label: 'Todos', value: '' }, ...this.users.map(user => ({ label: user.name, value: user.id }))]
+    },
+    doctorOptions () {
+      const ordenados = [...this.doctores].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }))
+      return [{ label: 'Todos', value: '' }, ...ordenados.map(doctor => ({ label: doctor.nombre, value: doctor.id }))]
     },
     activeItems () {
       return this.items.filter(item => !item.is_anulado)
@@ -251,6 +294,7 @@ export default {
   },
   mounted () {
     this.fetchUsers()
+    this.fetchDoctores()
     this.fetchItems()
   },
   methods: {
@@ -262,6 +306,13 @@ export default {
         this.users = res.data || []
       }).catch(err => {
         this.$alert.error(err.response?.data?.message || 'No se pudieron cargar usuarios')
+      })
+    },
+    fetchDoctores () {
+      this.$axios.get('doctores').then(res => {
+        this.doctores = res.data || []
+      }).catch(err => {
+        this.$alert.error(err.response?.data?.message || 'No se pudieron cargar doctores')
       })
     },
     fetchItems () {
@@ -298,7 +349,7 @@ export default {
       a.remove()
       window.URL.revokeObjectURL(url)
     },
-    async exportExcel () {
+    async exportExcel (puntoOverride = null) {
       if (!this.items.length) {
         this.$q.notify({ type: 'warning', message: 'No hay registros para exportar en Excel' })
         return
@@ -306,12 +357,17 @@ export default {
 
       this.loading = true
       try {
+        const params = { ...this.filters }
+        if (puntoOverride !== null) {
+          params.punto = puntoOverride
+        }
         const res = await this.$axios.get('caja-recepciones/excel', {
-          params: this.filters,
+          params,
           responseType: 'blob'
         })
         const suffix = `${this.filters.fechaInicio || 'inicio'}_a_${this.filters.fechaFin || 'fin'}`
-        this.triggerBlobDownload(res.data, `Caja_Recepcion_${suffix}.xlsx`)
+        const puntoSuffix = puntoOverride !== null ? `_Punto${puntoOverride}` : ''
+        this.triggerBlobDownload(res.data, `Caja_Recepcion_${suffix}${puntoSuffix}.xlsx`)
       } catch (err) {
         this.$alert.error(err.response?.data?.message || 'No se pudo exportar el Excel')
       } finally {
@@ -337,6 +393,7 @@ export default {
         fechaInicio: this.filters.fechaInicio || '',
         fechaFin: this.filters.fechaFin || '',
         user_id: this.filters.user_id || '',
+        doctor_id: this.filters.doctor_id || '',
         search: this.filters.search || ''
       })
 

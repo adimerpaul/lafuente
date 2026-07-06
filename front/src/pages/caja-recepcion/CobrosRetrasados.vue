@@ -57,13 +57,13 @@
     <q-card flat bordered class="q-mb-xs">
       <q-card-section class="q-pa-sm">
         <div class="row q-col-gutter-sm items-center">
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-input v-model="filters.fechaInicio" dense outlined type="date" label="Fecha inicio" />
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-input v-model="filters.fechaFin" dense outlined type="date" label="Fecha fin" />
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-6 col-md-2">
             <q-select
               v-model="filters.cobrado_por_user_id"
               :options="usersOptions"
@@ -71,12 +71,20 @@
               label="Cobrado por"
             />
           </div>
-          <div class="col-12 col-md-3">
+          <div class="col-6 col-md-2">
+            <q-select
+              v-model="filters.doctor_id"
+              :options="doctorOptions"
+              dense outlined emit-value map-options clearable
+              label="Doctor"
+            />
+          </div>
+          <div class="col-12 col-md-4">
             <q-input v-model="filters.search" dense outlined clearable label="Buscar paciente / ficha" />
           </div>
-          <div class="col-12 col-md-3 text-right">
-            <q-btn color="primary" label="Buscar" no-caps icon="search" :loading="loading" @click="fetchItems" />
-          </div>
+        </div>
+        <div class="row justify-end q-mt-sm">
+          <q-btn color="primary" label="Buscar" no-caps icon="search" :loading="loading" @click="fetchItems" />
         </div>
         <div class="row q-col-gutter-sm q-mt-xs">
           <div class="col-auto">
@@ -230,11 +238,13 @@ export default {
     return {
       items: [],
       users: [],
+      doctores: [],
       loading: false,
       filters: {
         fechaInicio: moment().format('YYYY-MM-DD'),
         fechaFin: moment().format('YYYY-MM-DD'),
         cobrado_por_user_id: null,
+        doctor_id: null,
         search: ''
       },
       cobroDialog: false,
@@ -246,6 +256,7 @@ export default {
   },
   mounted () {
     this.fetchUsers()
+    this.fetchDoctores()
     this.fetchItems()
   },
   computed: {
@@ -253,6 +264,13 @@ export default {
       return [
         { label: 'Todos', value: null },
         ...this.users.map(u => ({ label: u.name, value: u.id }))
+      ]
+    },
+    doctorOptions () {
+      const ordenados = [...this.doctores].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }))
+      return [
+        { label: 'Todos', value: null },
+        ...ordenados.map(d => ({ label: d.nombre, value: d.id }))
       ]
     },
     activos () {
@@ -286,6 +304,11 @@ export default {
         this.users = res.data || []
       }).catch(() => {})
     },
+    fetchDoctores () {
+      this.$axios.get('doctores').then(res => {
+        this.doctores = res.data || []
+      }).catch(() => {})
+    },
     fetchItems () {
       this.loading = true
       this.$axios.get('caja-recepciones', {
@@ -294,6 +317,7 @@ export default {
           fechaInicio: this.filters.fechaInicio || undefined,
           fechaFin: this.filters.fechaFin || undefined,
           cobrado_por_user_id: this.filters.cobrado_por_user_id || undefined,
+          doctor_id: this.filters.doctor_id || undefined,
           search: this.filters.search || undefined
         }
       }).then(res => {

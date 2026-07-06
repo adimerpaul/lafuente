@@ -98,7 +98,7 @@ class CajaRecepcionesExcelExport
 
         $baseHeaders = [
             '#', 'Fecha', 'Hora', 'Estado', 'Cobro', 'Paciente', 'Ficha', 'Encargado',
-            'Documento', 'Atencion', 'QR', 'Efectivo', 'Egreso', 'Recaudado', 'Final',
+            'Documento', 'N Factura', 'Atencion', 'QR', 'Efectivo', 'Egreso', 'Recaudado', 'Final',
         ];
         $distributionHeaders = [
             'CLI 30%', 'Laboratorio 70%', 'Total laboratorio',
@@ -114,8 +114,8 @@ class CajaRecepcionesExcelExport
 
         $groupRow = 9;
         $headerRow = 10;
-        $this->writeGroupHeader($sheet, 'A', 'J', $groupRow, 'DATOS DE CAJA', self::BG_BASE);
-        $this->writeGroupHeader($sheet, 'K', 'O', $groupRow, 'PAGOS Y CIERRE', self::BG_PAYMENT);
+        $this->writeGroupHeader($sheet, 'A', 'K', $groupRow, 'DATOS DE CAJA', self::BG_BASE);
+        $this->writeGroupHeader($sheet, 'L', 'P', $groupRow, 'PAGOS Y CIERRE', self::BG_PAYMENT);
 
         $costStart = count($baseHeaders) + 1;
         $costEnd = $costStart + count($costColumns) - 1;
@@ -175,6 +175,7 @@ class CajaRecepcionesExcelExport
                 (string) ($item->numero_ficha ?? ''),
                 (string) optional($item->user)->name,
                 (string) ($item->documento_label ?? ''),
+                (string) ($item->nombre_factura ?? ''),
                 (string) ($item->tipo_atencion ?? ''),
                 (float) ($item->qr ?? 0),
                 (float) ($item->efectivo ?? 0),
@@ -196,8 +197,8 @@ class CajaRecepcionesExcelExport
                 'borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF' . self::BORDER]]],
             ]);
             $sheet->getStyle("A{$dataRow}:E{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle("K{$dataRow}:{$lastCol}{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle("K{$dataRow}:{$lastCol}{$dataRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle("L{$dataRow}:{$lastCol}{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle("L{$dataRow}:{$lastCol}{$dataRow}")->getNumberFormat()->setFormatCode('#,##0.00');
             $sheet->getRowDimension($dataRow)->setRowHeight(18);
             $dataRow++;
         }
@@ -379,13 +380,13 @@ class CajaRecepcionesExcelExport
     private function writeTotalsRow($sheet, int $row, array $headers, array $costColumns): void
     {
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
-        $sheet->mergeCells("A{$row}:J{$row}");
+        $sheet->mergeCells("A{$row}:K{$row}");
         $sheet->setCellValue("A{$row}", 'TOTAL GENERAL');
 
-        for ($colIndex = 11; $colIndex <= count($headers); $colIndex++) {
+        for ($colIndex = 12; $colIndex <= count($headers); $colIndex++) {
             $col = Coordinate::stringFromColumnIndex($colIndex);
-            $start = 11;
-            $end = max(11, $row - 1);
+            $start = 12;
+            $end = max(12, $row - 1);
             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$start}:{$col}{$end})");
         }
 
@@ -399,14 +400,14 @@ class CajaRecepcionesExcelExport
             ],
         ]);
         $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle("K{$row}:{$lastCol}{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle("K{$row}:{$lastCol}{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle("L{$row}:{$lastCol}{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle("L{$row}:{$lastCol}{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
         $sheet->getRowDimension($row)->setRowHeight(22);
     }
 
     private function applyDetalleWidths($sheet, int $headerCount, int $baseCount, int $costCount): void
     {
-        $widths = [5, 11, 8, 10, 11, 28, 16, 20, 12, 16, 12, 12, 12, 13, 12];
+        $widths = [5, 11, 8, 10, 11, 28, 16, 20, 12, 14, 16, 12, 12, 12, 13, 12];
         foreach ($widths as $index => $width) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index + 1))->setWidth($width);
         }
