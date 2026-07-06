@@ -497,3 +497,19 @@
 [117979231ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
 [117979237ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9000/node_modules/.q-cache/vite/spa/deps/vue.js?v=53e28394:0
 [117979539ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
+[118361177ms] [LOG] [vite] server connection lost. polling for restart... @ http://localhost:9000/@vite/client:374
+[118361210ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/__vite_ping:0
+[118375020ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:9000/@vite/client:215
+[118377791ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9000/node_modules/.q-cache/vite/spa/deps/vue.js?v=53e28394:0
+[118377795ms] [LOG] [vite] connecting... @ http://localhost:9000/@vite/client:183
+[118378184ms] [LOG] [vite] connected. @ http://localhost:9000/@vite/client:211
+[118379919ms] [LOG] [vite] server connection lost. polling for restart... @ http://localhost:9000/@vite/client:374
+[118379924ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/__vite_ping:0
+[144720076ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:9000/@vite/client:215
+[144722090ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/@vite/client:0
+[144722090ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/.quasar/client-entry.js?t=1783076887148:0
+[144722095ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/favicon.ico:0
+[144722103ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/icons/favicon-32x32.png:0
+[144722105ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/icons/favicon-16x16.png:0
+[144722107ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/icons/favicon-96x96.png:0
+[144722114ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:9000/icons/favicon-128x128.png:0

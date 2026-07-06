@@ -59,32 +59,32 @@ export class Imprimir {
       }
 
       const styles = `
-      @page { margin: 6mm 8mm; }
+      @page { margin: 4mm 6mm; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      .tk { width: 280px; margin: 0 auto; font-family: "Courier New", Courier, monospace; font-size: 11px; color: #111; line-height: 1.25; }
-      .tk-header { background: #111; color: #fff; padding: 5px 6px 4px; text-align: center; }
-      .tk-header .clinic { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-      .tk-header .sub { font-size: 9px; color: #bbb; margin-top: 2px; line-height: 1.3; }
-      .tk-title { background: #333; color: #fff; text-align: center; font-size: 11px; font-weight: 700; padding: 3px 0; letter-spacing: 0.1em; text-transform: uppercase; }
-      .tk-sec { padding: 3px 6px; }
+      .tk { width: 340px; margin: 0 auto; font-family: "Courier New", Courier, monospace; font-size: 14px; font-weight: 700; color: #111; line-height: 1.05; }
+      .tk-header { background: #111; color: #fff; padding: 4px 8px 3px; text-align: center; }
+      .tk-header .clinic { font-size: 16px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+      .tk-header .sub { font-size: 12px; color: #ddd; margin-top: 1px; line-height: 1.1; font-weight: 700; }
+      .tk-title { background: #333; color: #fff; text-align: center; font-size: 14px; font-weight: 700; padding: 2px 0; letter-spacing: 0.1em; text-transform: uppercase; }
+      .tk-sec { padding: 1px 8px; }
       .tk-sep { border: none; border-top: 1px dashed #999; margin: 0; }
       .tk-sep-solid { border: none; border-top: 2px solid #111; margin: 0; }
-      .tk-row { display: flex; justify-content: space-between; align-items: baseline; padding: 1px 0; }
-      .tk-row .lbl { font-weight: 700; font-size: 10px; color: #555; text-transform: uppercase; min-width: 66px; flex-shrink: 0; }
-      .tk-row .val { text-align: right; font-size: 11px; }
+      .tk-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0; }
+      .tk-row .lbl { font-weight: 700; font-size: 13px; color: #333; text-transform: uppercase; min-width: 84px; flex-shrink: 0; }
+      .tk-row .val { text-align: right; font-size: 14px; font-weight: 700; }
       .tk-row .val.bold { font-weight: 700; }
-      .tk-amt { padding: 3px 6px; }
-      .tk-amt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 1px 0; }
-      .tk-amt-row .albl { font-size: 10px; color: #555; text-transform: uppercase; }
-      .tk-amt-row .aval { font-size: 11px; font-weight: 600; }
-      .tk-total { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px; background: #111; color: #fff; margin-top: 2px; }
-      .tk-total .tlbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-      .tk-total .tval { font-size: 12px; font-weight: 700; }
-      .tk-obs { padding: 2px 6px; font-size: 12px; color: #333; }
-      .tk-extra { padding: 2px 6px; }
-      .tk-extra .tk-row .lbl { font-size: 9px; }
-      .tk-extra .tk-row .val { font-size: 10px; }
-      .tk-footer { text-align: center; font-size: 9px; color: #777; padding: 3px 6px; border-top: 1px dashed #aaa; margin-top: 2px; }
+      .tk-amt { padding: 1px 8px; }
+      .tk-amt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0; }
+      .tk-amt-row .albl { font-size: 13px; color: #333; text-transform: uppercase; font-weight: 700; }
+      .tk-amt-row .aval { font-size: 14px; font-weight: 700; }
+      .tk-total { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 8px; background: #111; color: #fff; margin-top: 1px; }
+      .tk-total .tlbl { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+      .tk-total .tval { font-size: 16px; font-weight: 700; }
+      .tk-obs { padding: 1px 8px; font-size: 14px; color: #111; font-weight: 700; }
+      .tk-extra { padding: 1px 8px; }
+      .tk-extra .tk-row .lbl { font-size: 12px; }
+      .tk-extra .tk-row .val { font-size: 13px; }
+      .tk-footer { text-align: center; font-size: 11px; color: #333; font-weight: 700; padding: 2px 8px; border-top: 1px dashed #aaa; margin-top: 1px; }
       `
 
       const html = `
