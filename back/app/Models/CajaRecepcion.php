@@ -92,6 +92,8 @@ class CajaRecepcion extends Model implements Auditable
         'qr' => 'float',
         'efectivo' => 'float',
         'egreso' => 'float',
+        'doctor_pagado' => 'boolean',
+        'doctor_pagado_at' => 'datetime',
         'recaudado_total' => 'float',
         'costo_atencion_medica' => 'float',
         'costo_curacion' => 'float',
@@ -145,6 +147,11 @@ class CajaRecepcion extends Model implements Auditable
     public function cobradoPor()
     {
         return $this->belongsTo(User::class, 'cobrado_por_user_id');
+    }
+
+    public function doctorPagadoPor()
+    {
+        return $this->belongsTo(User::class, 'doctor_pagado_por_user_id');
     }
 
     public function observaciones()

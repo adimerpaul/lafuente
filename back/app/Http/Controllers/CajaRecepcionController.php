@@ -25,7 +25,7 @@ class CajaRecepcionController extends Controller
         $cobradoPorUserId = $request->get('cobrado_por_user_id');
         $search = trim((string) $request->get('search', ''));
 
-        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems'])
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
@@ -348,7 +348,7 @@ class CajaRecepcionController extends Controller
 
     public function show(CajaRecepcion $cajaRecepcion)
     {
-        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems'])->findOrFail($cajaRecepcion->id);
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor'])->findOrFail($cajaRecepcion->id);
     }
 
     public function store(Request $request)
@@ -383,7 +383,7 @@ class CajaRecepcionController extends Controller
             return $cajaRecepcion;
         });
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']), 201);
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor']), 201);
     }
 
     public function update(Request $request, CajaRecepcion $cajaRecepcion)
@@ -419,7 +419,7 @@ class CajaRecepcionController extends Controller
             }
         });
 
-        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems']));
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor']));
     }
 
     private function saveCostosDetalle(CajaRecepcion $cajaRecepcion, array $costosDetalle): void
@@ -452,6 +452,24 @@ class CajaRecepcionController extends Controller
         $cajaRecepcion->update(['estado' => 'Anulado']);
 
         return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor']));
+    }
+
+    public function marcarDoctorPagado(Request $request, CajaRecepcion $cajaRecepcion)
+    {
+        if (! $request->user()->can('Caja recepcion editar')) {
+            return response()->json(['message' => 'No tiene permiso para editar registros de caja de recepcion.'], 403);
+        }
+
+        if ($cajaRecepcion->doctor_pagado) {
+            return response()->json(['message' => 'El pago al doctor ya fue confirmado y no puede revertirse.'], 422);
+        }
+
+        $cajaRecepcion->doctor_pagado = true;
+        $cajaRecepcion->doctor_pagado_at = now();
+        $cajaRecepcion->doctor_pagado_por_user_id = $request->user()->id;
+        $cajaRecepcion->save();
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor']));
     }
 
     public function cobrar(Request $request, CajaRecepcion $cajaRecepcion)

@@ -418,6 +418,21 @@
                     <div class="text-caption text-grey-7">
                       Suma por costos: {{ money(doctorEgresoCalculado) }}
                     </div>
+                    <q-separator class="q-my-sm" />
+                    <q-checkbox
+                      :model-value="!!form.doctor_pagado"
+                      :disable="!!form.doctor_pagado"
+                      label="El doctor recibió el dinero"
+                      color="positive"
+                      dense
+                      @update:model-value="onToggleDoctorPagado"
+                    />
+                    <div v-if="form.doctor_pagado" class="text-caption text-grey-7 q-mt-xs">
+                      Confirmado el {{ formatObservacionDate(form.doctor_pagado_at) }}<span v-if="form.doctor_pagado_por?.name"> por {{ form.doctor_pagado_por.name }}</span>
+                    </div>
+                    <div v-else-if="!isEdit" class="text-caption text-grey-6 q-mt-xs">
+                      Guarda el registro para poder confirmar el pago al doctor
+                    </div>
                   </q-card>
                 </div>
                 <div class="col-12 col-md-6">
@@ -806,6 +821,22 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="doctorPagadoDialog" persistent>
+      <q-card style="min-width: 320px; max-width: 95vw">
+        <q-card-section class="row items-center">
+          <q-avatar icon="payments" color="positive" text-color="white" />
+          <span class="q-ml-sm text-h6">Confirmar pago al doctor</span>
+        </q-card-section>
+        <q-card-section class="q-pt-none text-grey-8">
+          Esta acción marca que el doctor <strong>ya recibió su dinero</strong>. Una vez confirmado, <strong>no podrás revertirlo</strong>.
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" no-caps @click="doctorPagadoDialog = false" :disable="confirmandoDoctorPagado" />
+          <q-btn color="positive" label="Sí, ya recibió el dinero" no-caps icon="check" :loading="confirmandoDoctorPagado" @click="confirmDoctorPagado" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
   <div id="myElement" class="hidden"></div>
 </template>
@@ -853,6 +884,9 @@ const emptyForm = () => ({
   egreso: 0,
   costo_farmacia: 0,
   estado_cobro: 'Pagado',
+  doctor_pagado: false,
+  doctor_pagado_at: null,
+  doctor_pagado_por: null,
 })
 
 const createEmptyObservacionForm = () => ({
@@ -870,6 +904,8 @@ export default {
       saving: false,
       anulando: false,
       anularDialog: false,
+      doctorPagadoDialog: false,
+      confirmandoDoctorPagado: false,
       savingPatient: false,
       savingDoctor: false,
       savingObservacion: false,
@@ -1849,6 +1885,27 @@ export default {
           this.$alert.error(err.response?.data?.message || 'No se pudo anular el registro')
         })
         .finally(() => { this.anulando = false })
+    },
+    onToggleDoctorPagado (value) {
+      if (!value || this.form.doctor_pagado) return
+      if (!this.isEdit) {
+        this.$alert.error('Guarda el registro antes de confirmar el pago al doctor')
+        return
+      }
+      this.doctorPagadoDialog = true
+    },
+    confirmDoctorPagado () {
+      this.confirmandoDoctorPagado = true
+      this.$axios.put(`caja-recepciones/${this.$route.params.id}/marcar-doctor-pagado`)
+        .then(res => {
+          this.form = { ...this.form, ...res.data }
+          this.doctorPagadoDialog = false
+          this.$alert.success('Pago al doctor confirmado')
+        })
+        .catch(err => {
+          this.$alert.error(err.response?.data?.message || 'No se pudo confirmar el pago al doctor')
+        })
+        .finally(() => { this.confirmandoDoctorPagado = false })
     },
     async save () {
       if (this.formLocked) {
