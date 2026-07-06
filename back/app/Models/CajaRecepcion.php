@@ -55,6 +55,7 @@ class CajaRecepcion extends Model implements Auditable
         'laboratorio_nombre',
         'medico_ecografia',
         'observaciones',
+        'comentario',
         'qr',
         'efectivo',
         'egreso',

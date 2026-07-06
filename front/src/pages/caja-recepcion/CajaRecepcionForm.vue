@@ -349,18 +349,32 @@
             <q-tab-panel name="pagos" class="q-pa-sm">
               <div class="row q-col-gutter-sm">
                 <div class="col-12 col-md-4">
-                  <q-select
-                    v-model="metodoPago"
-                    :options="metodoPagoOptions"
+                  <q-input
+                    :model-value="form.efectivo"
                     dense
                     outlined
-                    emit-value
-                    map-options
-                    label="Metodo de pago"
-                  />
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    label="Efectivo"
+                    @update:model-value="onEfectivoInput"
+                  >
+                    <template #prepend><q-icon name="payments" /></template>
+                  </q-input>
                 </div>
-                <div v-if="showQr" class="col-12 col-md-4">
-                  <q-input v-model.number="form.qr" dense outlined type="number" min="0" step="0.01" label="Monto QR" />
+                <div class="col-12 col-md-4">
+                  <q-input
+                    :model-value="form.qr"
+                    dense
+                    outlined
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    label="QR"
+                    @update:model-value="onQrInput"
+                  >
+                    <template #prepend><q-icon name="qr_code" /></template>
+                  </q-input>
                 </div>
                 <div class="col-12 col-md-4">
                   <q-toggle
@@ -406,8 +420,11 @@
                     </div>
                   </q-card>
                 </div>
-                <div class="col-12">
+                <div class="col-12 col-md-6">
                   <q-input v-model="form.observaciones" dense outlined type="textarea" autogrow label="Observaciones" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <q-input v-model="form.comentario" dense outlined type="textarea" autogrow label="Comentario" />
                 </div>
               </div>
             </q-tab-panel>
@@ -830,6 +847,7 @@ const emptyForm = () => ({
   laboratorio_nombre: '',
   medico_ecografia: '',
   observaciones: '',
+  comentario: '',
   qr: 0,
   efectivo: 0,
   egreso: 0,
@@ -907,12 +925,6 @@ export default {
         { label: '0', value: 0 },
         { label: '1', value: 1 }
       ],
-      metodoPagoOptions: [
-        { label: 'Efectivo', value: 'efectivo' },
-        { label: 'QR', value: 'qr' },
-        { label: 'Mixto', value: 'mixto' },
-        { label: 'Pendiente', value: 'pendiente' }
-      ],
       doctorPagoPorcentaje: 0,
       suppressDoctorPercentageApply: false,
       doctorPagoPorcentajeOptions: [0, 20, 30, 50].map(value => ({
@@ -932,7 +944,11 @@ export default {
       return this.isEdit && !this.canEditarCaja
     },
     recaudadoTotal () {
-      return Object.values(this.costosValues).reduce((sum, v) => sum + Number(v.monto || 0), 0)
+      const farmaciaId = this.costoFarmaciaCatalogo?.id
+      return Object.entries(this.costosValues).reduce((sum, [id, v]) => {
+        if (farmaciaId && String(id) === String(farmaciaId)) return sum
+        return sum + Number(v.monto || 0)
+      }, 0)
     },
     arancelSelectionTotal () {
       if (!this.arancelDialogCosto) return 0
@@ -968,12 +984,6 @@ export default {
       set (value) {
         this.form.estado_pago = value ? 'Ahora' : 'Luego'
       }
-    },
-    showQr () {
-      return this.metodoPago === 'qr' || this.metodoPago === 'mixto'
-    },
-    showEfectivo () {
-      return this.metodoPago === 'efectivo' || this.metodoPago === 'mixto'
     },
     controlItems () {
       return controlCatalog.map(item => ({
@@ -1418,6 +1428,24 @@ export default {
       if (Number(this.form.egreso || 0) !== nextValue) {
         this.form.egreso = nextValue
       }
+    },
+    onEfectivoInput (value) {
+      const total = Number(this.recaudadoTotal || 0)
+      let efectivo = Number(value)
+      if (isNaN(efectivo)) efectivo = 0
+      efectivo = Math.min(Math.max(efectivo, 0), total)
+      this.form.efectivo = Math.round(efectivo * 100) / 100
+      this.form.qr = Math.round((total - efectivo) * 100) / 100
+      this.metodoPago = 'mixto'
+    },
+    onQrInput (value) {
+      const total = Number(this.recaudadoTotal || 0)
+      let qr = Number(value)
+      if (isNaN(qr)) qr = 0
+      qr = Math.min(Math.max(qr, 0), total)
+      this.form.qr = Math.round(qr * 100) / 100
+      this.form.efectivo = Math.round((total - qr) * 100) / 100
+      this.metodoPago = 'mixto'
     },
     syncPaymentAmounts () {
       const total = Number(this.recaudadoTotal || 0)

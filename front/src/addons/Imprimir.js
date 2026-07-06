@@ -85,7 +85,14 @@ export class Imprimir {
       .tk-extra .tk-row .lbl { font-size: 12px; }
       .tk-extra .tk-row .val { font-size: 13px; }
       .tk-footer { text-align: center; font-size: 11px; color: #333; font-weight: 700; padding: 2px 8px; border-top: 1px dashed #aaa; margin-top: 1px; }
+      .tk-det { padding: 1px 8px; }
+      .tk-det-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #333; padding: 2px 0; }
+      .tk-det-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0; }
+      .tk-det-row .dlbl { font-size: 13px; font-weight: 700; }
+      .tk-det-row .dval { font-size: 13px; font-weight: 700; text-align: right; }
       `
+
+      const costoItems = Array.isArray(caja?.costo_items) ? caja.costo_items : []
 
       const html = `
       <div class="tk">
@@ -100,6 +107,7 @@ export class Imprimir {
           <div class="tk-row"><span class="lbl">Fecha/Hora</span><span class="val">${S(caja?.fecha)} ${S(caja?.hora, '')}</span></div>
           <div class="tk-row"><span class="lbl">Ficha</span><span class="val">${S(caja?.numero_ficha, '-')}</span></div>
           <div class="tk-row"><span class="lbl">Documento</span><span class="val">${S(caja?.documento_label, '-')}</span></div>
+          ${(caja?.nombre_factura || '').toString().trim() ? `<div class="tk-row"><span class="lbl">N° Factura</span><span class="val bold">${S(caja.nombre_factura)}</span></div>` : ''}
           <div class="tk-row"><span class="lbl">Encargado</span><span class="val">${S(caja?.user?.name, '-')}</span></div>
           ${caja?.doctor ? `<div class="tk-row"><span class="lbl">Médico</span><span class="val bold">${S(caja.doctor?.nombre, '-')}</span></div>` : ''}
         </div>
@@ -122,6 +130,16 @@ export class Imprimir {
           <div class="tk-amt-row"><span class="albl">Egreso doctor</span><span class="aval">${F2(caja?.egreso)} Bs</span></div>
           <div class="tk-amt-row"><span class="albl">Farmacia</span><span class="aval">${F2(caja?.costo_farmacia)} Bs</span></div>
         </div>
+
+        ${costoItems.length ? `
+        <hr class="tk-sep">
+        <div class="tk-det">
+          <div class="tk-det-title">Detalle de costos</div>
+          ${costoItems.map(ci => `
+            <div class="tk-det-row"><span class="dlbl">${S(ci.nombre, 'Costo')}</span><span class="dval">${F2(ci.monto)} Bs</span></div>
+          `).join('')}
+        </div>
+        ` : ''}
 
         <div class="tk-total">
           <span class="tlbl">Saldo Final</span>

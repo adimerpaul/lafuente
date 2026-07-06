@@ -25,7 +25,7 @@ class CajaRecepcionController extends Controller
         $cobradoPorUserId = $request->get('cobrado_por_user_id');
         $search = trim((string) $request->get('search', ''));
 
-        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor'])
+        return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
@@ -362,7 +362,9 @@ class CajaRecepcionController extends Controller
 
         $costosDetalle = $request->input('costos_detalle', null);
         if ($costosDetalle !== null) {
-            $data['recaudado_total'] = collect($costosDetalle)->sum('monto');
+            $data['recaudado_total'] = collect($costosDetalle)
+                ->reject(fn ($item) => strtolower(trim($item['nombre'] ?? '')) === 'farmacia')
+                ->sum('monto');
         } else {
             $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
         }
@@ -398,7 +400,9 @@ class CajaRecepcionController extends Controller
 
         $costosDetalle = $request->input('costos_detalle', null);
         if ($costosDetalle !== null) {
-            $data['recaudado_total'] = collect($costosDetalle)->sum('monto');
+            $data['recaudado_total'] = collect($costosDetalle)
+                ->reject(fn ($item) => strtolower(trim($item['nombre'] ?? '')) === 'farmacia')
+                ->sum('monto');
         } else {
             $data['recaudado_total'] = $this->calculateRecaudadoTotal($data);
         }
@@ -699,6 +703,7 @@ class CajaRecepcionController extends Controller
             'laboratorio_nombre' => 'nullable|string|max:255',
             'medico_ecografia' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
+            'comentario' => 'nullable|string',
             'qr' => 'nullable|numeric|min:0',
             'efectivo' => 'nullable|numeric|min:0',
             'egreso' => 'nullable|numeric|min:0',
