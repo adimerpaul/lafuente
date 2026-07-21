@@ -269,7 +269,7 @@ class CajaRecepcionesExcelExport
         $row++;
 
         foreach ($costColumns as $costName) {
-            $total = $this->items->sum(fn ($item) => (float) ($this->itemCostValues($item, [$costName])[$costName] ?? 0));
+            $total = $this->paidItems()->sum(fn ($item) => (float) ($this->itemCostValues($item, [$costName])[$costName] ?? 0));
             if ($total <= 0) {
                 continue;
             }
@@ -381,13 +381,15 @@ class CajaRecepcionesExcelExport
     {
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
         $sheet->mergeCells("A{$row}:K{$row}");
-        $sheet->setCellValue("A{$row}", 'TOTAL GENERAL');
+        $sheet->setCellValue("A{$row}", 'TOTAL GENERAL (solo Pagado)');
+
+        $start = 11;
+        $end = max($start, $row - 1);
+        $cobroCol = 'E';
 
         for ($colIndex = 12; $colIndex <= count($headers); $colIndex++) {
             $col = Coordinate::stringFromColumnIndex($colIndex);
-            $start = 12;
-            $end = max(12, $row - 1);
-            $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$start}:{$col}{$end})");
+            $sheet->setCellValue("{$col}{$row}", "=SUMIF({$cobroCol}{$start}:{$cobroCol}{$end},\"Pagado\",{$col}{$start}:{$col}{$end})");
         }
 
         $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
@@ -417,6 +419,11 @@ class CajaRecepcionesExcelExport
         for ($i = $baseCount + $costCount + 1; $i <= $headerCount; $i++) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(13);
         }
+    }
+
+    private function paidItems(): Collection
+    {
+        return $this->items->filter(fn ($item) => ($item->estado_cobro ?? 'Pendiente') === 'Pagado');
     }
 
     private function costColumns(): array
@@ -457,9 +464,13 @@ class CajaRecepcionesExcelExport
         }
 
         foreach (self::LEGACY_COSTS as $name => $field) {
+            if (array_key_exists($name, $costs)) {
+                // Ya viene de costoItems (p.ej. "Farmacia" se refleja en costo_farmacia); sumar de nuevo lo duplicaria.
+                continue;
+            }
             $value = (float) ($item->{$field} ?? 0);
             if ($value > 0) {
-                $costs[$name] = ($costs[$name] ?? 0) + $value;
+                $costs[$name] = $value;
             }
         }
 
@@ -514,7 +525,7 @@ class CajaRecepcionesExcelExport
             'Ecografia' => ['cli' => 0, 'tercero' => 0, 'total' => 0],
         ];
 
-        foreach ($this->items as $item) {
+        foreach ($this->paidItems() as $item) {
             $values = $this->distributionValues($item);
             $rows['Laboratorio']['cli'] += $values['lab_cli'];
             $rows['Laboratorio']['tercero'] += $values['lab_tercero'];

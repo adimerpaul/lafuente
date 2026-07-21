@@ -107,7 +107,7 @@
               dense
               dense-toggle
               expand-separator
-              default-opened
+              :default-opened="sectionIsActive(section)"
               :icon="section.icon"
               :label="section.title"
               :header-class="sectionIsActive(section) ? 'drawer-group drawer-group--active' : 'drawer-group'"
@@ -316,24 +316,24 @@ export default {
 
 .drawer-content {
   min-height: 100%;
-  padding: 12px 10px 16px;
+  padding: 8px 6px 10px;
 }
 
 .drawer-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 16px;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(6px);
 }
 
 .drawer-profile__avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -346,8 +346,13 @@ export default {
 
 .drawer-profile__name {
   font-weight: 700;
+  font-size: 13px;
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+.drawer-profile__role {
+  font-size: 10px;
 }
 
 .drawer-profile__role {
@@ -355,7 +360,7 @@ export default {
 }
 
 .drawer-section-label {
-  padding: 2px 8px 8px;
+  padding: 0 8px 4px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -366,29 +371,47 @@ export default {
 .drawer-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
-.drawer-group {
+.drawer-list .drawer-group {
   margin: 0;
-  border-radius: 14px;
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: white;
   font-weight: 600;
+  font-size: 12px;
 }
 
 .drawer-group--active {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.drawer-link {
-  min-height: 36px;
-  border-radius: 10px;
-  margin: 2px 0;
+.drawer-list .drawer-link {
+  min-height: 24px;
+  border-radius: 6px;
+  margin: 0;
+  padding: 1px 6px;
 }
 
-.drawer-link__avatar {
-  min-width: 34px;
+.drawer-list .q-item__label {
+  font-size: 12px;
+  line-height: 1.2 !important;
+}
+
+.drawer-list .q-icon {
+  font-size: 16px;
+}
+
+.drawer-list .q-item__section--avatar {
+  min-width: 22px;
+  padding-right: 6px;
+}
+
+.drawer-list .q-expansion-item__content > .q-list {
+  padding: 0 2px 2px;
 }
 
 .menu {
@@ -397,8 +420,8 @@ export default {
 }
 
 .drawer-logout {
-  margin-top: 12px;
-  border-radius: 12px;
+  margin-top: 8px;
+  border-radius: 10px;
   background: rgba(244, 67, 54, 0.14);
   color: #ffd5d2;
 }

@@ -60,7 +60,7 @@
           <div class="col-6 col-md-2">
             <q-input v-model="filters.fechaFin" dense outlined type="date" label="Fecha fin" />
           </div>
-          <div class="col-6 col-md-2">
+          <div v-if="canVerTodas" class="col-6 col-md-2">
             <q-select
               v-model="filters.user_id"
               :options="usersOptions"
@@ -281,6 +281,9 @@ export default {
     }
   },
   computed: {
+    canVerTodas () {
+      return (this.$store.permissions || []).some(p => p.name === 'Caja recepcion ver todas')
+    },
     usersOptions () {
       return [{ label: 'Todos', value: '' }, ...this.users.map(user => ({ label: user.name, value: user.id }))]
     },

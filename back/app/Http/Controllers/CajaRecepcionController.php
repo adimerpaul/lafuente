@@ -27,6 +27,11 @@ class CajaRecepcionController extends Controller
         $cobradoPorUserId = $request->get('cobrado_por_user_id');
         $search = trim((string) $request->get('search', ''));
 
+        $authUser = $request->user();
+        if ($authUser && !$authUser->can('Caja recepcion ver todas')) {
+            $userId = $authUser->id;
+        }
+
         return CajaRecepcion::with(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor'])
             ->when($fechaInicio, fn ($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin, fn ($q) => $q->whereDate('fecha', '<=', $fechaFin))
