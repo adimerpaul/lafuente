@@ -17,11 +17,13 @@ class Costo extends Model
         'color',
         'activo',
         'orden',
+        'porcentaje',
     ];
 
     protected $casts = [
         'activo' => 'boolean',
         'orden' => 'integer',
+        'porcentaje' => 'float',
     ];
 
     protected $hidden = ['deleted_at'];

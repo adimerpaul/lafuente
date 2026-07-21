@@ -1,0 +1,9 @@
+[     923ms] [LOG] [vite] connecting... @ http://localhost:9001/@vite/client:183
+[    1679ms] [LOG] [vite] connected. @ http://localhost:9001/@vite/client:211
+[    1832ms] [INFO] [Quasar] Running SPA. @ http://localhost:9001/.quasar/client-entry.js:50
+[    2051ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:9001/node_modules/.q-cache/vite/spa/deps/axios.js?v=dff1d742:0
+[    2051ms] [ERROR] [Quasar] boot error: TypeError: Failed to fetch dynamically imported module: http://localhost:9001/src/boot/axios.js @ http://localhost:9001/.quasar/client-entry.js:145
+[    2127ms] [LOG] [vite] connecting... @ http://localhost:9001/@vite/client:183
+[    2804ms] [LOG] [vite] connected. @ http://localhost:9001/@vite/client:211
+[    2841ms] [INFO] [Quasar] Running SPA. @ http://localhost:9001/.quasar/client-entry.js:50
+[    2982ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:9001/login:0

@@ -26,6 +26,7 @@ class CostoController extends Controller
             'color'      => 'nullable|string|max:100',
             'activo'     => 'nullable|boolean',
             'orden'      => 'nullable|integer|min:0',
+            'porcentaje' => 'nullable|numeric|min:0|max:100',
             'arancel_ids' => 'nullable|array',
             'arancel_ids.*' => 'integer|exists:aranceles,id',
         ]);
@@ -47,6 +48,7 @@ class CostoController extends Controller
             'color'      => 'nullable|string|max:100',
             'activo'     => 'nullable|boolean',
             'orden'      => 'nullable|integer|min:0',
+            'porcentaje' => 'nullable|numeric|min:0|max:100',
             'arancel_ids' => 'nullable|array',
             'arancel_ids.*' => 'integer|exists:aranceles,id',
         ]);

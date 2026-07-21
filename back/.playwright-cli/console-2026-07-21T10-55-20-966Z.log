@@ -1,0 +1,6 @@
+[      20ms] [LOG] [vite] connecting... @ http://localhost:9001/@vite/client:183
+[      32ms] [INFO] [Quasar] Running SPA. @ http://localhost:9001/.quasar/client-entry.js:50
+[     338ms] [LOG] [vite] connected. @ http://localhost:9001/@vite/client:211
+[     467ms] [LOG] [vite] connecting... @ http://localhost:9001/@vite/client:183
+[    1147ms] [LOG] [vite] connected. @ http://localhost:9001/@vite/client:211
+[    1199ms] [INFO] [Quasar] Running SPA. @ http://localhost:9001/.quasar/client-entry.js:50

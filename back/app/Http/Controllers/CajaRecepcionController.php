@@ -69,6 +69,8 @@ class CajaRecepcionController extends Controller
             'total_egresos'       => (float) $paidItems->sum('egreso'),
             'total_qr'            => (float) $paidItems->sum('qr'),
             'total_efectivo'      => (float) $paidItems->sum('efectivo'),
+            'total_efectivo_punto1' => (float) $paidItems->filter(fn ($i) => (int) $i->punto === 1)->sum('efectivo'),
+            'total_efectivo_punto0' => (float) $paidItems->filter(fn ($i) => (int) $i->punto !== 1)->sum('efectivo'),
             'total_efectivo_caja' => (float) $paidItems->sum('efectivo')
                                    - (float) $paidItems->sum('egreso'),
             'total_farmacia'      => (float) $paidItems->sum('costo_farmacia'),
@@ -433,19 +435,46 @@ class CajaRecepcionController extends Controller
 
     private function saveCostosDetalle(CajaRecepcion $cajaRecepcion, array $costosDetalle): void
     {
+        $pagadosPrevios = $cajaRecepcion->costoItems()->where('pagado', true)->get()->keyBy('costo_id');
         $cajaRecepcion->costoItems()->delete();
         foreach ($costosDetalle as $item) {
             if (($item['monto'] ?? 0) <= 0) {
                 continue;
             }
+            $previo = isset($item['costo_id']) ? $pagadosPrevios->get($item['costo_id']) : null;
+            $pagado = (bool) ($item['pagado'] ?? false);
             $cajaRecepcion->costoItems()->create([
                 'costo_id'   => $item['costo_id'] ?? null,
                 'nombre'     => $item['nombre'] ?? '',
                 'monto'      => (float) ($item['monto'] ?? 0),
                 'doctor_porcentaje' => max(0, min(100, (int) ($item['doctor_porcentaje'] ?? 0))),
                 'arancel_ids' => $item['arancel_ids'] ?? [],
+                'pagado' => $pagado,
+                'pagado_at' => $pagado ? ($previo?->pagado_at ?? now()) : null,
+                'pagado_por_user_id' => $pagado ? ($previo?->pagado_por_user_id ?? auth()->id()) : null,
             ]);
         }
+    }
+
+    public function marcarCostoPagado(Request $request, CajaRecepcion $cajaRecepcion, CajaRecepcionCosto $costoItem)
+    {
+        if ($costoItem->caja_recepcion_id !== $cajaRecepcion->id) {
+            return response()->json(['message' => 'El costo no pertenece a este registro de caja.'], 404);
+        }
+
+        $pagado = $request->boolean('pagado', true);
+
+        if (! $pagado && ! $request->user()->can('Caja recepcion editar')) {
+            return response()->json(['message' => 'Solo un usuario con el permiso "Caja recepcion editar" puede quitar la marca de pagado.'], 403);
+        }
+
+        $costoItem->update([
+            'pagado' => $pagado,
+            'pagado_at' => $pagado ? ($costoItem->pagado_at ?? now()) : null,
+            'pagado_por_user_id' => $pagado ? ($costoItem->pagado_por_user_id ?? $request->user()->id) : null,
+        ]);
+
+        return response()->json($cajaRecepcion->load(['user', 'paciente', 'doctor', 'cobradoPor', 'costoItems', 'doctorPagadoPor']));
     }
 
     public function anular(Request $request, CajaRecepcion $cajaRecepcion)

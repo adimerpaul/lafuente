@@ -1,0 +1,38 @@
+- generic [ref=e1]:
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e9]:
+          - img [ref=e12]
+        - img [ref=e13]:
+          - img [ref=e16]
+      - generic [ref=e19]:
+        - img [ref=e21]:
+          - img [ref=e24]
+        - generic [ref=e25]: Bienvenido al sistema
+        - generic [ref=e26]: Inicia sesión para continuar
+        - generic [ref=e27]:
+          - text: Usuario
+          - textbox [ref=e32]: testcheck
+        - generic [ref=e34]:
+          - text: Contraseña
+          - generic [ref=e37]:
+            - textbox [ref=e39]: test1234
+            - generic [ref=e41]: visibility
+        - generic [ref=e43]:
+          - checkbox "Recordar usuario" [ref=e44] [cursor=pointer]:
+            - img [ref=e47]
+            - generic [ref=e49]: Recordar usuario
+          - link "¿Olvidaste tu contraseña?" [ref=e50] [cursor=pointer]:
+            - /url: ""
+        - button "Iniciar sesión" [ref=e52] [cursor=pointer]:
+          - generic [ref=e54]: Iniciar sesión
+        - generic [ref=e55]:
+          - text: No tienes cuenta?
+          - link "Regístrate" [ref=e56] [cursor=pointer]:
+            - /url: ""
+  - alert [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e60]: Bienvenido Test Check
+      - button [ref=e63] [cursor=pointer]:
+        - img [ref=e65]: close

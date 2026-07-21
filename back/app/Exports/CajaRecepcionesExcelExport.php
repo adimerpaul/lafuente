@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\CajaRecepcion;
+use App\Models\Costo;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -100,13 +101,19 @@ class CajaRecepcionesExcelExport
             '#', 'Fecha', 'Hora', 'Estado', 'Cobro', 'Paciente', 'Ficha', 'Encargado',
             'Documento', 'N Factura', 'Atencion', 'QR', 'Efectivo', 'Egreso', 'Recaudado', 'Final',
         ];
-        $distributionHeaders = [
-            'CLI 30%', 'Laboratorio 70%', 'Total laboratorio',
-            'CLI 20%', 'Ambulancia 80%', 'Total ambulancia',
-            'CLI 20%', 'Atencion emergencia 80%', 'Total atencion emergencia',
-            'CLI 70%', 'Ecografias 30%', 'Total ecografia',
-        ];
-        $headers = array_merge($baseHeaders, $costColumns, $distributionHeaders);
+        $costHeaders = [];
+        foreach ($costColumns as $costName) {
+            $clinicaPct = $this->costPorcentaje($costName);
+            $doctorPct = round(100 - $clinicaPct, 2);
+            array_push(
+                $costHeaders,
+                'Monto',
+                'Doctor ' . $this->pctLabel($doctorPct),
+                'Clinica ' . $this->pctLabel($clinicaPct),
+                'Pagado doctor'
+            );
+        }
+        $headers = array_merge($baseHeaders, $costHeaders);
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
 
         $this->writeTitle($sheet, $lastCol);
@@ -118,30 +125,11 @@ class CajaRecepcionesExcelExport
         $this->writeGroupHeader($sheet, 'L', 'P', $groupRow, 'PAGOS Y CIERRE', self::BG_PAYMENT);
 
         $costStart = count($baseHeaders) + 1;
-        $costEnd = $costStart + count($costColumns) - 1;
-        if ($costColumns) {
-            $this->writeGroupHeader(
-                $sheet,
-                Coordinate::stringFromColumnIndex($costStart),
-                Coordinate::stringFromColumnIndex($costEnd),
-                $groupRow,
-                'COSTOS REGISTRADOS',
-                self::BG_COSTS
-            );
-        }
-
-        $distributionStart = $costEnd + 1;
-        $groups = [
-            ['LABORATORIO', 3, 'EAB308'],
-            ['AMBULANCIA', 3, 'A8A29E'],
-            ['ATENCION EMERGENCIA', 3, 'F4B8AD'],
-            ['ECOGRAFIA', 3, 'E8BF55'],
-        ];
-        foreach ($groups as [$title, $span, $color]) {
-            $start = Coordinate::stringFromColumnIndex($distributionStart);
-            $end = Coordinate::stringFromColumnIndex($distributionStart + $span - 1);
-            $this->writeGroupHeader($sheet, $start, $end, $groupRow, $title, $color, self::TEXT);
-            $distributionStart += $span;
+        foreach ($costColumns as $index => $costName) {
+            $start = Coordinate::stringFromColumnIndex($costStart + $index * 4);
+            $end = Coordinate::stringFromColumnIndex($costStart + $index * 4 + 3);
+            $bg = $index % 2 === 0 ? self::BG_COSTS : '8D6E63';
+            $this->writeGroupHeader($sheet, $start, $end, $groupRow, mb_strtoupper($costName), $bg);
         }
 
         foreach ($headers as $index => $label) {
@@ -163,8 +151,6 @@ class CajaRecepcionesExcelExport
 
         $dataRow = 11;
         foreach ($this->items as $index => $item) {
-            $costValues = $this->itemCostValues($item, $costColumns);
-            $distributionValues = $this->distributionValues($item);
             $rowValues = array_merge([
                 $index + 1,
                 (string) ($item->fecha ?? ''),
@@ -182,7 +168,7 @@ class CajaRecepcionesExcelExport
                 (float) ($item->egreso ?? 0),
                 (float) ($item->recaudado_total ?? 0),
                 (float) ($item->saldo_final ?? 0),
-            ], array_values($costValues), array_values($distributionValues));
+            ], $this->costRowCells($item, $costColumns));
 
             foreach ($rowValues as $colIndex => $value) {
                 $col = Coordinate::stringFromColumnIndex($colIndex + 1);
@@ -203,8 +189,8 @@ class CajaRecepcionesExcelExport
             $dataRow++;
         }
 
-        $this->writeTotalsRow($sheet, $dataRow, $headers, $costColumns);
-        $this->applyDetalleWidths($sheet, count($headers), count($baseHeaders), count($costColumns));
+        $this->writeTotalsRow($sheet, $dataRow, $headers, count($baseHeaders));
+        $this->applyDetalleWidths($sheet, count($headers), count($baseHeaders), count($costColumns) * 4);
 
         $sheet->freezePane('A11');
         $sheet->setAutoFilter("A{$headerRow}:{$lastCol}{$headerRow}");
@@ -265,36 +251,36 @@ class CajaRecepcionesExcelExport
         $row = 8;
         $sheet->setCellValue("A{$row}", 'Costo');
         $sheet->setCellValue("B{$row}", 'Total Bs');
-        $sheet->getStyle("A{$row}:B{$row}")->applyFromArray($this->tableHeaderStyle(self::BG_COSTS));
+        $sheet->setCellValue("C{$row}", 'Doctor Bs');
+        $sheet->setCellValue("D{$row}", 'Clinica Bs');
+        $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($this->tableHeaderStyle(self::BG_COSTS));
         $row++;
 
         foreach ($costColumns as $costName) {
-            $total = $this->paidItems()->sum(fn ($item) => (float) ($this->itemCostValues($item, [$costName])[$costName] ?? 0));
+            $total = 0.0;
+            $doctor = 0.0;
+            $clinica = 0.0;
+            foreach ($this->paidItems() as $item) {
+                $detail = $this->itemCostDetails($item)[$costName] ?? null;
+                if (!$detail) {
+                    continue;
+                }
+                $monto = (float) $detail['monto'];
+                $cli = round($monto * ((float) $detail['porcentaje']) / 100, 2);
+                $total += $monto;
+                $clinica += $cli;
+                $doctor += $monto - $cli;
+            }
             if ($total <= 0) {
                 continue;
             }
             $sheet->setCellValue("A{$row}", $costName);
             $sheet->setCellValue("B{$row}", round($total, 2));
-            $sheet->getStyle("A{$row}:B{$row}")->applyFromArray($this->bodyRowStyle($row));
-            $sheet->getStyle("B{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->setCellValue("C{$row}", round($doctor, 2));
+            $sheet->setCellValue("D{$row}", round($clinica, 2));
+            $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($this->bodyRowStyle($row));
+            $sheet->getStyle("B{$row}:D{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
             $row++;
-        }
-
-        $distStart = 8;
-        $sheet->setCellValue("D{$distStart}", 'Distribucion');
-        $sheet->setCellValue("E{$distStart}", 'CLI Bs');
-        $sheet->setCellValue("F{$distStart}", 'Tercero Bs');
-        $sheet->setCellValue("G{$distStart}", 'Total Bs');
-        $sheet->getStyle("D{$distStart}:G{$distStart}")->applyFromArray($this->tableHeaderStyle('E8BF55', self::TEXT));
-        $distRow = $distStart + 1;
-        foreach ($this->distributionSummaryRows() as $rowData) {
-            $sheet->setCellValue("D{$distRow}", $rowData['label']);
-            $sheet->setCellValue("E{$distRow}", round($rowData['cli'], 2));
-            $sheet->setCellValue("F{$distRow}", round($rowData['tercero'], 2));
-            $sheet->setCellValue("G{$distRow}", round($rowData['total'], 2));
-            $sheet->getStyle("D{$distRow}:G{$distRow}")->applyFromArray($this->bodyRowStyle($distRow));
-            $sheet->getStyle("E{$distRow}:G{$distRow}")->getNumberFormat()->setFormatCode('#,##0.00');
-            $distRow++;
         }
 
         foreach (range('A', 'H') as $col) {
@@ -377,7 +363,7 @@ class CajaRecepcionesExcelExport
         $sheet->getRowDimension($row)->setRowHeight(22);
     }
 
-    private function writeTotalsRow($sheet, int $row, array $headers, array $costColumns): void
+    private function writeTotalsRow($sheet, int $row, array $headers, int $baseCount): void
     {
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
         $sheet->mergeCells("A{$row}:K{$row}");
@@ -388,6 +374,10 @@ class CajaRecepcionesExcelExport
         $cobroCol = 'E';
 
         for ($colIndex = 12; $colIndex <= count($headers); $colIndex++) {
+            if ($colIndex > $baseCount && ($colIndex - $baseCount) % 4 === 0) {
+                // Columna "Pagado doctor" (texto Si/No): no se suma.
+                continue;
+            }
             $col = Coordinate::stringFromColumnIndex($colIndex);
             $sheet->setCellValue("{$col}{$row}", "=SUMIF({$cobroCol}{$start}:{$cobroCol}{$end},\"Pagado\",{$col}{$start}:{$col}{$end})");
         }
@@ -426,125 +416,94 @@ class CajaRecepcionesExcelExport
         return $this->items->filter(fn ($item) => ($item->estado_cobro ?? 'Pendiente') === 'Pagado');
     }
 
-    private function costColumns(): array
+    private ?array $costCatalog = null;
+
+    private function costCatalog(): array
     {
-        $columns = [];
-        foreach ($this->items as $item) {
-            foreach ($this->itemAllCosts($item) as $name => $value) {
-                if ((float) $value > 0 && !in_array($name, $columns, true)) {
-                    $columns[] = $name;
+        if ($this->costCatalog === null) {
+            $this->costCatalog = [];
+            foreach (Costo::query()->where('activo', true)->orderBy('orden')->orderBy('nombre')->get() as $costo) {
+                $name = trim((string) $costo->nombre);
+                if ($name !== '' && !array_key_exists($name, $this->costCatalog)) {
+                    $this->costCatalog[$name] = $costo->porcentaje !== null ? (float) $costo->porcentaje : 100.0;
                 }
             }
         }
 
-        sort($columns, SORT_NATURAL | SORT_FLAG_CASE);
-        return $columns;
+        return $this->costCatalog;
     }
 
-    private function itemCostValues(CajaRecepcion $item, array $costColumns): array
+    private function costPorcentaje(string $name): float
     {
-        $all = $this->itemAllCosts($item);
-        $values = [];
-        foreach ($costColumns as $costName) {
-            $values[$costName] = round((float) ($all[$costName] ?? 0), 2);
+        return $this->costCatalog()[$name] ?? 100.0;
+    }
+
+    private function pctLabel(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.') . '%';
+    }
+
+    private function costColumns(): array
+    {
+        $columns = array_keys($this->costCatalog());
+        $extra = [];
+        foreach ($this->items as $item) {
+            foreach ($this->itemCostDetails($item) as $name => $detail) {
+                if ((float) $detail['monto'] > 0 && !in_array($name, $columns, true) && !in_array($name, $extra, true)) {
+                    $extra[] = $name;
+                }
+            }
         }
 
-        return $values;
+        sort($extra, SORT_NATURAL | SORT_FLAG_CASE);
+        return array_merge($columns, $extra);
     }
 
-    private function itemAllCosts(CajaRecepcion $item): array
+    private function itemCostDetails(CajaRecepcion $item): array
     {
-        $costs = [];
+        $details = [];
         foreach (($item->costoItems ?? []) as $costItem) {
             $name = trim((string) ($costItem->nombre ?: optional($costItem->costo)->nombre));
             if ($name === '') {
                 $name = 'Costo sin nombre';
             }
-            $costs[$name] = ($costs[$name] ?? 0) + (float) ($costItem->monto ?? 0);
+            if (!isset($details[$name])) {
+                $details[$name] = ['monto' => 0.0, 'porcentaje' => $this->costPorcentaje($name), 'pagado' => true];
+            }
+            $details[$name]['monto'] += (float) ($costItem->monto ?? 0);
+            $details[$name]['pagado'] = $details[$name]['pagado'] && (bool) $costItem->pagado;
         }
 
         foreach (self::LEGACY_COSTS as $name => $field) {
-            if (array_key_exists($name, $costs)) {
+            if (array_key_exists($name, $details)) {
                 // Ya viene de costoItems (p.ej. "Farmacia" se refleja en costo_farmacia); sumar de nuevo lo duplicaria.
                 continue;
             }
             $value = (float) ($item->{$field} ?? 0);
             if ($value > 0) {
-                $costs[$name] = $value;
+                $details[$name] = ['monto' => $value, 'porcentaje' => 100.0, 'pagado' => false];
             }
         }
 
-        return $costs;
+        return $details;
     }
 
-    private function distributionValues(CajaRecepcion $item): array
+    private function costRowCells(CajaRecepcion $item, array $costColumns): array
     {
-        $laboratorio = $this->distributionBase($item, ['laboratorio']);
-        $ambulancia = $this->distributionBase($item, ['ambulancia']);
-        $emergencia = $this->distributionBase($item, ['emergencia', 'atencion medica']);
-        $ecografia = $this->distributionBase($item, ['ecografia']);
-
-        return [
-            'lab_cli' => $laboratorio * 0.30,
-            'lab_tercero' => $laboratorio * 0.70,
-            'lab_total' => $laboratorio,
-            'amb_cli' => $ambulancia * 0.20,
-            'amb_tercero' => $ambulancia * 0.80,
-            'amb_total' => $ambulancia,
-            'eme_cli' => $emergencia * 0.20,
-            'eme_tercero' => $emergencia * 0.80,
-            'eme_total' => $emergencia,
-            'eco_cli' => $ecografia * 0.70,
-            'eco_tercero' => $ecografia * 0.30,
-            'eco_total' => $ecografia,
-        ];
-    }
-
-    private function distributionBase(CajaRecepcion $item, array $needles): float
-    {
-        $total = 0.0;
-        foreach ($this->itemAllCosts($item) as $name => $value) {
-            $normalized = mb_strtolower($name);
-            foreach ($needles as $needle) {
-                if (str_contains($normalized, $needle)) {
-                    $total += (float) $value;
-                    break;
-                }
-            }
+        $details = $this->itemCostDetails($item);
+        $cells = [];
+        foreach ($costColumns as $name) {
+            $monto = round((float) ($details[$name]['monto'] ?? 0), 2);
+            $porcentaje = (float) ($details[$name]['porcentaje'] ?? 100);
+            $clinica = round($monto * $porcentaje / 100, 2);
+            $doctor = round($monto - $clinica, 2);
+            $cells[] = $monto;
+            $cells[] = $doctor;
+            $cells[] = $clinica;
+            $cells[] = $monto > 0 ? (($details[$name]['pagado'] ?? false) ? 'Si' : 'No') : '';
         }
 
-        return $total;
-    }
-
-    private function distributionSummaryRows(): array
-    {
-        $rows = [
-            'Laboratorio' => ['cli' => 0, 'tercero' => 0, 'total' => 0],
-            'Ambulancia' => ['cli' => 0, 'tercero' => 0, 'total' => 0],
-            'Atencion emergencia' => ['cli' => 0, 'tercero' => 0, 'total' => 0],
-            'Ecografia' => ['cli' => 0, 'tercero' => 0, 'total' => 0],
-        ];
-
-        foreach ($this->paidItems() as $item) {
-            $values = $this->distributionValues($item);
-            $rows['Laboratorio']['cli'] += $values['lab_cli'];
-            $rows['Laboratorio']['tercero'] += $values['lab_tercero'];
-            $rows['Laboratorio']['total'] += $values['lab_total'];
-            $rows['Ambulancia']['cli'] += $values['amb_cli'];
-            $rows['Ambulancia']['tercero'] += $values['amb_tercero'];
-            $rows['Ambulancia']['total'] += $values['amb_total'];
-            $rows['Atencion emergencia']['cli'] += $values['eme_cli'];
-            $rows['Atencion emergencia']['tercero'] += $values['eme_tercero'];
-            $rows['Atencion emergencia']['total'] += $values['eme_total'];
-            $rows['Ecografia']['cli'] += $values['eco_cli'];
-            $rows['Ecografia']['tercero'] += $values['eco_tercero'];
-            $rows['Ecografia']['total'] += $values['eco_total'];
-        }
-
-        return collect($rows)
-            ->map(fn ($row, $label) => ['label' => $label, ...$row])
-            ->values()
-            ->all();
+        return $cells;
     }
 
     private function metaText(): string

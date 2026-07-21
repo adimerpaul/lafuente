@@ -141,6 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/caja-recepciones/{cajaRecepcion}/observaciones', [App\Http\Controllers\CajaObservacionController::class, 'show']);
     Route::post('/caja-recepciones/{cajaRecepcion}/observaciones', [App\Http\Controllers\CajaObservacionController::class, 'store']);
     Route::delete('/caja-recepciones/{cajaRecepcion}/observaciones/{observacion}', [App\Http\Controllers\CajaObservacionController::class, 'destroy']);
+    Route::put('/caja-recepciones/{cajaRecepcion}/costos/{costoItem}/pagado', [App\Http\Controllers\CajaRecepcionController::class, 'marcarCostoPagado']);
     Route::post('/caja-recepciones/{cajaRecepcion}/cobrar', [App\Http\Controllers\CajaRecepcionController::class, 'cobrar']);
     Route::put('/caja-recepciones/{cajaRecepcion}/anular', [App\Http\Controllers\CajaRecepcionController::class, 'anular']);
     Route::put('/caja-recepciones/{cajaRecepcion}/marcar-doctor-pagado', [App\Http\Controllers\CajaRecepcionController::class, 'marcarDoctorPagado']);

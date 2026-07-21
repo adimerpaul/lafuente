@@ -1,0 +1,375 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - toolbar [ref=e5]:
+      - button "Menu" [ref=e6] [cursor=pointer]:
+        - img [ref=e8]: menu
+      - generic [ref=e9]: v5.2.1
+      - generic [ref=e11]:
+        - button [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]:
+            - img [ref=e14]: notifications
+            - status [ref=e15]: "98"
+        - button "Test Check" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]:
+            - img [ref=e18]: account_circle
+            - generic [ref=e19]: Test Check
+  - complementary [ref=e20]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e25]: account_circle
+        - generic [ref=e26]:
+          - generic [ref=e27]: Test Check
+          - generic [ref=e29]: Recepcion
+      - generic [ref=e30]: Navegación
+      - list [ref=e31]:
+        - generic [ref=e33]:
+          - button "Expandir \"General\"" [ref=e34] [cursor=pointer]:
+            - generic [ref=e36]: space_dashboard
+            - generic [ref=e38]: General
+            - generic [ref=e40]: arrow_drop_down
+          - separator [ref=e41]
+          - separator [ref=e42]
+        - generic [ref=e44]:
+          - button "Expandir \"Financiera\"" [ref=e45] [cursor=pointer]:
+            - generic [ref=e47]: account_balance_wallet
+            - generic [ref=e49]: Financiera
+            - generic [ref=e51]: arrow_drop_down
+          - separator [ref=e52]
+          - separator [ref=e53]
+      - listitem [ref=e54] [cursor=pointer]:
+        - generic [ref=e56]: exit_to_app
+        - generic [ref=e58]: Salir
+  - main [ref=e60]:
+    - generic [ref=e61]:
+      - button [ref=e63] [cursor=pointer]:
+        - img [ref=e65]: arrow_back
+      - alert [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]: lock
+          - text: No tienes permiso para editar este registro (se requiere el permiso "Caja recepcion editar"). Puedes ver los datos pero no guardarlos.
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: Recaudado total
+            - generic [ref=e75]: 10.00 Bs
+          - generic [ref=e77]:
+            - generic [ref=e78]: QR
+            - generic [ref=e79]: 0.00 Bs
+          - generic [ref=e81]:
+            - generic [ref=e82]: Farmacia
+            - generic [ref=e83]: 0.00 Bs
+          - generic [ref=e85]:
+            - generic [ref=e86]: Egreso doctor
+            - generic [ref=e87]: 0.00 Bs
+          - generic [ref=e89]:
+            - generic [ref=e90]: Efectivo
+            - generic [ref=e91]: 10.00 Bs
+          - generic [ref=e93]:
+            - generic [ref=e94]: Saldo final caja
+            - generic [ref=e95]: 10.00 Bs
+          - generic [ref=e96]:
+            - button "Cancelar" [ref=e97] [cursor=pointer]:
+              - generic [ref=e99]: Cancelar
+            - button "Guardar" [disabled] [ref=e100]:
+              - generic [ref=e102]: Guardar
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - combobox "Paciente" [disabled]: ABEL ZEQUEIROS RIOS
+                    - generic: Paciente
+                  - generic:
+                    - button [disabled]:
+                      - generic:
+                        - img: edit
+                    - button [disabled]:
+                      - generic:
+                        - img: person_add
+                  - generic:
+                    - generic: arrow_drop_down
+        - tablist [ref=e103]:
+          - generic [ref=e104]:
+            - tab "Datos" [ref=e105] [cursor=pointer]:
+              - generic [ref=e106]:
+                - generic [ref=e107]: assignment
+                - generic [ref=e108]: Datos
+            - tab "Costos" [selected] [ref=e110] [cursor=pointer]:
+              - generic [ref=e111]:
+                - generic [ref=e112]: payments
+                - generic [ref=e113]: Costos
+            - tab "Formulario" [ref=e115] [cursor=pointer]:
+              - generic [ref=e116]:
+                - generic [ref=e117]: assignment_turned_in
+                - generic [ref=e118]: Formulario
+            - tab "Pago y cierre" [ref=e120] [cursor=pointer]:
+              - generic [ref=e121]:
+                - generic [ref=e122]: point_of_sale
+                - generic [ref=e123]: Pago y cierre
+        - separator [ref=e125]
+        - generic:
+          - tabpanel:
+            - tabpanel:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: medical_services
+                        - generic: Atencion medica
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e134] [cursor=pointer]:
+                          - img [ref=e137]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: content_cut
+                        - generic: Procedimiento medico
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e139] [cursor=pointer]:
+                          - img [ref=e142]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: vaccines
+                        - generic: Enfermeria
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e144] [cursor=pointer]:
+                          - img [ref=e147]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)": "10"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: inventory_2
+                        - generic: Insumos
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e149] [cursor=pointer]:
+                          - img [ref=e152]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: science
+                        - generic: Laboratorio
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e154] [cursor=pointer]:
+                          - img [ref=e157]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: pregnant_woman
+                        - generic: Ecografia
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e159] [cursor=pointer]:
+                          - img [ref=e162]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: door_front
+                        - generic: Consultorio
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e164] [cursor=pointer]:
+                          - img [ref=e167]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: local_pharmacy
+                        - generic: Farmacia
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e169] [cursor=pointer]:
+                          - img [ref=e172]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: biotech
+                        - generic: Tomografia
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e174] [cursor=pointer]:
+                          - img [ref=e177]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: directions_run
+                        - generic: Fisioterapia
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e179] [cursor=pointer]:
+                          - img [ref=e182]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: water_drop
+                        - generic: Odontologia
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e184] [cursor=pointer]:
+                          - img [ref=e187]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: monitor_heart
+                        - generic: Rayos X
+                        - button:
+                          - generic:
+                            - img: fact_check
+                        - checkbox [ref=e189] [cursor=pointer]:
+                          - img [ref=e192]
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Bs
+                            - generic:
+                              - spinbutton "Monto (Bs)"
+                              - generic: Monto (Bs)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - textbox "A qué laboratorio se lo llevó"
+                          - generic: A qué laboratorio se lo llevó
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - textbox "Quién hizo la ecografía"
+                          - generic: Quién hizo la ecografía
+        - separator [ref=e126]
+        - generic [ref=e127]:
+          - button "Cancelar" [ref=e128] [cursor=pointer]:
+            - generic [ref=e130]: Cancelar
+          - button "Guardar" [disabled] [ref=e131]:
+            - generic [ref=e133]: Guardar
