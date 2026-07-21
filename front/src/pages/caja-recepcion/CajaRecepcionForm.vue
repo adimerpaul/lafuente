@@ -319,6 +319,18 @@
                             :label="String(costoArancelCount(costo.id))"
                           />
                         </q-btn>
+                        <q-checkbox
+                          v-if="Number(costosValues[costo.id]?.monto || 0) > 0"
+                          :model-value="!!costosValues[costo.id]?.pagado"
+                          dense
+                          size="sm"
+                          color="positive"
+                          keep-color
+                          class="costo-pagado-check q-ml-xs"
+                          @update:model-value="onToggleCostoPagado(costo.id, $event)"
+                        >
+                          <q-tooltip>{{ costoPagadoTooltip(costo.id) }}</q-tooltip>
+                        </q-checkbox>
                       </div>
                       <q-input
                         :model-value="costoValueDisplay(costo.id)"
@@ -1150,7 +1162,7 @@ export default {
       }))
       const newValues = {}
       costos.forEach(c => {
-        newValues[c.id] = this.costosValues[c.id] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
+        newValues[c.id] = this.costosValues[c.id] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [], pagado: false, pagadoOriginal: false, item_id: null }
       })
       this.costosValues = newValues
     },
@@ -1161,12 +1173,15 @@ export default {
           values[item.costo_id] = {
             monto: item.monto || 0,
             doctor_porcentaje: Math.min(Math.max(Number(item.doctor_porcentaje) || 0, 0), 100),
-            arancel_ids: item.arancel_ids || []
+            arancel_ids: item.arancel_ids || [],
+            pagado: !!item.pagado,
+            pagadoOriginal: !!item.pagado,
+            item_id: item.id
           }
         }
       })
       this.costosCatalogo.forEach(c => {
-        if (!values[c.id]) values[c.id] = { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
+        if (!values[c.id]) values[c.id] = { monto: 0, doctor_porcentaje: 0, arancel_ids: [], pagado: false, pagadoOriginal: false, item_id: null }
       })
       this.costosValues = values
     },
@@ -1209,6 +1224,53 @@ export default {
     },
     costoArancelCount (costoId) {
       return (this.costosValues[costoId]?.arancel_ids || []).length
+    },
+    costoPagadoLocked (costoId) {
+      const v = this.costosValues[costoId]
+      if (!v) return true
+      return !!v.pagadoOriginal && !this.canEditarCaja
+    },
+    costoPagadoTooltip (costoId) {
+      const v = this.costosValues[costoId] || {}
+      if (v.pagadoOriginal && !this.canEditarCaja) {
+        return 'Pagado (solo se puede quitar con el permiso "Caja recepcion editar")'
+      }
+      return v.pagado ? 'Pagado' : 'Marcar como pagado'
+    },
+    setCostoPagadoLocal (costoId, patch) {
+      const current = this.costosValues[costoId] || { monto: 0, doctor_porcentaje: 0, arancel_ids: [] }
+      this.costosValues = { ...this.costosValues, [costoId]: { ...current, ...patch } }
+    },
+    onToggleCostoPagado (costoId, value) {
+      if (this.costoPagadoLocked(costoId)) {
+        this.$alert.error('Este costo ya fue pagado y no se puede revertir. Solo un usuario con el permiso "Caja recepcion editar" puede quitarlo.')
+        return
+      }
+      const current = this.costosValues[costoId] || {}
+
+      if (!this.isEdit || !current.item_id) {
+        this.setCostoPagadoLocal(costoId, { pagado: !!value })
+        return
+      }
+
+      const guardar = () => {
+        this.$axios.put(`caja-recepciones/${this.$route.params.id}/costos/${current.item_id}/pagado`, { pagado: !!value })
+          .then(() => {
+            this.setCostoPagadoLocal(costoId, { pagado: !!value, pagadoOriginal: !!value })
+            this.$alert.success(value ? 'Costo marcado como pagado' : 'Marca de pagado quitada')
+          })
+          .catch(err => {
+            this.$alert.error(err.response?.data?.message || 'No se pudo actualizar el pago del costo')
+          })
+      }
+
+      if (value && !this.canEditarCaja) {
+        this.$alert.dialog('Una vez marcado como pagado no podrás quitar el check. ¿Confirmar?').onOk(guardar)
+      } else if (!value) {
+        this.$alert.dialog('¿Quitar la marca de pagado de este costo?').onOk(guardar)
+      } else {
+        guardar()
+      }
     },
     openArancelDialog (costo) {
       this.arancelDialogCosto = costo
@@ -1869,6 +1931,7 @@ export default {
             monto: Number(v.monto || 0),
             doctor_porcentaje: Math.min(Math.max(Number(v.doctor_porcentaje) || 0, 0), 100),
             arancel_ids: v.arancel_ids || [],
+            pagado: !!v.pagado,
           }
         })
       return payload
@@ -1949,6 +2012,12 @@ export default {
   pointer-events: none;
   opacity: 0.6;
   filter: grayscale(0.3);
+}
+
+.form-locked .costo-pagado-check {
+  pointer-events: auto !important;
+  opacity: 1;
+  filter: none;
 }
 
 .stat-row {

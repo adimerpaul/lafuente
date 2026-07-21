@@ -29,7 +29,10 @@
                     <q-icon :name="costo.icono || 'payments'" color="white" size="xs" />
                   </div>
                   <div class="col">
-                    <div class="text-caption text-weight-bold ellipsis" style="max-width:170px">{{ costo.nombre }}</div>
+                    <div class="text-caption text-weight-bold ellipsis" style="max-width:170px">
+                      {{ costo.nombre }}
+                      <q-badge v-if="Number(costo.porcentaje) > 0" color="teal-7" class="q-ml-xs">{{ Number(costo.porcentaje) }}%</q-badge>
+                    </div>
                     <div class="row items-center q-mt-xs" style="gap:3px;flex-wrap:wrap">
                       <q-badge
                         v-for="ar in (costo.aranceles || []).slice(0,3)"
@@ -78,6 +81,19 @@
                 <q-input v-model="form.nombre" label="Nombre *" dense outlined class="q-mb-sm" :rules="[v => !!v || 'Requerido']" />
                 <q-toggle v-model="form.activo" label="Activo" color="positive" class="q-mb-sm" />
                 <q-input v-model.number="form.orden" type="number" label="Orden" dense outlined min="0" class="q-mb-sm" />
+                <q-input
+                  v-model.number="form.porcentaje"
+                  type="number"
+                  label="Porcentaje (%)"
+                  dense
+                  outlined
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  suffix="%"
+                  class="q-mb-sm"
+                  :rules="[v => v === null || v === '' || (Number(v) >= 0 && Number(v) <= 100) || 'Entre 0 y 100']"
+                />
 
                 <div class="text-caption text-weight-medium q-mb-xs">Color</div>
                 <div class="row q-gutter-xs q-mb-md">
@@ -249,6 +265,7 @@ const emptyForm = () => ({
   color: 'teal-7',
   activo: true,
   orden: 0,
+  porcentaje: 100,
   arancel_ids: [],
 })
 
@@ -321,6 +338,7 @@ export default {
         color: costo.color || 'teal-7',
         activo: costo.activo !== false,
         orden: costo.orden || 0,
+        porcentaje: Number(costo.porcentaje) || 0,
         arancel_ids: (costo.aranceles || []).map(a => a.id),
       }
       this.arancelSearch = ''

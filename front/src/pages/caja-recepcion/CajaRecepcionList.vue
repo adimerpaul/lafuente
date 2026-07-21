@@ -1,51 +1,16 @@
 <template>
   <q-page class="q-pa-xs">
     <div class="row q-col-gutter-xs q-mb-xs">
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-cyan text-white">
-            <div class="text-caption">QR</div>
-            <div class="text-h6">{{ money(summary.total_qr) }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-primary text-white">
-            <div class="text-caption">Recaudado</div>
-            <div class="text-h6">{{ money(summary.total_recaudado) }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-positive text-white">
-            <div class="text-caption">Ingresos</div>
-            <div class="text-h6">{{ money(summary.total_ingresos) }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-negative text-white">
-            <div class="text-caption">Egresos</div>
-            <div class="text-h6">{{ money(summary.total_egresos) }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-orange text-white">
-            <div class="text-caption">Farmacia</div>
-            <div class="text-h6">{{ money(summary.total_farmacia) }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <div class="col-12 col-md-2">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm bg-indigo text-white">
-            <div class="text-caption">Final</div>
-            <div class="text-h6">{{ money(summary.total_final) }}</div>
+      <div v-for="card in summaryCards" :key="card.label" class="col-6 col-md">
+        <q-card flat class="resumen-card" :style="{ background: card.bg }">
+          <q-card-section class="q-pa-sm row items-center no-wrap">
+            <div class="resumen-card__icon q-mr-sm">
+              <q-icon :name="card.icon" size="20px" />
+            </div>
+            <div class="col">
+              <div class="resumen-card__label">{{ card.label }}</div>
+              <div class="resumen-card__value">{{ money(card.value) }}</div>
+            </div>
           </q-card-section>
         </q-card>
       </div>
@@ -260,6 +225,8 @@ export default {
         total_egresos: 0,
         total_qr: 0,
         total_efectivo: 0,
+        total_efectivo_punto1: 0,
+        total_efectivo_punto0: 0,
         total_efectivo_caja: 0,
         total_farmacia: 0,
         total_final: 0,
@@ -281,6 +248,15 @@ export default {
     }
   },
   computed: {
+    summaryCards () {
+      return [
+        { label: 'QR', icon: 'qr_code_2', value: this.summary.total_qr, bg: 'linear-gradient(135deg, #0e7490, #06b6d4)' },
+        { label: 'Efectivo Punto 1', icon: 'payments', value: this.summary.total_efectivo_punto1, bg: 'linear-gradient(135deg, #15803d, #22c55e)' },
+        { label: 'Efectivo Punto 0', icon: 'payments', value: this.summary.total_efectivo_punto0, bg: 'linear-gradient(135deg, #0f766e, #14b8a6)' },
+        { label: 'Egresos', icon: 'trending_down', value: this.summary.total_egresos, bg: 'linear-gradient(135deg, #b91c1c, #ef4444)' },
+        { label: 'Final caja', icon: 'account_balance_wallet', value: this.summary.total_final, bg: 'linear-gradient(135deg, #4338ca, #6366f1)' }
+      ]
+    },
     canVerTodas () {
       return (this.$store.permissions || []).some(p => p.name === 'Caja recepcion ver todas')
     },
@@ -421,5 +397,37 @@ export default {
 <style scoped>
 .row-anulado td {
   opacity: 0.82;
+}
+
+.resumen-card {
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+.resumen-card__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.22);
+  flex: 0 0 auto;
+}
+
+.resumen-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  line-height: 1.1;
+}
+
+.resumen-card__value {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 </style>
