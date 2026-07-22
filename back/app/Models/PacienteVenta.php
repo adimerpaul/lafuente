@@ -14,8 +14,8 @@ class PacienteVenta extends Model{
     protected $appends = ['nombre_completo'];
 
     public function getNombreCompletoAttribute(): string{
-        $user = User::find($this->user_id);
-        return $user->name;
+        $user = User::withTrashed()->find($this->user_id);
+        return $user->name ?? '';
     }
 
     protected static function boot()

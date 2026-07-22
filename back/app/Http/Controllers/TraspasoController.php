@@ -83,6 +83,104 @@ class TraspasoController extends Controller
     }
 
     /**
+     * Procesa un ítem de traspaso: descuenta el lote origen y crea el
+     * VentaDetalle/CompraDetalle pareados en origen/destino.
+     * Devuelve el subtotal (mismo valor para venta y compra).
+     */
+    private function procesarItemTraspaso(array $item, Venta $venta, Compra $compra, string $farmaciaOrigen, string $farmaciaDestino, int $userId): float
+    {
+        $compraDetalleOrigen = CompraDetalle::where('id', $item['compra_detalle_id'])
+            ->where('farmacia_tipo', $farmaciaOrigen)
+            ->where('estado', 'Activo')
+            ->lockForUpdate()
+            ->firstOrFail();
+        $cantidad = (float) $item['cantidad'];
+
+        // Validar que haya suficiente cantidad
+        if (($compraDetalleOrigen->cantidad_venta ?? 0) < $cantidad) {
+            $loteLabel = $compraDetalleOrigen->lote ?: 'sin lote';
+            $vencimientoLabel = $compraDetalleOrigen->fecha_vencimiento ?: 'sin vencimiento';
+            throw new \Exception("Stock insuficiente para el lote {$loteLabel} ({$vencimientoLabel}). Disponible: {$compraDetalleOrigen->cantidad_venta}, solicitado: {$cantidad}");
+        }
+
+        $subtotal = $cantidad * $compraDetalleOrigen->precio;
+
+        $productoOrigen = Producto::where('id', $compraDetalleOrigen->producto_id)
+            ->where('farmacia_tipo', $farmaciaOrigen)
+            ->first();
+
+        if (! $productoOrigen) {
+            throw new \Exception('Producto origen no encontrado para el traspaso');
+        }
+
+        $cloneProducto = Producto::where('nombre', $productoOrigen->nombre)
+            ->where('farmacia_tipo', $farmaciaDestino)
+            ->first();
+
+        if (! $cloneProducto) {
+            $cloneProducto = Producto::create([
+                'nombre' => $productoOrigen->nombre,
+                'imagen' => $productoOrigen->imagen,
+                'farmacia_tipo' => $farmaciaDestino,
+                'descripcion' => $productoOrigen->descripcion,
+                'unidad' => $productoOrigen->unidad,
+                'precio' => $productoOrigen->precio,
+                'stock' => 0,
+                'stock_minimo' => $productoOrigen->stock_minimo,
+                'stock_maximo' => $productoOrigen->stock_maximo,
+            ]);
+        }
+
+        // Crear detalle de VENTA
+        VentaDetalle::create([
+            'venta_id' => $venta->id,
+            'producto_id' => $compraDetalleOrigen->producto_id,
+            'compra_detalle_id' => $compraDetalleOrigen->id,
+            'nombre' => $productoOrigen->nombre,
+            'cantidad' => $cantidad,
+            'unidad' => $productoOrigen->unidad,
+            'precio' => $compraDetalleOrigen->precio,
+            'lote' => $compraDetalleOrigen->lote,
+            'fecha_vencimiento' => $compraDetalleOrigen->fecha_vencimiento,
+            'farmacia_tipo' => $farmaciaOrigen,
+        ]);
+
+        // Crear detalle de COMPRA
+        CompraDetalle::create([
+            'compra_id' => $compra->id,
+            'user_id' => $userId,
+            'producto_id' => $cloneProducto->id,
+            'nombre' => $cloneProducto->nombre,
+            'cantidad' => $cantidad,
+            'cantidad_venta' => $cantidad,
+            'precio' => $compraDetalleOrigen->precio,
+            'total' => $subtotal,
+            'lote' => $compraDetalleOrigen->lote,
+            'fecha_vencimiento' => $compraDetalleOrigen->fecha_vencimiento,
+            'farmacia_tipo' => $farmaciaDestino,
+            'estado' => 'Activo',
+            'precio_venta' => $cloneProducto->precio,
+        ]);
+
+        // Disminuir stock en farmacia origen
+        $compraDetalleOrigen->update([
+            'cantidad' => max(0, (float) $compraDetalleOrigen->cantidad - $cantidad),
+            'cantidad_venta' => max(0, (float) ($compraDetalleOrigen->cantidad_venta ?? 0) - $cantidad),
+        ]);
+
+        // Actualizar stock de producto en farmacia origen
+        $productoOrigen->update([
+            'stock' => max(0, (float) $productoOrigen->stock - $cantidad),
+        ]);
+
+        $cloneProducto->update([
+            'stock' => (float) $cloneProducto->stock + $cantidad,
+        ]);
+
+        return $subtotal;
+    }
+
+    /**
      * Crear un traspaso entre farmacias
      */
     public function store(Request $request)
@@ -147,95 +245,16 @@ class TraspasoController extends Controller
 
             // Procesar cada item
             foreach ($validated['items'] as $item) {
-                $compraDetalleOrigen = CompraDetalle::where('id', $item['compra_detalle_id'])
-                    ->where('farmacia_tipo', $validated['farmacia_origen'])
-                    ->where('estado', 'Activo')
-                    ->lockForUpdate()
-                    ->firstOrFail();
-                $cantidad = (float) $item['cantidad'];
-
-                // Validar que haya suficiente cantidad
-                if (($compraDetalleOrigen->cantidad_venta ?? 0) < $cantidad) {
-                    $loteLabel = $compraDetalleOrigen->lote ?: 'sin lote';
-                    $vencimientoLabel = $compraDetalleOrigen->fecha_vencimiento ?: 'sin vencimiento';
-                    throw new \Exception("Stock insuficiente para el lote {$loteLabel} ({$vencimientoLabel}). Disponible: {$compraDetalleOrigen->cantidad_venta}, solicitado: {$cantidad}");
-                }
-
-                $subtotal = $cantidad * $compraDetalleOrigen->precio;
+                $subtotal = $this->procesarItemTraspaso(
+                    $item,
+                    $venta,
+                    $compra,
+                    $validated['farmacia_origen'],
+                    $validated['farmacia_destino'],
+                    $user_id
+                );
                 $totalVenta += $subtotal;
                 $totalCompra += $subtotal;
-
-                $productoOrigen = Producto::where('id', $compraDetalleOrigen->producto_id)
-                    ->where('farmacia_tipo', $validated['farmacia_origen'])
-                    ->first();
-
-                if (! $productoOrigen) {
-                    throw new \Exception('Producto origen no encontrado para el traspaso');
-                }
-
-                $cloneProducto = Producto::where('nombre', $productoOrigen->nombre)
-                    ->where('farmacia_tipo', $validated['farmacia_destino'])
-                    ->first();
-
-                if (! $cloneProducto) {
-                    $cloneProducto = Producto::create([
-                        'nombre' => $productoOrigen->nombre,
-                        'imagen' => $productoOrigen->imagen,
-                        'farmacia_tipo' => $validated['farmacia_destino'],
-                        'descripcion' => $productoOrigen->descripcion,
-                        'unidad' => $productoOrigen->unidad,
-                        'precio' => $productoOrigen->precio,
-                        'stock' => 0,
-                        'stock_minimo' => $productoOrigen->stock_minimo,
-                        'stock_maximo' => $productoOrigen->stock_maximo,
-                    ]);
-                }
-
-                // Crear detalle de VENTA
-                VentaDetalle::create([
-                    'venta_id' => $venta->id,
-                    'producto_id' => $compraDetalleOrigen->producto_id,
-                    'compra_detalle_id' => $compraDetalleOrigen->id,
-                    'nombre' => $productoOrigen->nombre,
-                    'cantidad' => $cantidad,
-                    'unidad' => $productoOrigen->unidad,
-                    'precio' => $compraDetalleOrigen->precio,
-                    'lote' => $compraDetalleOrigen->lote,
-                    'fecha_vencimiento' => $compraDetalleOrigen->fecha_vencimiento,
-                    'farmacia_tipo' => $validated['farmacia_origen'],
-                ]);
-
-                // Crear detalle de COMPRA
-                CompraDetalle::create([
-                    'compra_id' => $compra->id,
-                    'user_id' => $user_id,
-                    'producto_id' => $cloneProducto->id,
-                    'nombre' => $cloneProducto->nombre,
-                    'cantidad' => $cantidad,
-                    'cantidad_venta' => $cantidad,
-                    'precio' => $compraDetalleOrigen->precio,
-                    'total' => $subtotal,
-                    'lote' => $compraDetalleOrigen->lote,
-                    'fecha_vencimiento' => $compraDetalleOrigen->fecha_vencimiento,
-                    'farmacia_tipo' => $validated['farmacia_destino'],
-                    'estado' => 'Activo',
-                    'precio_venta' => $cloneProducto->precio,
-                ]);
-
-                // Disminuir stock en farmacia origen
-                $compraDetalleOrigen->update([
-                    'cantidad' => max(0, (float) $compraDetalleOrigen->cantidad - $cantidad),
-                    'cantidad_venta' => max(0, (float) ($compraDetalleOrigen->cantidad_venta ?? 0) - $cantidad),
-                ]);
-
-                // Actualizar stock de producto en farmacia origen
-                $productoOrigen->update([
-                    'stock' => max(0, (float) $productoOrigen->stock - $cantidad),
-                ]);
-
-                $cloneProducto->update([
-                    'stock' => (float) $cloneProducto->stock + $cantidad,
-                ]);
             }
 
             // Actualizar totales

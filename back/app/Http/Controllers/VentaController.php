@@ -98,6 +98,9 @@ class VentaController extends Controller
             if ($venta->estado !== 'Activo') {
                 abort(422, 'Solo se pueden agregar productos a ventas activas.');
             }
+            if ($venta->tipo === 'Traspaso') {
+                abort(422, 'Esta venta es un traspaso entre farmacias. Agregue productos desde el módulo de Traspasos.');
+            }
 
             $farmaciaTipo = $this->resolveFarmaciaTipo($request);
             if ($venta->farmacia_tipo !== $farmaciaTipo) {
@@ -175,6 +178,9 @@ class VentaController extends Controller
             if ($venta->estado !== 'Activo') {
                 abort(422, 'Solo se pueden aumentar productos en ventas activas.');
             }
+            if ($venta->tipo === 'Traspaso') {
+                abort(422, 'Esta venta es un traspaso entre farmacias. Modifique cantidades desde el módulo de Traspasos.');
+            }
 
             $farmaciaTipo = $this->resolveFarmaciaTipo($request);
             if ($venta->farmacia_tipo !== $farmaciaTipo) {
@@ -247,6 +253,11 @@ class VentaController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $ventaDevolucion = Venta::where('id', $ventaId)->lockForUpdate()->firstOrFail();
+            if ($ventaDevolucion->tipo === 'Traspaso') {
+                abort(422, 'Esta venta es un traspaso entre farmacias. Anule el traspaso desde el módulo de Traspasos en lugar de devolver productos.');
+            }
+
             if ($cantidad <= 0 || $cantidad > (float) $vd->cantidad) {
                 abort(422, 'Cantidad inválida para la devolución.');
             }
@@ -271,9 +282,8 @@ class VentaController extends Controller
             }
 
             // Actualizar total de venta
-            $venta = Venta::where('id', $ventaId)->lockForUpdate()->firstOrFail();
-            $venta->total = (float) $venta->total - ($cantidad * (float) $vd->precio);
-            $venta->save();
+            $ventaDevolucion->total = (float) $ventaDevolucion->total - ($cantidad * (float) $vd->precio);
+            $ventaDevolucion->save();
 
             DB::commit();
 

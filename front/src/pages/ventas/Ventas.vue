@@ -520,7 +520,7 @@
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Devolver productos</div>
           <q-btn
-            v-if="canAgregarProductoVenta && venta.estado === 'Activo'"
+            v-if="canAgregarProductoVenta && venta.estado === 'Activo' && venta.tipo !== 'Traspaso'"
             class="q-ml-md"
             color="primary"
             icon="add"
@@ -556,7 +556,7 @@
               <td class="text-center">{{ d.cantidad }}</td>
               <td class="text-center">
                 <q-btn
-                  v-if="canAgregarProductoVenta && venta.estado === 'Activo'"
+                  v-if="canAgregarProductoVenta && venta.estado === 'Activo' && venta.tipo !== 'Traspaso'"
                   size="sm"
                   color="primary"
                   label="Aumentar"
@@ -567,7 +567,9 @@
               </td>
               <td>
 <!--                devolver btn-->
-                <q-btn size="sm" color="negative" label="Devolver" no-caps @click="devolverProducto(venta.id, d.id, d.cantidad)"
+                <q-btn
+                  v-if="venta.tipo !== 'Traspaso'"
+                  size="sm" color="negative" label="Devolver" no-caps @click="devolverProducto(venta.id, d.id, d.cantidad)"
                        icon="undo"
                 />
               </td>
