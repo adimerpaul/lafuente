@@ -29,6 +29,28 @@ class CajaRecepcionesExcelExport
     private const WHITE = 'FFFFFF';
     private const TEXT = '0F172A';
     private const MUTED = '64748B';
+    private const BG_HEADER_DOCTOR = 'FFC7CE';
+    private const FG_HEADER_DOCTOR = '9C0006';
+    private const BG_HEADER_PAGOS = 'C4BD97';
+    private const BG_RESUMEN_DIST = 'E8BF55';
+
+    // Colores por costo segun el formato entregado por la clinica.
+    private const COST_COLORS = [
+        'ATENCION MEDICA' => ['F4B8AD', '0F172A'],
+        'ATENCION EMERGENCIA' => ['F4B8AD', '0F172A'],
+        'PROCEDIMIENTO MEDICO' => ['CCC0DA', '0F172A'],
+        'LABORATORIO' => ['EAB308', '0F172A'],
+        'ECOGRAFIA' => ['C4BD97', '0F172A'],
+        'TOMOGRAFIA' => ['92CDDC', '0F172A'],
+        'FISIOTERAPIA' => ['31859C', 'FFFFFF'],
+        'ODONTOLOGIA' => ['8DB4E2', '0F172A'],
+        'ENFERMERIA' => ['C4BD97', '0F172A'],
+        'INSUMOS' => ['D99694', '0F172A'],
+        'CONSULTORIO' => ['FCD5B4', '0F172A'],
+        'FARMACIA' => ['C6EFCE', '006100'],
+        'AMBULANCIA' => ['FCD5B4', '0F172A'],
+    ];
+    private const COST_FALLBACK_COLORS = ['FDE68A', 'A7F3D0', 'C7D2FE', 'FBCFE8', 'FED7AA', 'BAE6FD'];
 
     private const LEGACY_COSTS = [
         'Atencion medica' => 'costo_atencion_medica',
@@ -99,19 +121,12 @@ class CajaRecepcionesExcelExport
 
         $baseHeaders = [
             '#', 'Fecha', 'Hora', 'Estado', 'Cobro', 'Paciente', 'Ficha', 'Encargado',
-            'Documento', 'N Factura', 'Atencion', 'QR', 'Efectivo', 'Egreso', 'Recaudado', 'Final',
+            'Medico / Servicio', 'Documento', 'N Factura', 'Atencion', 'QR', 'Efectivo', 'Egreso', 'Recaudado',
         ];
+        $costSpecs = $this->costColumnSpecs($costColumns, count($baseHeaders) + 1);
         $costHeaders = [];
-        foreach ($costColumns as $costName) {
-            $clinicaPct = $this->costPorcentaje($costName);
-            $doctorPct = round(100 - $clinicaPct, 2);
-            array_push(
-                $costHeaders,
-                'Monto',
-                'Doctor ' . $this->pctLabel($doctorPct),
-                'Clinica ' . $this->pctLabel($clinicaPct),
-                'Pagado doctor'
-            );
+        foreach ($costSpecs as $spec) {
+            array_push($costHeaders, ...$spec['headers']);
         }
         $headers = array_merge($baseHeaders, $costHeaders);
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
@@ -121,15 +136,13 @@ class CajaRecepcionesExcelExport
 
         $groupRow = 9;
         $headerRow = 10;
-        $this->writeGroupHeader($sheet, 'A', 'K', $groupRow, 'DATOS DE CAJA', self::BG_BASE);
-        $this->writeGroupHeader($sheet, 'L', 'P', $groupRow, 'PAGOS Y CIERRE', self::BG_PAYMENT);
+        $this->writeGroupHeader($sheet, 'A', 'L', $groupRow, 'DATOS DE CAJA', self::BG_BASE);
+        $this->writeGroupHeader($sheet, 'M', 'P', $groupRow, 'PAGOS Y CIERRE', self::BG_PAYMENT);
 
-        $costStart = count($baseHeaders) + 1;
-        foreach ($costColumns as $index => $costName) {
-            $start = Coordinate::stringFromColumnIndex($costStart + $index * 4);
-            $end = Coordinate::stringFromColumnIndex($costStart + $index * 4 + 3);
-            $bg = $index % 2 === 0 ? self::BG_COSTS : '8D6E63';
-            $this->writeGroupHeader($sheet, $start, $end, $groupRow, mb_strtoupper($costName), $bg);
+        foreach ($costSpecs as $spec) {
+            $start = Coordinate::stringFromColumnIndex($spec['start']);
+            $end = Coordinate::stringFromColumnIndex($spec['start'] + count($spec['headers']) - 1);
+            $this->writeGroupHeader($sheet, $start, $end, $groupRow, mb_strtoupper($spec['name']), $spec['bg'], $spec['fg']);
         }
 
         foreach ($headers as $index => $label) {
@@ -147,6 +160,13 @@ class CajaRecepcionesExcelExport
             ],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF' . self::BORDER]]],
         ]);
+        $sheet->getStyle("I{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF' . self::FG_HEADER_DOCTOR]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::BG_HEADER_DOCTOR]],
+        ]);
+        $sheet->getStyle("M{$headerRow}:P{$headerRow}")->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::BG_HEADER_PAGOS]],
+        ]);
         $sheet->getRowDimension($headerRow)->setRowHeight(86);
 
         $dataRow = 11;
@@ -160,6 +180,7 @@ class CajaRecepcionesExcelExport
                 trim((string) (optional($item->paciente)->nombre_completo ?: $item->nombre_factura ?: '')),
                 (string) ($item->numero_ficha ?? ''),
                 (string) optional($item->user)->name,
+                trim((string) (optional($item->doctor)->nombre ?: $item->laboratorio_nombre ?: $item->medico_ecografia ?: '')),
                 (string) ($item->documento_label ?? ''),
                 (string) ($item->nombre_factura ?? ''),
                 (string) ($item->tipo_atencion ?? ''),
@@ -167,8 +188,7 @@ class CajaRecepcionesExcelExport
                 (float) ($item->efectivo ?? 0),
                 (float) ($item->egreso ?? 0),
                 (float) ($item->recaudado_total ?? 0),
-                (float) ($item->saldo_final ?? 0),
-            ], $this->costRowCells($item, $costColumns));
+            ], $this->costRowCells($item, $costSpecs));
 
             foreach ($rowValues as $colIndex => $value) {
                 $col = Coordinate::stringFromColumnIndex($colIndex + 1);
@@ -183,14 +203,14 @@ class CajaRecepcionesExcelExport
                 'borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF' . self::BORDER]]],
             ]);
             $sheet->getStyle("A{$dataRow}:E{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle("L{$dataRow}:{$lastCol}{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle("L{$dataRow}:{$lastCol}{$dataRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle("M{$dataRow}:{$lastCol}{$dataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle("M{$dataRow}:{$lastCol}{$dataRow}")->getNumberFormat()->setFormatCode('#,##0.00');
             $sheet->getRowDimension($dataRow)->setRowHeight(18);
             $dataRow++;
         }
 
-        $this->writeTotalsRow($sheet, $dataRow, $headers, count($baseHeaders));
-        $this->applyDetalleWidths($sheet, count($headers), count($baseHeaders), count($costColumns) * 4);
+        $this->writeTotalsRow($sheet, $dataRow, $headers);
+        $this->applyDetalleWidths($sheet, count($headers));
 
         $sheet->freezePane('A11');
         $sheet->setAutoFilter("A{$headerRow}:{$lastCol}{$headerRow}");
@@ -248,14 +268,18 @@ class CajaRecepcionesExcelExport
             $sheet->getStyle("{$col}5")->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
-        $row = 8;
-        $sheet->setCellValue("A{$row}", 'Costo');
-        $sheet->setCellValue("B{$row}", 'Total Bs');
-        $sheet->setCellValue("C{$row}", 'Doctor Bs');
-        $sheet->setCellValue("D{$row}", 'Clinica Bs');
-        $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($this->tableHeaderStyle(self::BG_COSTS));
-        $row++;
+        $headerRow = 8;
+        $sheet->setCellValue("A{$headerRow}", 'Costo');
+        $sheet->setCellValue("B{$headerRow}", 'Total Bs');
+        $sheet->getStyle("A{$headerRow}:B{$headerRow}")->applyFromArray($this->tableHeaderStyle(self::BG_COSTS));
 
+        $sheet->setCellValue("D{$headerRow}", 'Distribucion');
+        $sheet->setCellValue("E{$headerRow}", 'CLI Bs');
+        $sheet->setCellValue("F{$headerRow}", 'Tercero Bs');
+        $sheet->setCellValue("G{$headerRow}", 'Total Bs');
+        $sheet->getStyle("D{$headerRow}:G{$headerRow}")->applyFromArray($this->tableHeaderStyle(self::BG_RESUMEN_DIST, self::TEXT));
+
+        $totales = [];
         foreach ($costColumns as $costName) {
             $total = 0.0;
             $doctor = 0.0;
@@ -271,16 +295,38 @@ class CajaRecepcionesExcelExport
                 $clinica += $cli;
                 $doctor += $monto - $cli;
             }
-            if ($total <= 0) {
+            $totales[$costName] = [
+                'total' => round($total, 2),
+                'clinica' => round($clinica, 2),
+                'doctor' => round($doctor, 2),
+                'tieneTercero' => round(100 - $this->costPorcentaje($costName), 2) > 0,
+            ];
+        }
+
+        $leftRow = $headerRow + 1;
+        foreach ($totales as $costName => $data) {
+            if ($data['total'] <= 0) {
                 continue;
             }
-            $sheet->setCellValue("A{$row}", $costName);
-            $sheet->setCellValue("B{$row}", round($total, 2));
-            $sheet->setCellValue("C{$row}", round($doctor, 2));
-            $sheet->setCellValue("D{$row}", round($clinica, 2));
-            $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($this->bodyRowStyle($row));
-            $sheet->getStyle("B{$row}:D{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-            $row++;
+            $sheet->setCellValue("A{$leftRow}", $costName);
+            $sheet->setCellValue("B{$leftRow}", $data['total']);
+            $sheet->getStyle("A{$leftRow}:B{$leftRow}")->applyFromArray($this->bodyRowStyle($leftRow));
+            $sheet->getStyle("B{$leftRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $leftRow++;
+        }
+
+        $rightRow = $headerRow + 1;
+        foreach ($totales as $costName => $data) {
+            if (!$data['tieneTercero']) {
+                continue;
+            }
+            $sheet->setCellValue("D{$rightRow}", $costName);
+            $sheet->setCellValue("E{$rightRow}", $data['clinica']);
+            $sheet->setCellValue("F{$rightRow}", $data['doctor']);
+            $sheet->setCellValue("G{$rightRow}", $data['total']);
+            $sheet->getStyle("D{$rightRow}:G{$rightRow}")->applyFromArray($this->bodyRowStyle($rightRow));
+            $sheet->getStyle("E{$rightRow}:G{$rightRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $rightRow++;
         }
 
         foreach (range('A', 'H') as $col) {
@@ -363,21 +409,17 @@ class CajaRecepcionesExcelExport
         $sheet->getRowDimension($row)->setRowHeight(22);
     }
 
-    private function writeTotalsRow($sheet, int $row, array $headers, int $baseCount): void
+    private function writeTotalsRow($sheet, int $row, array $headers): void
     {
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
-        $sheet->mergeCells("A{$row}:K{$row}");
+        $sheet->mergeCells("A{$row}:L{$row}");
         $sheet->setCellValue("A{$row}", 'TOTAL GENERAL (solo Pagado)');
 
         $start = 11;
         $end = max($start, $row - 1);
         $cobroCol = 'E';
 
-        for ($colIndex = 12; $colIndex <= count($headers); $colIndex++) {
-            if ($colIndex > $baseCount && ($colIndex - $baseCount) % 4 === 0) {
-                // Columna "Pagado doctor" (texto Si/No): no se suma.
-                continue;
-            }
+        for ($colIndex = 13; $colIndex <= count($headers); $colIndex++) {
             $col = Coordinate::stringFromColumnIndex($colIndex);
             $sheet->setCellValue("{$col}{$row}", "=SUMIF({$cobroCol}{$start}:{$cobroCol}{$end},\"Pagado\",{$col}{$start}:{$col}{$end})");
         }
@@ -392,21 +434,18 @@ class CajaRecepcionesExcelExport
             ],
         ]);
         $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle("L{$row}:{$lastCol}{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle("L{$row}:{$lastCol}{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle("M{$row}:{$lastCol}{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle("M{$row}:{$lastCol}{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
         $sheet->getRowDimension($row)->setRowHeight(22);
     }
 
-    private function applyDetalleWidths($sheet, int $headerCount, int $baseCount, int $costCount): void
+    private function applyDetalleWidths($sheet, int $headerCount): void
     {
-        $widths = [5, 11, 8, 10, 11, 28, 16, 20, 12, 14, 16, 12, 12, 12, 13, 12];
+        $widths = [5, 11, 8, 10, 11, 28, 16, 20, 20, 12, 14, 16, 12, 12, 12, 13];
         foreach ($widths as $index => $width) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index + 1))->setWidth($width);
         }
-        for ($i = $baseCount + 1; $i <= $baseCount + $costCount; $i++) {
-            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(13);
-        }
-        for ($i = $baseCount + $costCount + 1; $i <= $headerCount; $i++) {
+        for ($i = count($widths) + 1; $i <= $headerCount; $i++) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(13);
         }
     }
@@ -488,19 +527,72 @@ class CajaRecepcionesExcelExport
         return $details;
     }
 
-    private function costRowCells(CajaRecepcion $item, array $costColumns): array
+    private function costColumnSpecs(array $costColumns, int $startIndex): array
+    {
+        $specs = [];
+        $fallback = 0;
+        foreach ($costColumns as $name) {
+            $clinicaPct = $this->costPorcentaje($name);
+            $doctorPct = round(100 - $clinicaPct, 2);
+            [$bg, $fg] = $this->costColor($name, $fallback);
+
+            if ($doctorPct <= 0) {
+                $headers = [mb_strtolower(trim($name)) === 'farmacia' ? 'Farmacia 100%' : 'Clinica 100%'];
+            } else {
+                $headers = [
+                    'CLI ' . $this->pctLabel($clinicaPct),
+                    $name . ' ' . $this->pctLabel($doctorPct),
+                    'Total ' . mb_strtolower($name),
+                ];
+            }
+
+            $specs[] = [
+                'name' => $name,
+                'headers' => $headers,
+                'start' => $startIndex,
+                'bg' => $bg,
+                'fg' => $fg,
+            ];
+            $startIndex += count($headers);
+        }
+
+        return $specs;
+    }
+
+    private function costColor(string $name, int &$fallback): array
+    {
+        $key = mb_strtoupper(strtr(trim($name), [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'ñ' => 'n', 'Ñ' => 'N',
+        ]));
+        if (isset(self::COST_COLORS[$key])) {
+            return self::COST_COLORS[$key];
+        }
+
+        $bg = self::COST_FALLBACK_COLORS[$fallback % count(self::COST_FALLBACK_COLORS)];
+        $fallback++;
+
+        return [$bg, self::TEXT];
+    }
+
+    private function costRowCells(CajaRecepcion $item, array $costSpecs): array
     {
         $details = $this->itemCostDetails($item);
         $cells = [];
-        foreach ($costColumns as $name) {
+        foreach ($costSpecs as $spec) {
+            $name = $spec['name'];
             $monto = round((float) ($details[$name]['monto'] ?? 0), 2);
             $porcentaje = (float) ($details[$name]['porcentaje'] ?? 100);
             $clinica = round($monto * $porcentaje / 100, 2);
             $doctor = round($monto - $clinica, 2);
-            $cells[] = $monto;
-            $cells[] = $doctor;
-            $cells[] = $clinica;
-            $cells[] = $monto > 0 ? (($details[$name]['pagado'] ?? false) ? 'Si' : 'No') : '';
+
+            if (count($spec['headers']) === 1) {
+                $cells[] = $monto;
+            } else {
+                $cells[] = $clinica;
+                $cells[] = $doctor;
+                $cells[] = $monto;
+            }
         }
 
         return $cells;
