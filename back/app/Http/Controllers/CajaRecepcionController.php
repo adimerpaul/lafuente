@@ -136,7 +136,9 @@ class CajaRecepcionController extends Controller
         $paidItems = $activeItems->where('estado_cobro', 'Pagado');
 
         $summary = [
-            'total_recaudado'     => (float) $paidItems->sum('recaudado_total'),
+            'total_recaudado'     => (float) $paidItems->sum('qr')
+                                   + (float) $paidItems->sum('efectivo')
+                                   - (float) $paidItems->sum('egreso'),
             'total_ingresos'      => (float) $paidItems->sum('recaudado_total'),
             'total_egresos'       => (float) $paidItems->sum('egreso'),
             'total_qr'            => (float) $paidItems->sum('qr'),

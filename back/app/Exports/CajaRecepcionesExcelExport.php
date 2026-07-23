@@ -187,7 +187,7 @@ class CajaRecepcionesExcelExport
                 (float) ($item->qr ?? 0),
                 (float) ($item->efectivo ?? 0),
                 (float) ($item->egreso ?? 0),
-                (float) ($item->recaudado_total ?? 0),
+                (float) ($item->qr ?? 0) + (float) ($item->efectivo ?? 0) - (float) ($item->egreso ?? 0),
             ], $this->costRowCells($item, $costSpecs));
 
             foreach ($rowValues as $colIndex => $value) {
