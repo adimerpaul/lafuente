@@ -2,22 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\AntecedentesFamiliare;
-use App\Models\Area;
-use App\Models\Diagnostico;
-use App\Models\HabitosPersonale;
-use App\Models\HistorialMedico;
-use App\Models\Material;
-use App\Models\Paciente;
-use App\Models\Periodo;
-use App\Models\Receta;
-use App\Models\RecetaDetalle;
-use App\Models\SignosVitale;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,18 +16,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-//        User::factory()->create([
-//            'name' => 'Test User',
-//            'email' => 'test@example.com',
-//        ]);
-//        User::create([
-//            'name' => 'Administrador',
-//            'username' => 'admin',
-//            'email' => 'admin@test.com',
-//            'password' => bcrypt('admin'),
-//            'role' => 'Administrador',
-//        ]);
-//        User::factory(10)->create();
+        //        User::factory()->create([
+        //            'name' => 'Test User',
+        //            'email' => 'test@example.com',
+        //        ]);
+        //        User::create([
+        //            'name' => 'Administrador',
+        //            'username' => 'admin',
+        //            'email' => 'admin@test.com',
+        //            'password' => bcrypt('admin'),
+        //            'role' => 'Administrador',
+        //        ]);
+        //        User::factory(10)->create();
         $sqlFIle = base_path('database/seeders/productos.sql');
         $sqlContent = file_get_contents($sqlFIle);
         DB::unprepared($sqlContent);
@@ -49,6 +37,7 @@ class DatabaseSeeder extends Seeder
         DB::unprepared($sqlContent);
 
         $this->call(PermissionSeeder::class);
+        $this->call(ArancelInternacionSeeder::class);
         $this->call(ArancelSeeder::class);
     }
 }

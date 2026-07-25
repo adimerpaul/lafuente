@@ -16,6 +16,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
     Route::get('/me', [App\Http\Controllers\UserController::class, 'me']);
 
+    Route::middleware('permission:Activos fijos')->group(function () {
+        Route::get('/activos-fijos', [App\Http\Controllers\ActivoFijoController::class, 'index']);
+        Route::get('/activos-fijos/{activoFijo}/asignaciones', [App\Http\Controllers\ActivoFijoController::class, 'asignaciones']);
+        Route::post('/activos-fijos/{activoFijo}/asignaciones', [App\Http\Controllers\ActivoFijoController::class, 'asignar']);
+        Route::post('/activos-fijos/asignaciones-multiples', [App\Http\Controllers\ActivoFijoController::class, 'asignarVarios']);
+        Route::put('/activos-fijos/asignaciones/{asignacion}/devolver', [App\Http\Controllers\ActivoFijoController::class, 'devolver']);
+        Route::post('/activos-fijos', [App\Http\Controllers\ActivoFijoController::class, 'store']);
+        Route::post('/activos-fijos/{activoFijo}/actualizar', [App\Http\Controllers\ActivoFijoController::class, 'update']);
+        Route::delete('/activos-fijos/{activoFijo}', [App\Http\Controllers\ActivoFijoController::class, 'destroy']);
+    });
+    Route::middleware('permission:Activos fijos|Activos fijos funcionarios')->group(function () {
+        Route::get('/activos-fijos/funcionarios', [App\Http\Controllers\ActivoFijoController::class, 'funcionarios']);
+        Route::get('/activos-fijos/funcionarios/{user}/pdf', [App\Http\Controllers\ActivoFijoController::class, 'funcionarioActivosPdf']);
+        Route::get('/activos-fijos/funcionarios/{user}/excel', [App\Http\Controllers\ActivoFijoController::class, 'funcionarioActivosExcel']);
+        Route::get('/activos-fijos/funcionarios/{user}', [App\Http\Controllers\ActivoFijoController::class, 'funcionarioDetalle']);
+        Route::get('/activos-fijos/detalle/{activoFijo}', [App\Http\Controllers\ActivoFijoController::class, 'detalle']);
+    });
+
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index']);
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store']);
     Route::put('/users/{user}', [App\Http\Controllers\UserController::class, 'update']);
@@ -41,7 +59,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/internaciones/pacientes', [App\Http\Controllers\InternacionController::class, 'pacientes']);
         Route::get('/internaciones/pacientes/{paciente}', [App\Http\Controllers\InternacionController::class, 'resumen']);
         Route::post('/internaciones', [App\Http\Controllers\InternacionController::class, 'store']);
+        Route::put('/internaciones/{internacion}', [App\Http\Controllers\InternacionController::class, 'update']);
+        Route::delete('/internaciones/{internacion}', [App\Http\Controllers\InternacionController::class, 'destroy']);
         Route::put('/internaciones/{internacion}/finalizar', [App\Http\Controllers\InternacionController::class, 'finalizar']);
+        Route::post('/internaciones/{internacion}/aranceles', [App\Http\Controllers\InternacionController::class, 'aplicarArancel']);
+        Route::get('/internaciones/{internacion}/aranceles/pdf', [App\Http\Controllers\InternacionController::class, 'arancelesPdf']);
+        Route::get('/internaciones/{internacion}/aranceles/excel', [App\Http\Controllers\InternacionController::class, 'arancelesExcel']);
+        Route::get('/aranceles-internacion', [App\Http\Controllers\ArancelInternacionController::class, 'index']);
+        Route::get('/aranceles-internacion/pdf', [App\Http\Controllers\ArancelInternacionController::class, 'pdf']);
+        Route::get('/aranceles-internacion/excel', [App\Http\Controllers\ArancelInternacionController::class, 'excel']);
+        Route::post('/aranceles-internacion', [App\Http\Controllers\ArancelInternacionController::class, 'store']);
+        Route::put('/aranceles-internacion/{arancelInternacion}', [App\Http\Controllers\ArancelInternacionController::class, 'update']);
+        Route::delete('/aranceles-internacion/{arancelInternacion}', [App\Http\Controllers\ArancelInternacionController::class, 'destroy']);
     });
     Route::get('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'index']);
     Route::post('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'store']);

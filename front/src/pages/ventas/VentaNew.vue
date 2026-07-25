@@ -164,6 +164,56 @@
         <q-card-section>
           <q-form @submit="submitVenta">
             <div class="row">
+              <div v-if="!requierePacienteInterno && !esModoGasto" class="col-12 q-pa-xs">
+                <q-select
+                  v-model="venta.paciente_id"
+                  :options="pacienteOptions"
+                  outlined
+                  dense
+                  clearable
+                  use-input
+                  fill-input
+                  hide-selected
+                  emit-value
+                  map-options
+                  input-debounce="300"
+                  label="Buscar paciente por nombre, apellido o CI"
+                  :loading="pacientesLoading"
+                  @filter="filterPacientes"
+                  @update:modelValue="onPacienteSelected"
+                >
+                  <template #prepend>
+                    <q-icon name="person_search" />
+                  </template>
+                  <template #no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">
+                        No se encontraron pacientes
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                  <template #option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section avatar>
+                        <q-avatar color="primary" text-color="white" icon="person" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">
+                          {{ scope.opt.paciente.nombre_completo }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          CI: {{ scope.opt.paciente.identificacion || 'Sin registro' }}
+                          · Nacimiento: {{ scope.opt.paciente.fecha_nacimiento || 'Sin registro' }}
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                  <template #selected-item="scope">
+                    {{ scope.opt.paciente.nombre_completo }}
+                    · CI {{ scope.opt.paciente.identificacion || 'SN' }}
+                  </template>
+                </q-select>
+              </div>
               <div class="col-12 col-md-3 q-pa-xs">
                 <q-input v-model="venta.nit" outlined dense label="CI/NIT" @update:modelValue="searchCliente"
                          :debounce="500" :disable="requierePacienteInterno"/>
@@ -720,12 +770,13 @@ export default {
         const res = await this.$axios.get('pacientes', {
           params: {
             search,
-            tipo_paciente: 'Interno',
+            tipo_paciente: this.requierePacienteInterno ? 'Interno' : undefined,
+            per_page: 20,
           }
         });
         const pacientes = res.data?.data || [];
         this.pacienteOptions = pacientes.map(paciente => ({
-          label: `${paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim()} - ${paciente.identificacion || 'SN'}`,
+          label: paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim(),
           value: paciente.id,
           paciente,
         }));
@@ -745,7 +796,7 @@ export default {
       if (!paciente) return;
       this.venta.nit = paciente.identificacion || '0';
       this.venta.nombre = paciente.nombre_completo || `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim() || 'SN';
-      this.venta.tipo_venta = 'Internado';
+      if (this.requierePacienteInterno) this.venta.tipo_venta = 'Internado';
     },
   },
 

@@ -81,4 +81,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(FormularioControl::class);
     }
+
+    public function asignacionesActivos()
+    {
+        return $this->hasMany(ActivoFijoAsignacion::class);
+    }
 }

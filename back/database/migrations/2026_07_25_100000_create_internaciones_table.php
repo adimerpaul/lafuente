@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('cama', 100);
             $table->string('estado', 20)->default('Activa');
             $table->text('observacion')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['paciente_id', 'estado']);

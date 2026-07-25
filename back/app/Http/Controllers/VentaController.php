@@ -591,10 +591,16 @@ class VentaController extends Controller
             };
             $paciente = null;
 
-            if ($farmaciaTipo === 'Farmacia institucional' && $tipoVentaNormalizado !== 'Egreso') {
-                $paciente = Paciente::where('tipo_paciente', 'Interno')->find($request->input('paciente_id'));
+            if ($tipoVentaNormalizado !== 'Egreso' && $request->filled('paciente_id')) {
+                $paciente = Paciente::find($request->input('paciente_id'));
 
                 if (! $paciente) {
+                    abort(422, 'El paciente seleccionado no existe.');
+                }
+            }
+
+            if ($farmaciaTipo === 'Farmacia institucional' && $tipoVentaNormalizado !== 'Egreso') {
+                if (! $paciente || $paciente->tipo_paciente !== 'Interno') {
                     abort(422, 'Debe seleccionar un paciente interno para ventas de farmacia institucional.');
                 }
             }

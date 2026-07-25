@@ -199,12 +199,28 @@ export default {
           ]
         },
         {
+          title: 'Internación',
+          icon: 'hotel',
+          links: [
+            { title: 'Internaciones', icon: 'hotel', link: '/internaciones', can: 'Internaciones' },
+            { title: 'Aranceles internación', icon: 'price_check', link: '/aranceles-internacion', can: 'Internaciones' },
+          ]
+        },
+        {
           title: 'Reportes',
           icon: 'assessment',
           links: [
             { title: 'Reporte farmacia', icon: 'summarize', link: '/reportes/farmacia', can: 'Reportes farmacia' },
             { title: 'Altas y Bajas pacientes', icon: 'medical_information', link: '/reportes/pacientes', can: 'Pacientes' },
             { title: 'Reporte farmacia institucional', icon: 'summarize', link: '/institucional/reportes/farmacia', can: 'Reportes farmacia institucional' },
+          ]
+        },
+        {
+          title: 'Activos fijos',
+          icon: 'domain',
+          links: [
+            { title: 'Listado de activos', icon: 'inventory', link: '/activos-fijos', can: 'Activos fijos' },
+            { title: 'Funcionarios y activos', icon: 'badge', link: '/activos-fijos/funcionarios', can: 'Activos fijos funcionarios' },
           ]
         },
         {
@@ -222,7 +238,6 @@ export default {
             { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios' },
             { title: 'Doctor', icon: 'medical_services', link: '/doctores', can: 'Doctores' },
             { title: 'Pacientes', icon: 'personal_injury', link: '/pacientes', can: 'Pacientes' },
-            { title: 'Internaciones', icon: 'hotel', link: '/internaciones', can: 'Internaciones' },
             { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores' },
             { title: 'Precios productos', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos' },
           ]
@@ -245,6 +260,7 @@ export default {
     }
   },
   mounted () {
+    this.refreshSessionPermissions()
     this.getNotificaciones()
   },
   watch: {
@@ -259,6 +275,7 @@ export default {
     visibleSections () {
       const order = ['General', 'ClÃ­nica', 'Clínica', 'Farmacia', 'Farmacia Institucional', 'Operaciones', 'Financiera', 'Reportes']
       const orderIndex = (title) => {
+        if (title === 'Activos fijos') return 2
         const index = order.indexOf(title)
         return index === -1 ? Number.MAX_SAFE_INTEGER : index
       }
@@ -268,6 +285,12 @@ export default {
     }
   },
   methods: {
+    refreshSessionPermissions () {
+      this.$axios.get('/me').then(response => {
+        this.$store.user = response.data.user
+        this.$store.permissions = response.data.user?.permissions || []
+      })
+    },
     getNotificaciones () {
       this.$axios.get('/productos-por-vencer-campana', {
         params: {

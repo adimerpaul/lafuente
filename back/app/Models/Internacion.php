@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Internacion extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'internaciones';
 
     protected $fillable = [
@@ -50,5 +53,10 @@ class Internacion extends Model
     public function finalizadoPor()
     {
         return $this->belongsTo(User::class, 'finalizado_user_id');
+    }
+
+    public function arancelesAplicados()
+    {
+        return $this->hasMany(InternacionArancel::class)->orderByDesc('fecha_hora');
     }
 }

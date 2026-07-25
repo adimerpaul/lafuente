@@ -50,6 +50,8 @@ class PermissionSeeder extends Seeder
             'Caja recepcion crear',
             'Caja recepcion editar',
             'Internaciones',
+            'Activos fijos',
+            'Activos fijos funcionarios',
         ];
 
         foreach ($permisos as $permiso) {
