@@ -12,6 +12,7 @@ const routes = [
       { path: 'ventaNuevo', name: 'ventaNuevo', component: () => import('pages/ventas/VentaNew.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'paciente/:id', name: 'paciente', component: () => import('pages/pacientes/PacienteShow.vue'), meta: { requiresAuth: true } },
       { path: 'internaciones', name: 'internaciones', component: () => import('pages/internaciones/Internaciones.vue'), meta: { requiresAuth: true } },
+      { path: 'internaciones/paciente/:id', name: 'internacion-paciente', component: () => import('pages/internaciones/InternacionPaciente.vue'), meta: { requiresAuth: true } },
       { path: 'proveedores', name: 'proveedores', component: () => import('pages/proveedores/Proveedores.vue'), meta: { requiresAuth: true } },
       { path: 'compras', name: 'compras', component: () => import('pages/compras/Compras.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
       { path: 'compras-create', name: 'compras-create', component: () => import('pages/compras/ComprasCreate.vue'), meta: { requiresAuth: true, farmaciaTipo: 'Farmacia', farmaciaNombre: 'Farmacia' } },
