@@ -37,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pacientes/{paciente}/proforma-excel', [App\Http\Controllers\VentaController::class, 'proformaPacienteExcel']);
     Route::get('/pacientes-reporte/altas-bajas', [App\Http\Controllers\PacienteController::class, 'reporteAltasBajas']);
     Route::get('/pacientes-reporte/altas-bajas-pdf', [App\Http\Controllers\PacienteController::class, 'reporteAltasBajasPdf']);
+    Route::middleware('permission:Internaciones')->group(function () {
+        Route::get('/internaciones/pacientes', [App\Http\Controllers\InternacionController::class, 'pacientes']);
+        Route::get('/internaciones/pacientes/{paciente}', [App\Http\Controllers\InternacionController::class, 'resumen']);
+        Route::post('/internaciones', [App\Http\Controllers\InternacionController::class, 'store']);
+        Route::put('/internaciones/{internacion}/finalizar', [App\Http\Controllers\InternacionController::class, 'finalizar']);
+    });
     Route::get('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'index']);
     Route::post('/paciente-fotos', [App\Http\Controllers\PacienteFotoController::class, 'store']);
     Route::delete('/paciente-fotos/{pacienteFoto}', [App\Http\Controllers\PacienteFotoController::class, 'destroy']);

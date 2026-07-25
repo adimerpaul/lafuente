@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Compra;
+use App\Models\Producto;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -125,6 +126,36 @@ class DashboardController extends Controller
         $usuarios = $ventasPorUsuario->pluck('usuario');
         $ventasUsuarios = $ventasPorUsuario->pluck('total');
 
+        $ventasPorProducto = DB::table('venta_detalles as vd')
+            ->join('ventas as v', 'v.id', '=', 'vd.venta_id')
+            ->selectRaw('vd.producto_id, SUM(COALESCE(vd.cantidad, 0)) as cantidad_vendida')
+            ->where('v.estado', 'Activo')
+            ->where('v.farmacia_tipo', $farmaciaTipo)
+            ->whereBetween('v.fecha', [$desde, $hasta])
+            ->whereNull('v.deleted_at')
+            ->whereNull('vd.deleted_at')
+            ->groupBy('vd.producto_id');
+
+        $productosRanking = Producto::query()
+            ->leftJoinSub($ventasPorProducto, 'ranking_ventas', function ($join) {
+                $join->on('productos.id', '=', 'ranking_ventas.producto_id');
+            })
+            ->where('productos.farmacia_tipo', $farmaciaTipo)
+            ->select(['productos.id', 'productos.nombre', 'productos.imagen', 'productos.precio'])
+            ->selectRaw('COALESCE(ranking_ventas.cantidad_vendida, 0) as cantidad_vendida');
+
+        $productosMasVendidos = (clone $productosRanking)
+            ->orderByDesc('cantidad_vendida')
+            ->orderBy('productos.nombre')
+            ->limit(5)
+            ->get();
+
+        $productosMenosVendidos = (clone $productosRanking)
+            ->orderBy('cantidad_vendida')
+            ->orderBy('productos.nombre')
+            ->limit(5)
+            ->get();
+
         return response()->json([
             'ventas' => $ventas,
 
@@ -147,6 +178,9 @@ class DashboardController extends Controller
             // bar: ventas por usuario (rango)
             'usuarios'       => $usuarios,
             'ventasUsuarios' => $ventasUsuarios,
+
+            'productosMasVendidos' => $productosMasVendidos,
+            'productosMenosVendidos' => $productosMenosVendidos,
 
             'desde' => $desde,
             'hasta' => $hasta,

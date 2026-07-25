@@ -222,6 +222,7 @@ export default {
             { title: 'Usuarios', icon: 'supervisor_account', link: '/usuarios', can: 'Usuarios' },
             { title: 'Doctor', icon: 'medical_services', link: '/doctores', can: 'Doctores' },
             { title: 'Pacientes', icon: 'personal_injury', link: '/pacientes', can: 'Pacientes' },
+            { title: 'Internaciones', icon: 'hotel', link: '/internaciones', can: 'Internaciones' },
             { title: 'Proveedores', icon: 'local_shipping', link: '/proveedores', can: 'Proveedores' },
             { title: 'Precios productos', icon: 'price_check', link: '/productos-precios', can: 'Precio de ventas productos' },
           ]

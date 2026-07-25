@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Paciente extends Model{
-    use SoftDeletes,HasFactory;
+class Paciente extends Model
+{
+    use HasFactory,SoftDeletes;
+
     protected $table = 'pacientes';
+
     protected $fillable = [
         'nombre',
         'apellido',
@@ -32,61 +35,105 @@ class Paciente extends Model{
         'updated_at',
         'deleted_at',
     ];
+
     protected $appends = [
         'nombre_completo',
     ];
 
-    public function getNombreCompletoAttribute(): string{
+    public function getNombreCompletoAttribute(): string
+    {
         return "{$this->nombre} {$this->apellido}";
     }
-    public function historialMedicos(){
+
+    public function historialMedicos()
+    {
         return $this->hasMany(HistorialMedico::class);
     }
-    public function signosVitales(){
+
+    public function signosVitales()
+    {
         return $this->hasMany(SignosVitale::class);
     }
-    public function antecedentesFamiliares(){
+
+    public function antecedentesFamiliares()
+    {
         return $this->hasMany(AntecedentesFamiliare::class);
     }
-    public function habitosPersonales(){
+
+    public function habitosPersonales()
+    {
         return $this->hasMany(HabitosPersonale::class);
     }
-    public function recetas(){
+
+    public function recetas()
+    {
         return $this->hasMany(Receta::class);
     }
-    public function diagnosticos(){
+
+    public function diagnosticos()
+    {
         return $this->hasMany(Diagnostico::class);
     }
-    function ventas(){
+
+    public function ventas()
+    {
         return $this->belongsToMany(Venta::class, 'paciente_ventas')
             ->withPivot('user_id', 'fecha', 'hora')
             ->withTimestamps();
     }
-    function pacienteVentas(){
+
+    public function pacienteVentas()
+    {
         return $this->hasMany(PacienteVenta::class);
     }
-    function cobros(){
+
+    public function cobros()
+    {
         return $this->hasMany(Cobro::class);
     }
-    function facturas(){
+
+    public function facturas()
+    {
         return $this->hasMany(Factura::class);
     }
-    function pagos(){
+
+    public function pagos()
+    {
         return $this->hasMany(Pago::class);
     }
-    function cajaRecepciones(){
+
+    public function cajaRecepciones()
+    {
         return $this->hasMany(CajaRecepcion::class);
     }
-    function formulariosControl(){
+
+    public function formulariosControl()
+    {
         return $this->hasMany(FormularioControl::class);
     }
-    function registroUser(){
+
+    public function registroUser()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
-    function altaUser(){
+
+    public function altaUser()
+    {
         return $this->belongsTo(User::class, 'alta_user_id');
     }
-    function altas(){
+
+    public function altas()
+    {
         return $this->hasMany(PacienteAlta::class)->orderByDesc('fecha_hora');
+    }
+
+    public function internaciones()
+    {
+        return $this->hasMany(Internacion::class)->orderByDesc('fecha_inicio');
+    }
+
+    public function internacionActiva()
+    {
+        return $this->hasOne(Internacion::class)->where('estado', 'Activa')->latestOfMany('fecha_inicio');
     }
 }
