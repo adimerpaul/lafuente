@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
             'Caja recepcion',
             'Caja recepcion crear',
             'Caja recepcion editar',
+            'Caja recepcion factura',
             'Internaciones',
             'Activos fijos',
             'Activos fijos funcionarios',

@@ -166,9 +166,10 @@
                     v-model="form.nombre_factura"
                     dense
                     outlined
-                    :disable="Number(form.punto) !== 1"
+                    :disable="Number(form.punto) !== 1 || facturaLocked"
                     :label="Number(form.punto) === 1 ? 'Numero de factura' : 'Recibo automatico'"
-                    :hint="Number(form.punto) === 1 ? '' : 'El backend lo registrara como recibo'"
+                    :hint="facturaHint"
+                    :rules="facturaRules"
                   />
                 </div>
 
@@ -987,6 +988,21 @@ export default {
     },
     canEditarCaja () {
       return (this.$store.permissions || []).some(p => p.name === 'Caja recepcion editar')
+    },
+    canFacturaCaja () {
+      return (this.$store.permissions || []).some(p => p.name === 'Caja recepcion factura')
+    },
+    facturaLocked () {
+      return this.isEdit && !this.canFacturaCaja
+    },
+    facturaHint () {
+      if (Number(this.form.punto) !== 1) return 'El backend lo registrara como recibo'
+      if (this.facturaLocked) return 'Se requiere el permiso "Caja recepcion factura" para modificar el numero de factura'
+      return 'Obligatorio cuando el punto es con factura'
+    },
+    facturaRules () {
+      if (Number(this.form.punto) !== 1 || this.facturaLocked) return []
+      return [v => !!String(v ?? '').trim() || 'Ingrese el numero de factura']
     },
     formLocked () {
       return this.isEdit && !this.canEditarCaja
@@ -1921,6 +1937,9 @@ export default {
       if (Number(payload.punto) !== 1) {
         payload.nombre_factura = null
       }
+      if (this.facturaLocked) {
+        delete payload.nombre_factura
+      }
       payload.costos_detalle = Object.entries(this.costosValues)
         .filter(([, v]) => Number(v.monto || 0) > 0)
         .map(([costo_id, v]) => {
@@ -1973,6 +1992,11 @@ export default {
     async save () {
       if (this.formLocked) {
         this.$alert.error('No tienes permiso para editar este registro')
+        return
+      }
+      if (Number(this.form.punto) === 1 && !this.facturaLocked && !String(this.form.nombre_factura ?? '').trim()) {
+        this.tab = 'datos'
+        this.$alert.error('Ingrese el numero de factura')
         return
       }
       this.saving = true

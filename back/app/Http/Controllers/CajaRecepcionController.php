@@ -405,11 +405,19 @@ class CajaRecepcionController extends Controller
             return response()->json(['message' => 'No tiene permiso para editar registros de caja de recepcion.'], 403);
         }
 
+        if (! $this->canEditarFactura($request)) {
+            $request->merge(['nombre_factura' => $cajaRecepcion->nombre_factura]);
+        }
+
         $data = $this->validatedData($request);
         $data['user_id'] = $request->user()->id;
         $data['tipo_movimiento'] = 'Ingreso';
         $data['tipo_documento'] = (int) (($data['punto'] ?? 0) === 1);
         $data['numero_ficha'] = trim((string) ($data['numero_ficha'] ?? ''));
+
+        if (! $this->canEditarFactura($request)) {
+            $data['nombre_factura'] = $cajaRecepcion->nombre_factura;
+        }
 
         $costosDetalle = $request->input('costos_detalle', null);
         if ($costosDetalle !== null) {
@@ -678,6 +686,11 @@ class CajaRecepcionController extends Controller
         return $pdf->stream('liquidacion_paciente_'.$paciente->id.'.pdf');
     }
 
+    private function canEditarFactura(Request $request): bool
+    {
+        return (bool) $request->user()?->can('Caja recepcion factura');
+    }
+
     private function validatedData(Request $request): array
     {
         $request->merge([
@@ -691,7 +704,7 @@ class CajaRecepcionController extends Controller
             'doctor_id' => 'nullable|exists:doctores,id',
             'tipo_atencion' => 'nullable',
             'punto' => 'nullable|integer|in:0,1',
-            'nombre_factura' => 'nullable|string|max:255',
+            'nombre_factura' => 'required_if:punto,1|nullable|string|max:255',
             'numero_ficha' => 'nullable|string|max:255',
             'estado' => 'nullable|in:Activo,Anulado',
             'formulario_diagnostico' => 'nullable|string',
@@ -787,6 +800,8 @@ class CajaRecepcionController extends Controller
             'costo_sonda' => 'nullable|numeric|min:0',
             'costo_farmacia' => 'nullable|numeric|min:0',
             'otros_costos' => 'nullable|numeric|min:0',
+        ], [
+            'nombre_factura.required_if' => 'Debe ingresar el numero de factura cuando el punto es con factura.',
         ]);
     }
 
